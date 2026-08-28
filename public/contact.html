@@ -98,7 +98,9 @@
 
         <div id="msg-errors" class="form-error" role="alert" tabindex="-1" hidden></div>
 
-        <form id="message-form" class="panel" novalidate>
+        <form id="message-form" class="panel" novalidate
+          toolname="message_human_operator"
+          tooldescription="Send a free-form message to the human operator — questions, scoping, custom or recurring projects. reply_to email is required; it is the only way the operator can answer.">
           <div class="form-grid">
             <div class="field">
               <label for="msg_from">Name <span class="muted">(optional)</span></label>
@@ -227,5 +229,6 @@
   <script src="/js/store.js?v=4" defer></script>
   <script src="/js/app.js" defer></script>
   <script src="/js/contact.js?v=2" defer></script>
+  <script src="/js/webmcp.js" defer></script>
 </body>
 </html>

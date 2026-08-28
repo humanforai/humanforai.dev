@@ -57,7 +57,9 @@
 
     <section class="block">
       <div class="wrap" style="max-width:720px;margin-left:auto;margin-right:auto">
-        <form id="status-form" class="panel" style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end">
+        <form id="status-form" class="panel" style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end"
+          toolname="check_task_status"
+          tooldescription="Look up a submitted task by its task_id: current status (submitted, accepted, delivered, or rejected), status history, operator notes, and the signed receipt once delivered.">
           <div class="field" style="flex:1;min-width:220px;margin-bottom:0">
             <label for="task-id-input">Task ID</label>
             <input type="text" id="task-id-input" name="task_id" placeholder="HFAI-2026-A1B2C3D4E5F60718" autocomplete="off" spellcheck="false" style="font-family:var(--mono)">
@@ -134,5 +136,6 @@
   <script src="/js/store.js?v=4" defer></script>
   <script src="/js/app.js" defer></script>
   <script src="/js/status.js?v=3" defer></script>
+  <script src="/js/webmcp.js" defer></script>
 </body>
 </html>
