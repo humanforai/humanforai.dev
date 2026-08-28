@@ -1,0 +1,69 @@
+{
+  "$schema_note": "Machine-readable profile of the human operator behind Human For AI (https://humanforai.dev). Part of a personal homepage for the agent era.",
+  "name": "Operator 001",
+  "name_note": "The operator works pseudonymously under the service name Human For AI. Identity verification by a third party is planned — see https://humanforai.dev/trust.",
+  "role": "Founding operator — the single verified human behind Human For AI",
+  "location": {
+    "disclosure": "Exact service area is confirmed at task review to protect operator privacy.",
+    "working_days": "Sunday-Thursday",
+    "physical_tasks": "Available in the operator's local service area; wider coverage by arrangement."
+  },
+  "languages": [
+    { "code": "en", "name": "English", "level": "fluent" }
+  ],
+  "professional_background": [
+    "Building and operating web products and APIs, including this platform",
+    "Software and product testing as a real end user, with structured reporting",
+    "Working with AI agents and automation workflows: reads machine-generated specs literally, flags ambiguity instead of guessing",
+    "Field work: on-location verification, photography, and physical-world checks"
+  ],
+  "areas_of_expertise": [
+    "Real-world verification with photo and text evidence",
+    "Web and mobile product testing on real devices",
+    "Review of AI-generated text, code, images, and decisions",
+    "Subjective human judgment: tone, clarity, trustworthiness, cultural fit",
+    "Manual data collection, labeling, and research",
+    "Accessibility and usability first-pass checks"
+  ],
+  "availability": {
+    "status": "available",
+    "working_hours": "every day, 19:00-00:00 (operator local time)",
+    "first_response_hours": 12,
+    "typical_response_hours": 4,
+    "urgent_tasks": "by prior arrangement only"
+  },
+  "preferred_task_types": [
+    "real_world_verification",
+    "product_or_app_testing",
+    "ai_output_review",
+    "human_judgment_and_feedback",
+    "prompt_and_workflow_testing"
+  ],
+  "boundaries_and_limitations": {
+    "review_policy": "Every task is reviewed by the human before acceptance — acceptance is never automatic.",
+    "will_not_do": [
+      "illegal_activity",
+      "harassment_or_intimidation",
+      "deception_or_impersonation",
+      "privacy_invasive_surveillance",
+      "unsafe_physical_actions",
+      "circumventing_security_or_verification_systems",
+      "academic_or_credential_fraud",
+      "regulated_professional_advice_presented_as_licensed_counsel"
+    ],
+    "limitations": [
+      "Single human — capacity is limited; oversized tasks receive a scoped counter-proposal at review.",
+      "Physical-world tasks depend on location coverage, confirmed at review.",
+      "Human judgment is provided as assistance, not as guaranteed truth; deliverables state their confidence.",
+      "Confidential material only by prior agreement — do not submit secrets by default."
+    ]
+  },
+  "links": {
+    "profile_page": "https://humanforai.dev/profile",
+    "agent_manifest": "https://humanforai.dev/.well-known/agent.json",
+    "capabilities": "https://humanforai.dev/.well-known/capabilities.json",
+    "services": "https://humanforai.dev/.well-known/services.json",
+    "trust_policy": "https://humanforai.dev/trust",
+    "contact": "https://humanforai.dev/contact"
+  }
+}

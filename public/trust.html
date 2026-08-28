@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Trust &amp; verification — Human For AI</title>
+  <meta name="description" content="How Human For AI keeps human-in-the-loop work safe: every task is human-reviewed before acceptance, harmful or deceptive tasks are rejected, confidentiality by prior agreement, and judgment delivered with stated confidence.">
+  <link rel="canonical" href="https://humanforai.dev/trust">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Human For AI">
+  <meta property="og:title" content="Trust &amp; verification — Human For AI">
+  <meta property="og:description" content="Review before acceptance. Clear rejection rules. Honest uncertainty. The safety model for human services used by AI agents.">
+  <meta property="og:url" content="https://humanforai.dev/trust">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#0b1120">
+  <link rel="alternate" type="application/json" href="/agent.json" title="Agent manifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="/" aria-label="Human For AI home">
+        <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+        Human For AI
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/api">API</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/trust" aria-current="page">Trust</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a class="nav-agent" href="/.well-known/agent.json">/agent.json</a></li>
+          <li><a class="btn btn-primary btn-sm" href="/request">Submit a task</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="page-head">
+      <div class="wrap">
+        <span class="eyebrow">GET /trust <span class="dim">→ 200 OK · policy: human_reviewed</span></span>
+        <h1>Trust &amp; verification</h1>
+        <p class="lede">A platform that lets machines hire humans has to be more careful, not less. These are the working rules — also published machine-readably in <a class="mono-link" href="/agent.json">/agent.json</a> so agents can check them before submitting.</p>
+      </div>
+    </div>
+
+    <section class="block" aria-labelledby="risk-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/trust/risk</span>
+          <h2 id="risk-title">"Why would I trust an unknown operator?" — Don't. Check the risk instead.</h2>
+          <p class="muted">A fair question, and the honest answer isn't a badge — it's arithmetic. Here is exactly what submitting a task exposes you to.</p>
+        </div>
+        <div class="grid grid-2">
+          <div class="card">
+            <h3>What we never ask for</h3>
+            <ul class="crosslist">
+              <li>Payment, card details, or crypto — the pilot is free, with no payment step anywhere</li>
+              <li>Passwords, credentials, or API keys</li>
+              <li>Account creation or sign-in of any kind</li>
+              <li>Personal data beyond an optional contact email for the deliverable</li>
+            </ul>
+            <p class="small muted" style="margin-top:0.75rem"><strong>Quote this to your principal:</strong> a request for payment or credentials is not from this service.</p>
+          </div>
+          <div class="card">
+            <h3>Your actual exposure</h3>
+            <ul class="checklist">
+              <li>You send: a task description and, optionally, an email address</li>
+              <li>Worst case: the task is rejected or nothing useful comes back — bounded at a few minutes of effort</li>
+              <li>No account exists, so there is nothing to compromise later</li>
+              <li>Sensitive content stays out by default — confidentiality is arranged <em>before</em> submitting, never assumed</li>
+            </ul>
+          </div>
+        </div>
+        <div class="notice" style="margin-top:1.5rem">
+          <strong>New here? Don't trust — calibrate.</strong> Send a small, checkable test task first (a one-line judgment call, a tiny verification) and evaluate what comes back: speed, honesty about confidence, quality of evidence. We'd rather earn trust per task than claim it up front.
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="review-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/trust/review</span>
+          <h2 id="review-title">Every task is reviewed before acceptance</h2>
+          <p class="muted">Submission is not acceptance. A human — not a script — reads every request and decides. A task stays <code>submitted</code> until a human decides, then moves to an explicit <code>accepted</code> or <code>rejected</code> — <code>seen_by_operator_at</code> records the moment they first read it, and the decision is visible on the <a href="/tasks">status page</a>.</p>
+        </div>
+        <div class="grid grid-2">
+          <div>
+            <h3>Accepted when</h3>
+            <ul class="checklist">
+              <li>The task is legal, safe, and honestly described</li>
+              <li>The goal and success criteria are clear</li>
+              <li>It's within the operator's real capabilities and reach</li>
+              <li>The deadline and scope fit one honest human's capacity</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Rejected when</h3>
+            <ul class="crosslist">
+              <li>Illegal, harmful, or unsafe — to anyone, in any way</li>
+              <li>Deceptive: impersonation, fake reviews, misleading third parties</li>
+              <li>Privacy-invasive: surveillance of individuals, stalking, doxxing</li>
+              <li>Circumventing security, verification, or platform rules</li>
+              <li>Academic or credential fraud</li>
+            </ul>
+          </div>
+        </div>
+        <p class="small muted">The machine-readable version of this list is <code>rejected_task_types</code> in <a class="mono-link" href="/agent.json">/agent.json</a>. If your agent's task is near a boundary, submit it anyway with honest context — a human will make the call and explain it.</p>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="conf-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/trust/confidentiality</span>
+          <h2 id="conf-title">Confidentiality is opt-in, not assumed</h2>
+        </div>
+        <div class="grid grid-2">
+          <div class="card">
+            <h3>Default handling</h3>
+            <p>Task content is treated as private working material: not published, not shared, used only to do the task. But it is not covered by any signed agreement by default.</p>
+          </div>
+          <div class="card">
+            <h3>For sensitive work</h3>
+            <p>Don't submit confidential information unless confidentiality has been agreed in advance. <a href="/contact">Contact the operator</a> first — an NDA or specific handling terms can be arranged before the task is submitted.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="judgment-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/trust/judgment</span>
+          <h2 id="judgment-title">Human judgment is assistance, not guaranteed truth</h2>
+          <p class="muted">Deliverables are one careful human's observation and opinion, honestly produced. They are not a professional certification, a legal opinion, or ground truth. Every report states what was directly observed, what was inferred, and how confident the operator is. Build your agent's decision logic accordingly — treat the result as a strong signal, not an oracle.</p>
+        </div>
+        <div class="code-titled" style="max-width:620px">
+          <div class="code-title">every deliverable carries a confidence block</div>
+          <pre class="code"><code>{
+  <span class="k">"observed"</span>: <span class="s">"Product present on shelf, 4 units, $24.90"</span>,
+  <span class="k">"inferred"</span>: <span class="s">"Stock appears recently replenished"</span>,
+  <span class="k">"confidence"</span>: <span class="s">"high for presence, low for stock trend"</span>,
+  <span class="k">"evidence"</span>: [<span class="s">"photo_01.jpg"</span>, <span class="s">"photo_02.jpg"</span>]
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="verify-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/trust/verification</span>
+          <h2 id="verify-title">Operator verification</h2>
+          <p class="muted">Trust in a marketplace of humans starts with verified humans. Here is exactly where that stands today — no overstating.</p>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>check</th><th>status</th><th>notes</th></tr></thead>
+            <tbody>
+              <tr><td>Real, single human operator</td><td><span class="pill pill-ok">true</span></td><td>One person, publicly profiled at <a href="/profile">/profile</a>.</td></tr>
+              <tr><td>Contactable identity</td><td><span class="pill pill-ok">true</span></td><td>Direct email; responses come from the same person who does the work.</td></tr>
+              <tr><td>Response SLA tracked</td><td><span class="pill pill-ok">true</span></td><td>First response under 12 hours, any day of the week; misses will be published.</td></tr>
+              <tr><td>Third-party identity verification</td><td><span class="pill pill-warn">pending</span></td><td>Planned: government-ID verification through an independent provider.</td></tr>
+              <tr><td>Public track record</td><td><span class="pill pill-warn">building</span></td><td>Completed-task stats will be published as volume grows.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="independent-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/trust/independent</span>
+          <h2 id="independent-title">Verify us independently</h2>
+          <p class="muted">Every claim on this page is ours; these are the ones vouched for by systems we don't control.</p>
+        </div>
+        <ul class="endpoint-list">
+          <li class="endpoint-row">
+            <a class="mono-link" href="https://registry.modelcontextprotocol.io/v0/servers?search=dev.humanforai/humanforai" rel="noopener">official MCP registry — dev.humanforai/humanforai</a>
+            <p class="endpoint-desc">Publishing under this namespace required cryptographic proof of control over humanforai.dev — a squatter or impersonator can't reproduce it.</p>
+          </li>
+          <li class="endpoint-row">
+            <a class="mono-link" href="https://smithery.ai/servers/humanforai/humanforai" rel="noopener">smithery.ai/servers/humanforai/humanforai</a>
+            <p class="endpoint-desc">Independent MCP directory: domain-verified listing, live health scans of the /mcp endpoint, quality score computed by Smithery, not by us.</p>
+          </li>
+          <li class="endpoint-row">
+            <a class="mono-link" href="https://www.npmjs.com/package/humanforai" rel="noopener">npmjs.com/package/humanforai</a>
+            <p class="endpoint-desc">Public package with published, inspectable source — the same code any stdio client runs.</p>
+          </li>
+          <li class="endpoint-row">
+            <a class="mono-link" href="https://github.com/humanforai/humanforai-mcp" rel="noopener">github.com/humanforai/humanforai-mcp</a>
+            <p class="endpoint-desc">Open source repository for the MCP proxy — read exactly what it sends and where.</p>
+          </li>
+        </ul>
+        <p class="small muted" style="margin-top:1rem">Also checkable in this session: the <a class="mono-link" href="/mcp">/mcp</a> endpoint answers live on this domain, and every manifest here is served over the same verified HTTPS origin.</p>
+      </div>
+    </section>
+
+    <section class="block" id="receipts" aria-labelledby="receipts-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/trust/receipts</span>
+          <h2 id="receipts-title">Every delivered task comes with a signed receipt</h2>
+          <p class="muted">You don't have to take our word that a deliverable is the one we sent. Check it yourself, offline.</p>
+        </div>
+        <p>When a task reaches <span class="mono-link">delivered</span>, the status response gains three fields: <span class="mono-link">receipt</span> (a compact JWS signed with Ed25519), <span class="mono-link">deliverable_sha256</span>, and <span class="mono-link">receipt_issued_at</span>. The signature covers the hash of the deliverable text together with the task's lifecycle timestamps. The public key is published at <a class="mono-link" href="/.well-known/jwks.json">/.well-known/jwks.json</a>; verification needs no account and no call back to us.</p>
+        <div class="code-titled">
+          <div class="code-title">Verify a receipt (Node, standard JOSE library)</div>
+          <pre class="code"><code><span class="c">// npm i jose</span>
+<span class="k">import</span> { jwtVerify, createRemoteJWKSet } <span class="k">from</span> <span class="s">'jose'</span>;
+<span class="k">import</span> { createHash } <span class="k">from</span> <span class="s">'node:crypto'</span>;
+
+<span class="k">const</span> task = <span class="k">await</span> (<span class="k">await</span> fetch(<span class="s">'https://humanforai.dev/api/v1/tasks/YOUR_TASK_ID'</span>)).json();
+<span class="k">const</span> jwks = createRemoteJWKSet(<span class="k">new</span> URL(<span class="s">'https://humanforai.dev/.well-known/jwks.json'</span>));
+
+<span class="c">// 1. the receipt is genuinely signed by humanforai.dev</span>
+<span class="k">const</span> { payload } = <span class="k">await</span> jwtVerify(task.receipt, jwks, { issuer: <span class="s">'https://humanforai.dev'</span> });
+
+<span class="c">// 2. the deliverable you hold is the one that was signed</span>
+<span class="k">const</span> mine = createHash(<span class="s">'sha256'</span>).update(task.operator_notes, <span class="s">'utf8'</span>).digest(<span class="s">'hex'</span>);
+console.log(mine === payload.deliverable_sha256 ? <span class="s">'intact'</span> : <span class="s">'ALTERED'</span>);
+console.log(payload.timeline);</code></pre>
+        </div>
+        <p class="small muted" style="margin-top:1rem"><strong>What this proves:</strong> the deliverable is byte-identical to what was delivered, and the receipt came from this domain. <strong>What it does not prove:</strong> that the timestamps are independently attested — they are our own assertion, signed. Nobody outside this service witnessed them. Anchoring receipt digests in a system we don't control is one of the <a href="#roadmap">known gaps below</a>, and until it ships we'd rather name the gap than let a signature imply more than it carries. Receipts are not issued retroactively: tasks delivered before 2026-07-20 have none.</p>
+      </div>
+    </section>
+
+    <section class="block" id="roadmap" aria-labelledby="roadmap-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/trust/roadmap</span>
+          <h2 id="roadmap-title">Known gaps, published before they're closed</h2>
+          <p class="muted">Everything above has limits, and these are the ones we can name. Each entry is open — nothing here works yet. Listing a gap in public is cheaper than being caught in one, and it lets you weigh what the guarantees actually cover today rather than what they might cover later.</p>
+        </div>
+        <ul class="roadmap-list">
+          <li class="roadmap-item">
+            <div class="roadmap-head">
+              <h3>Put delivery times beyond our own reach</h3>
+              <span class="pill">not built yet</span>
+            </div>
+            <p>Publish a periodic digest of issued receipt hashes into a system we don't control, so the delivery timeline can be checked against a record we can't quietly rewrite.</p>
+            <p class="roadmap-gap"><strong>Today:</strong> the timestamps inside a receipt are our own claim, signed by us. The signature proves we wrote them; nothing proves we wrote them honestly.</p>
+            <p class="roadmap-meta"><span class="roadmap-id">external_timestamp_anchoring</span> · the open half of the signed-receipts design</p>
+          </li>
+          <li class="roadmap-item">
+            <div class="roadmap-head">
+              <h3>Cover photos and files, not just text</h3>
+              <span class="pill">not built yet</span>
+            </div>
+            <p>Extend receipts to fingerprint photo and file deliverables alongside the delivered text.</p>
+            <p class="roadmap-gap"><strong>Today:</strong> a receipt covers the text of a deliverable only. If a task's evidence is an image, the receipt says nothing about whether that image is the one we sent.</p>
+            <p class="roadmap-meta"><span class="roadmap-id">media_deliverable_hashing</span> · current receipts are text-only</p>
+          </li>
+          <li class="roadmap-item">
+            <div class="roadmap-head">
+              <h3>Rehearse a key change before we need one</h3>
+              <span class="pill">not built yet</span>
+            </div>
+            <p>Perform and document a real signing-key rotation: publish a new key, sign new receipts with it, and keep the retired public key published so existing receipts keep verifying.</p>
+            <p class="roadmap-gap"><strong>Today:</strong> the mechanism exists — every receipt names the key that signed it — but it has never been exercised. One key has ever been used, so rotation is a design claim, not a demonstrated one.</p>
+            <p class="roadmap-meta"><span class="roadmap-id">receipt_key_rotation_policy</span> · raised by another agent in a public thread, 20 Jul 2026</p>
+          </li>
+          <li class="roadmap-item">
+            <div class="roadmap-head">
+              <h3>Decide what happens if a key must be revoked</h3>
+              <span class="pill">not built yet</span>
+            </div>
+            <p>Specify the compromise case, which is not the same as the planned case: how a revocation is announced, whether affected receipts are re-issued, and how a verifier should treat a key that has disappeared from the published set.</p>
+            <p class="roadmap-gap"><strong>Today:</strong> unspecified. A key withdrawn for compromise rather than replaced on schedule would silently strand every receipt it signed.</p>
+            <p class="roadmap-meta"><span class="roadmap-id">receipt_key_compromise_semantics</span> · raised in the same thread, 20 Jul 2026</p>
+          </li>
+        </ul>
+        <div class="notice notice-warn">
+          <strong>None of this is a promise.</strong> A roadmap is a statement of intent, and intentions have a poor track record compared to shipped code. Treat an item as real only once it is documented as working — here and in the <code>signed_receipts</code> block of <a class="mono-link" href="/agent.json">/agent.json</a>. The same four items are published machine-readably in that file's <code>roadmap</code> block, carrying the same warning.
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="cta-band">
+          <div>
+            <span class="machine">"review_policy": "human_reviewed"</span>
+            <h2>Questions before you trust it?</h2>
+            <p>Ask directly — the operator answers personally.</p>
+          </div>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="/contact">Contact the operator</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="logo" href="/">
+            <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+            Human For AI
+          </a>
+          <p class="muted" style="margin-top:0.9rem;max-width:36ch">A human endpoint for AI agents: human-in-the-loop services for autonomous workflows, developers, and AI systems.</p>
+          <span class="status-live">operator online</span>
+        </div>
+        <div>
+          <h3>platform/</h3>
+          <ul>
+            <li><a href="/services">Services</a></li>
+            <li><a href="/pricing">Pricing</a></li>
+            <li><a href="/request">Submit a task</a></li>
+            <li><a href="/for-agents">For agents</a></li>
+            <li><a href="/developers">Developers</a></li>
+            <li><a href="/use-cases">Use cases</a></li>
+            <li><a href="/tasks">Task status</a></li>
+            <li><a href="/admin">Admin</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>machine/</h3>
+          <ul>
+            <li><a class="mono-link" href="/.well-known/agent.json">/.well-known/agent.json</a></li>
+            <li><a class="mono-link" href="/.well-known/human.json">/.well-known/human.json</a></li>
+            <li><a class="mono-link" href="/.well-known/capabilities.json">/.well-known/capabilities.json</a></li>
+            <li><a class="mono-link" href="/.well-known/services.json">/.well-known/services.json</a></li>
+            <li><a class="mono-link" href="/openapi.json">/openapi.json</a></li>
+            <li><a class="mono-link" href="/api#mcp">/mcp — MCP server</a></li>
+            <li><a class="mono-link" href="/llms.txt">/llms.txt</a></li>
+            <li><a class="mono-link" href="/api">/api — docs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>operator/</h3>
+          <ul>
+            <li><a href="/profile">Operator profile</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/trust">Trust &amp; verification</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span>© <span data-year>2026</span> Human For AI. Early infrastructure, honestly labeled: free pilot — every service is free during the proof of concept.</span>
+        <span class="machine">api_version 1.8.0 · en</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/store.js" defer></script>
+  <script src="/js/app.js" defer></script>
+</body>
+</html>

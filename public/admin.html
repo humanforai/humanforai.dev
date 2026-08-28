@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin — Human For AI</title>
+  <meta name="description" content="Operator dashboard for incoming Human For AI task requests.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#0b1120">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <!-- ?v= stamps: bump when css/js changes so cached copies can't outlive the HTML -->
+  <link rel="stylesheet" href="/css/style.css?v=6">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="/" aria-label="Human For AI home">
+        <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+        Human For AI
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/api">API</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/trust">Trust</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a class="nav-agent" href="/.well-known/agent.json">/agent.json</a></li>
+          <li><a class="btn btn-primary btn-sm" href="/request">Submit a task</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="page-head">
+      <div class="wrap">
+        <span class="eyebrow">GET /admin <span class="dim">· operator only</span></span>
+        <h1>Incoming requests</h1>
+        <p class="lede">The operator's view: every submitted task, its budget, deadline, and a status control. Status changes are visible immediately on the public status page.</p>
+      </div>
+    </div>
+
+    <section class="block" id="admin-app">
+      <div class="wrap">
+
+        <div style="max-width:480px">
+          <form id="admin-key-form" class="panel">
+            <div class="field">
+              <label for="admin-key-input">Admin key</label>
+              <input type="password" id="admin-key-input" autocomplete="current-password" placeholder="admin key">
+              <span class="hint">The server's <code>ADMIN_KEY</code>. For local development, <code>server.js</code> prints a per-run key at startup when the env var is unset. Without a running server, the dashboard shows tasks stored in this browser.</span>
+            </div>
+            <div id="admin-key-error" class="form-error" role="alert" hidden></div>
+            <button class="btn btn-primary" type="submit">Open dashboard</button>
+          </form>
+        </div>
+
+        <div id="admin-dashboard" hidden>
+          <div class="admin-bar">
+            <p class="machine muted" id="admin-source" style="margin:0"></p>
+            <button type="button" class="btn btn-ghost btn-sm" id="layout-reset">reset layout</button>
+          </div>
+
+          <div id="admin-sections">
+
+            <section class="admin-section" data-section="traffic" id="traffic-section" hidden>
+              <div class="section-bar">
+                <button type="button" class="section-toggle" aria-expanded="true">
+                  <span class="section-caret" aria-hidden="true">▾</span>
+                  <h2>Traffic</h2>
+                </button>
+                <div class="section-tools">
+                  <button type="button" class="btn btn-ghost btn-xs" data-move="up" title="Move section up" aria-label="Move Traffic up">↑</button>
+                  <button type="button" class="btn btn-ghost btn-xs" data-move="down" title="Move section down" aria-label="Move Traffic down">↓</button>
+                </div>
+              </div>
+              <div class="section-body">
+                <p class="machine muted" style="margin-bottom:1rem">GET /api/v1/analytics · who is calling: humans, scripts, crawlers, agents</p>
+                <div class="stat-row" id="traffic-stats"></div>
+                <div class="panel" style="padding:1.25rem 1.5rem;margin-bottom:1rem">
+                  <p class="machine muted small" style="margin:0 0 0.75rem">requests per day — last 14 days</p>
+                  <div class="chart" id="traffic-chart" role="img" aria-label="Daily request volume, machine vs human"></div>
+                  <div class="chart-x" id="traffic-chart-x"></div>
+                  <p class="small muted" style="margin:0.75rem 0 0"><span class="chip chip-m"></span> machine callers (scripts, AI &amp; search crawlers, MCP clients) · <span class="chip chip-h"></span> human browsers</p>
+                </div>
+                <div class="grid grid-2" style="margin-bottom:1rem;align-items:start">
+                  <div class="table-scroll">
+                    <table>
+                      <caption class="skip-link">Callers by class, last 30 days</caption>
+                      <thead><tr><th>caller class (30d)</th><th>requests</th></tr></thead>
+                      <tbody id="class-rows"></tbody>
+                    </table>
+                  </div>
+                  <div class="table-scroll">
+                    <table>
+                      <caption class="skip-link">Top user agents in recent machine traffic</caption>
+                      <thead><tr><th>recent user agents</th><th>class</th><th>hits</th></tr></thead>
+                      <tbody id="ua-rows"></tbody>
+                    </table>
+                  </div>
+                </div>
+                <h3>Recent machine activity</h3>
+                <div class="table-scroll">
+                  <table>
+                    <caption class="skip-link">Recent machine requests</caption>
+                    <thead><tr><th>when</th><th>kind</th><th>what</th><th>caller</th></tr></thead>
+                    <tbody id="event-rows"></tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            <section class="admin-section" data-section="tasks">
+              <div class="section-bar">
+                <button type="button" class="section-toggle" aria-expanded="true">
+                  <span class="section-caret" aria-hidden="true">▾</span>
+                  <h2>Tasks <span class="section-count" id="tasks-count"></span></h2>
+                </button>
+                <div class="section-tools">
+                  <button type="button" class="btn btn-ghost btn-xs" data-move="up" title="Move section up" aria-label="Move Tasks up">↑</button>
+                  <button type="button" class="btn btn-ghost btn-xs" data-move="down" title="Move section down" aria-label="Move Tasks down">↓</button>
+                </div>
+              </div>
+              <div class="section-body">
+                <p class="machine muted" style="margin-bottom:1rem">active requests · rejected ones live in Archive</p>
+                <div class="stat-row" id="stat-row"></div>
+                <div class="table-scroll">
+                  <table>
+                    <caption class="skip-link">Incoming task requests</caption>
+                    <thead>
+                      <tr>
+                        <th>task_id</th>
+                        <th>type</th>
+                        <th>description</th>
+                        <th>budget</th>
+                        <th>deadline</th>
+                        <th>status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="task-rows"></tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            <section class="admin-section" data-section="messages">
+              <div class="section-bar">
+                <button type="button" class="section-toggle" aria-expanded="true">
+                  <span class="section-caret" aria-hidden="true">▾</span>
+                  <h2>Messages <span class="section-count" id="messages-count"></span></h2>
+                </button>
+                <div class="section-tools">
+                  <button type="button" class="btn btn-ghost btn-xs" id="messages-clear" title="Delete every message">clear all</button>
+                  <button type="button" class="btn btn-ghost btn-xs" data-move="up" title="Move section up" aria-label="Move Messages up">↑</button>
+                  <button type="button" class="btn btn-ghost btn-xs" data-move="down" title="Move section down" aria-label="Move Messages down">↓</button>
+                </div>
+              </div>
+              <div class="section-body">
+                <p class="machine muted" style="margin-bottom:1rem">POST /api/v1/messages → inbox</p>
+                <div class="table-scroll">
+                  <table>
+                    <caption class="skip-link">Incoming contact messages</caption>
+                    <thead>
+                      <tr>
+                        <th>message_id</th>
+                        <th>from</th>
+                        <th>subject / message</th>
+                        <th>reply_to</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody id="message-rows"></tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            <section class="admin-section" data-section="blocklist">
+              <div class="section-bar">
+                <button type="button" class="section-toggle" aria-expanded="false">
+                  <span class="section-caret" aria-hidden="true">▾</span>
+                  <h2>Blocklist <span class="section-count" id="blocklist-count"></span></h2>
+                </button>
+                <div class="section-tools">
+                  <button type="button" class="btn btn-ghost btn-xs" data-move="up" title="Move section up" aria-label="Move Blocklist up">↑</button>
+                  <button type="button" class="btn btn-ghost btn-xs" data-move="down" title="Move section down" aria-label="Move Blocklist down">↓</button>
+                </div>
+              </div>
+              <div class="section-body">
+                <p class="machine muted" style="margin-bottom:1rem">blocked client hashes · submissions from these get 403 · block from any task/message row</p>
+                <div class="table-scroll">
+                  <table>
+                    <caption class="skip-link">Blocked clients</caption>
+                    <thead>
+                      <tr>
+                        <th>client hash</th>
+                        <th>note</th>
+                        <th>blocked at</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody id="blocklist-rows"></tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            <section class="admin-section" data-section="archive">
+              <div class="section-bar">
+                <button type="button" class="section-toggle" aria-expanded="false">
+                  <span class="section-caret" aria-hidden="true">▾</span>
+                  <h2>Archive <span class="section-count" id="archive-count"></span></h2>
+                </button>
+                <div class="section-tools">
+                  <button type="button" class="btn btn-ghost btn-xs" data-move="up" title="Move section up" aria-label="Move Archive up">↑</button>
+                  <button type="button" class="btn btn-ghost btn-xs" data-move="down" title="Move section down" aria-label="Move Archive down">↓</button>
+                </div>
+              </div>
+              <div class="section-body">
+                <p class="machine muted" style="margin-bottom:1rem">rejected tasks · set a status here to bring one back</p>
+                <div class="table-scroll">
+                  <table>
+                    <caption class="skip-link">Rejected task requests</caption>
+                    <thead>
+                      <tr>
+                        <th>task_id</th>
+                        <th>type</th>
+                        <th>description</th>
+                        <th>budget</th>
+                        <th>deadline</th>
+                        <th>status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="archive-rows"></tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+          </div>
+
+          <p class="notice" id="traffic-unavailable" hidden>Traffic analytics needs the production API (Firestore) — not available from localStorage mode.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Shown when a task is moved to `accepted`; the value becomes `eta`
+         on the task, which agents read when they poll for status. -->
+    <dialog id="eta-dialog" class="modal" aria-labelledby="eta-dialog-title">
+      <h3 id="eta-dialog-title" style="margin-top:0">Delivery ETA</h3>
+      <p class="small muted" id="eta-dialog-task"></p>
+
+      <div class="field" style="margin-bottom:0.5rem">
+        <label for="eta-input">Estimated delivery</label>
+        <input type="datetime-local" id="eta-input">
+        <span class="hint" id="eta-hint">Your local time — agents receive it as UTC.</span>
+      </div>
+
+      <div class="quick-set" id="eta-quick">
+        <button type="button" class="btn btn-ghost btn-xs" data-eta-hours="2">+2h</button>
+        <button type="button" class="btn btn-ghost btn-xs" data-eta-hours="6">+6h</button>
+        <button type="button" class="btn btn-ghost btn-xs" data-eta-hours="24">+24h</button>
+        <button type="button" class="btn btn-ghost btn-xs" data-eta-hours="72">+3d</button>
+      </div>
+
+      <p class="form-error" id="eta-error" hidden></p>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="eta-cancel">Cancel</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="eta-skip">Accept without ETA</button>
+        <button type="button" class="btn btn-primary btn-sm" id="eta-save">Set ETA &amp; accept</button>
+      </div>
+    </dialog>
+
+    <!-- operator_notes: the deliverable of record. Shown on the public
+         status page, read directly by status_poll agents, and the exact
+         bytes the signed receipt hashes. -->
+    <dialog id="notes-dialog" class="modal modal-wide" aria-labelledby="notes-dialog-title">
+      <h3 id="notes-dialog-title" style="margin-top:0">Operator notes</h3>
+      <p class="small muted" id="notes-dialog-task"></p>
+
+      <div class="field" style="margin-bottom:0.5rem">
+        <label for="notes-input">Notes / deliverable</label>
+        <textarea id="notes-input" maxlength="2000" placeholder="What you found, did, or decided. This is the text the requester receives."></textarea>
+        <span class="hint"><span id="notes-count">0</span>/2000 · visible on this task's public status page</span>
+      </div>
+
+      <p class="notice small" id="notes-receipt-hint" hidden>Delivering signs these bytes into the task's receipt. Leave it empty and the task completes with no receipt.</p>
+      <p class="form-error" id="notes-error" hidden></p>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="notes-cancel">Cancel</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="notes-skip" hidden>Deliver without receipt</button>
+        <button type="button" class="btn btn-primary btn-sm" id="notes-save">Save</button>
+      </div>
+    </dialog>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-note" style="border-top:none;padding-top:0">
+        <span>© <span data-year>2026</span> Human For AI — operator dashboard.</span>
+        <span class="machine">api_version 1.8.0</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/store.js?v=4" defer></script>
+  <script src="/js/app.js" defer></script>
+  <script src="/js/admin.js?v=7" defer></script>
+</body>
+</html>

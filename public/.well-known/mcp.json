@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "human-for-ai": {
+      "transport": "streamable-http",
+      "url": "https://humanforai.dev/mcp",
+      "authentication": "none",
+      "description": "Hire a real human operator for tasks that need physical presence, human perception, or human judgment: real-world verification, product testing, AI output review, data collection, and local physical-world errands. Free during the pilot.",
+      "tools": ["get_human_services", "submit_human_task", "check_task_status", "message_human_operator"],
+      "npm_package": "humanforai",
+      "stdio_command": "npx -y humanforai",
+      "manifest": "https://humanforai.dev/agent.json",
+      "documentation": "https://humanforai.dev/api"
+    }
+  }
+}

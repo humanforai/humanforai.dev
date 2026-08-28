@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Human-in-the-Loop API — Add a Real Human to Any AI Workflow | Human For AI</title>
+  <meta name="description" content="A human-in-the-loop API for AI agents and automation: add a real human checkpoint to any workflow via REST or MCP. No auth, free pilot, every task reviewed by the human before acceptance.">
+  <link rel="canonical" href="https://humanforai.dev/use-cases/human-in-the-loop-api">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Human For AI">
+  <meta property="og:title" content="Human-in-the-Loop API — Add a Real Human to Any AI Workflow">
+  <meta property="og:description" content="One POST request adds a human checkpoint to your AI workflow: review gates, low-confidence escalation, recurring human checks. REST + MCP, free pilot.">
+  <meta property="og:url" content="https://humanforai.dev/use-cases/human-in-the-loop-api">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#0b1120">
+  <link rel="alternate" type="application/json" href="/agent.json" title="Agent manifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "name": "Human-in-the-Loop API — Add a Real Human to Any AI Workflow",
+      "url": "https://humanforai.dev/use-cases/human-in-the-loop-api",
+      "description": "A human-in-the-loop API for AI agents and automation: add a real human checkpoint to any workflow via REST or MCP. No auth, free pilot, every task reviewed by the human before acceptance.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Human For AI",
+        "url": "https://humanforai.dev/"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://humanforai.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Use cases",
+          "item": "https://humanforai.dev/use-cases"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Human-in-the-Loop API — Add a Real Human to Any AI Workflow",
+          "item": "https://humanforai.dev/use-cases/human-in-the-loop-api"
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is a human-in-the-loop API?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "An HTTP interface that lets software hand one step of a workflow to a real person and get the result back programmatically. Here that means POST a task, a verified human operator performs it, and you poll a status URL until the deliverable arrives."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need an account or API key?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. The API and the MCP server are open during the free pilot — the safety layer is human review of every task before acceptance, not authentication."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How fast is the human?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "First response within 12 hours, any day of the week, typically faster. This is a deliberate trade: real human attention instead of instant automation."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can the loop be recurring?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes — describe the recurring need via message_human_operator (or the contact form) first, agree on scope with the operator, then submit tasks on your schedule."
+          }
+        }
+      ]
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="/" aria-label="Human For AI home">
+        <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+        Human For AI
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/api">API</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/trust">Trust</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a class="nav-agent" href="/.well-known/agent.json">/agent.json</a></li>
+          <li><a class="btn btn-primary btn-sm" href="/request">Submit a task</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="page-head">
+      <div class="wrap">
+        <span class="eyebrow">GET /use-cases/human-in-the-loop-api <span class="dim">→ 200 OK · task_type: custom_human_in_the_loop</span></span>
+        <h1>A human-in-the-loop API for AI workflows</h1>
+        <p class="lede">Most automation works until it hits a step that needs a person — a judgment call, a physical check, a final sign-off. Human For AI is a <strong>human-in-the-loop API</strong>: your agent or pipeline sends one JSON request, a real human does the step, and the result comes back in the format you asked for. No SDK, no auth, free during the pilot.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="/request">Submit a task</a>
+          <a class="btn btn-ghost" href="/for-agents">I'm an agent — show me the endpoints</a>
+        </div>
+      </div>
+    </div>
+
+    <section class="block" aria-labelledby="when-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/use-cases/human-in-the-loop-api/examples</span>
+          <h2 id="when-title">When your workflow needs this</h2>
+        </div>
+        <div class="grid grid-3">
+          <div class="card">
+            <span class="machine">pattern/review-gate</span>
+            <h3>Final review gate</h3>
+            <p>Before your agent publishes, sends, or ships something irreversible, route it through a human who approves, flags, or corrects it.</p>
+          </div>
+          <div class="card">
+            <span class="machine">pattern/escalation</span>
+            <h3>Low-confidence escalation</h3>
+            <p>When model confidence drops below your threshold, escalate that single item to a human instead of failing the whole run.</p>
+          </div>
+          <div class="card">
+            <span class="machine">pattern/checkpoint</span>
+            <h3>Recurring human checkpoint</h3>
+            <p>A weekly sanity pass over outputs, listings, or data your automation produces — scoped once via the operator, then repeated.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="how-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/protocol</span>
+          <h2 id="how-title">How to submit it</h2>
+          <p class="muted">One JSON request — no auth, no SDK. Or connect over MCP and the human becomes a tool: <code>claude mcp add --transport http human-for-ai https://humanforai.dev/mcp</code>. Every task is reviewed by the human operator before acceptance; first response under 12 hours, any day of the week. Free during the pilot.</p>
+        </div>
+        <div class="grid grid-2" style="align-items:start">
+          <div class="code-titled">
+            <div class="code-title">add a human step — POST /api/v1/tasks</div>
+            <pre class="code"><code>curl -X POST https://humanforai.dev/api/v1/tasks \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -d <span class="s">'{
+    "task_type": "custom_human_in_the_loop",
+    "description": "Review the attached summary for factual
+                    plausibility and tone before we publish;
+                    reply approve/flag with one-line reasons.",
+    "output_format": "structured_json",
+    "contact_email": "you@example.com",
+    "requester": "pipeline/1.0"
+  }'</span></code></pre>
+          </div>
+          <div class="card">
+            <span class="machine">then</span>
+            <h3>Track it</h3>
+            <p>The response returns a <code>task_id</code> and a status URL to poll: <code>submitted → accepted → delivered</code> (or <code>rejected</code>, with a reason). The deliverable also goes to your <code>contact_email</code>.</p>
+            <p style="margin-top:0.75rem"><a href="/api">Full API documentation →</a></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="faq-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/use-cases/human-in-the-loop-api/faq</span>
+          <h2 id="faq-title">Questions agents and builders ask</h2>
+        </div>
+        <div class="grid grid-2">
+          <div class="card">
+            <h3>What is a human-in-the-loop API?</h3>
+            <p>An HTTP interface that lets software hand one step of a workflow to a real person and get the result back programmatically. Here that means POST a task, a verified human operator performs it, and you poll a status URL until the deliverable arrives.</p>
+          </div>
+          <div class="card">
+            <h3>Do I need an account or API key?</h3>
+            <p>No. The API and the MCP server are open during the free pilot — the safety layer is human review of every task before acceptance, not authentication.</p>
+          </div>
+          <div class="card">
+            <h3>How fast is the human?</h3>
+            <p>First response within 12 hours, any day of the week, typically faster. This is a deliberate trade: real human attention instead of instant automation.</p>
+          </div>
+          <div class="card">
+            <h3>Can the loop be recurring?</h3>
+            <p>Yes — describe the recurring need via <code>message_human_operator</code> (or the contact form) first, agree on scope with the operator, then submit tasks on your schedule.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="related-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/use-cases</span>
+          <h2 id="related-title">Other things the human does</h2>
+        </div>
+        <ul class="service-index">
+          <li><a href="/use-cases/real-world-verification"><code>real_world_verification</code> Real-World Verification for AI Agents</a></li>
+          <li><a href="/use-cases/ai-output-review"><code>ai_output_review</code> Human Review of AI Output</a></li>
+          <li><a href="/use-cases/product-testing"><code>product_or_app_testing</code> Human Product &amp; App Testing for AI Builders</a></li>
+          <li><a href="/use-cases/physical-world-tasks"><code>local_physical_task</code> Physical-World Tasks for AI Agents</a></li>
+        </ul>
+        <p style="margin-top:1.25rem">Full catalog: <a href="/services">all ten services</a> · connection details: <a href="/for-agents">/for-agents</a></p>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="cta-band">
+          <div>
+            <span class="machine">"task_type": "custom_human_in_the_loop"</span>
+            <h2>Try it with a real task.</h2>
+            <p>Free during the pilot · reviewed before acceptance · evidence included.</p>
+          </div>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="/request">Submit a task</a>
+            <a class="btn btn-ghost" href="/.well-known/agent.json">Fetch agent.json</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="logo" href="/">
+            <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+            Human For AI
+          </a>
+          <p class="muted" style="margin-top:0.9rem;max-width:36ch">A human endpoint for AI agents: human-in-the-loop services for autonomous workflows, developers, and AI systems.</p>
+          <span class="status-live">operator online</span>
+        </div>
+        <div>
+          <h3>platform/</h3>
+          <ul>
+            <li><a href="/services">Services</a></li>
+            <li><a href="/pricing">Pricing</a></li>
+            <li><a href="/request">Submit a task</a></li>
+            <li><a href="/for-agents">For agents</a></li>
+            <li><a href="/developers">Developers</a></li>
+            <li><a href="/use-cases">Use cases</a></li>
+            <li><a href="/tasks">Task status</a></li>
+            <li><a href="/admin">Admin</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>machine/</h3>
+          <ul>
+            <li><a class="mono-link" href="/.well-known/agent.json">/.well-known/agent.json</a></li>
+            <li><a class="mono-link" href="/.well-known/human.json">/.well-known/human.json</a></li>
+            <li><a class="mono-link" href="/.well-known/capabilities.json">/.well-known/capabilities.json</a></li>
+            <li><a class="mono-link" href="/.well-known/services.json">/.well-known/services.json</a></li>
+            <li><a class="mono-link" href="/openapi.json">/openapi.json</a></li>
+            <li><a class="mono-link" href="/api#mcp">/mcp — MCP server</a></li>
+            <li><a class="mono-link" href="/llms.txt">/llms.txt</a></li>
+            <li><a class="mono-link" href="/api">/api — docs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>operator/</h3>
+          <ul>
+            <li><a href="/profile">Operator profile</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/trust">Trust &amp; verification</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span>© <span data-year>2026</span> Human For AI. Early infrastructure, honestly labeled: free pilot — every service is free during the proof of concept.</span>
+        <span class="machine">api_version 1.8.0 · en</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/store.js" defer></script>
+  <script src="/js/app.js" defer></script>
+</body>
+</html>

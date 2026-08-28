@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pricing — Human For AI</title>
+  <meta name="description" content="All Human For AI services are free during the proof-of-concept pilot: real human verification, testing, judgment, and physical-world tasks for AI agents, at no cost. Paid tiers may come later.">
+  <link rel="canonical" href="https://humanforai.dev/pricing">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Human For AI">
+  <meta property="og:title" content="Pricing — Human For AI">
+  <meta property="og:description" content="Free during the pilot. Every service, every task type — $0 while Human For AI proves the concept.">
+  <meta property="og:url" content="https://humanforai.dev/pricing">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#0b1120">
+  <link rel="alternate" type="application/json" href="/agent.json" title="Agent manifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="/" aria-label="Human For AI home">
+        <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+        Human For AI
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/api">API</a></li>
+          <li><a href="/pricing" aria-current="page">Pricing</a></li>
+          <li><a href="/trust">Trust</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a class="nav-agent" href="/.well-known/agent.json">/agent.json</a></li>
+          <li><a class="btn btn-primary btn-sm" href="/request">Submit a task</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="page-head">
+      <div class="wrap">
+        <span class="eyebrow">GET /pricing <span class="dim">→ 200 OK · model: free_pilot</span></span>
+        <h1>Pricing</h1>
+        <p class="lede"><strong>Everything is free during the proof-of-concept pilot.</strong> You get real human work; the platform gets a track record and feedback. Paid tiers may come later — any change will be announced here and in <a class="mono-link" href="/agent.json">/agent.json</a> first, and tasks accepted during the pilot stay free.</p>
+      </div>
+    </div>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="grid grid-2" style="align-items:start">
+          <div class="card tier tier-featured">
+            <span class="machine">tier: pilot</span>
+            <h3>Everything, free</h3>
+            <div class="tier-price">$0</div>
+            <span class="tier-unit">per task · during the proof-of-concept pilot</span>
+            <ul>
+              <li>All ten services in the <a href="/services">catalog</a></li>
+              <li>Same human review before acceptance</li>
+              <li>Same deliverables, evidence, and stated confidence</li>
+              <li>No payment step, no invoice, no card — ever asked</li>
+            </ul>
+          </div>
+          <div class="card tier">
+            <span class="machine">tier: capacity</span>
+            <h3>The only limit</h3>
+            <div class="tier-price">1 human</div>
+            <span class="tier-unit">honest queue, first come first served</span>
+            <ul>
+              <li>One operator does all the work personally</li>
+              <li>Oversized tasks get a scoped-down counter-proposal</li>
+              <li>Recurring or large projects: <a href="/contact">talk first</a></li>
+              <li>Response under 12 hours, any day of the week</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="notice" style="margin-top:2rem">
+          <strong>How it works during the pilot:</strong> submit a task → the operator reviews and accepts or declines → work happens → you receive the deliverable. That's the whole flow. If demand exceeds capacity, tasks queue in submission order.
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="faq-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/pricing/faq</span>
+          <h2 id="faq-title">Pricing questions</h2>
+        </div>
+        <div class="grid grid-2">
+          <div class="card">
+            <h3>Why free?</h3>
+            <p>The pilot's goal is proof, not revenue: real tasks from real agents, a public track record, and feedback on what machine callers actually need. That's worth more than early invoices.</p>
+          </div>
+          <div class="card">
+            <h3>What's the catch?</h3>
+            <p>None hidden. Every task still goes through <a href="/trust">human review</a> — unsafe or deceptive requests are declined, free or not. And capacity is one human, so oversized tasks may be counter-proposed at smaller scope.</p>
+          </div>
+          <div class="card">
+            <h3>Will it stay free?</h3>
+            <p>Probably not forever. If paid tiers arrive, they'll be published here and in <code>agent.json</code> before anything changes, and work accepted during the pilot is never billed retroactively.</p>
+          </div>
+          <div class="card">
+            <h3>What about <code>budget_usd</code>?</h3>
+            <p>Older integrations may still send it. The API accepts the field and ignores it during the pilot — nothing is ever charged, whatever the value.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="cta-band">
+          <div>
+            <span class="machine">"pricing": "free_pilot"</span>
+            <h2>Costs nothing to try.</h2>
+            <p>Submit a real task — the pilot is free, the work is real.</p>
+          </div>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="/request">Submit a task</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="logo" href="/">
+            <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+            Human For AI
+          </a>
+          <p class="muted" style="margin-top:0.9rem;max-width:36ch">A human endpoint for AI agents: human-in-the-loop services for autonomous workflows, developers, and AI systems.</p>
+          <span class="status-live">operator online</span>
+        </div>
+        <div>
+          <h3>platform/</h3>
+          <ul>
+            <li><a href="/services">Services</a></li>
+            <li><a href="/pricing">Pricing</a></li>
+            <li><a href="/request">Submit a task</a></li>
+            <li><a href="/for-agents">For agents</a></li>
+            <li><a href="/developers">Developers</a></li>
+            <li><a href="/use-cases">Use cases</a></li>
+            <li><a href="/tasks">Task status</a></li>
+            <li><a href="/admin">Admin</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>machine/</h3>
+          <ul>
+            <li><a class="mono-link" href="/.well-known/agent.json">/.well-known/agent.json</a></li>
+            <li><a class="mono-link" href="/.well-known/human.json">/.well-known/human.json</a></li>
+            <li><a class="mono-link" href="/.well-known/capabilities.json">/.well-known/capabilities.json</a></li>
+            <li><a class="mono-link" href="/.well-known/services.json">/.well-known/services.json</a></li>
+            <li><a class="mono-link" href="/openapi.json">/openapi.json</a></li>
+            <li><a class="mono-link" href="/api#mcp">/mcp — MCP server</a></li>
+            <li><a class="mono-link" href="/llms.txt">/llms.txt</a></li>
+            <li><a class="mono-link" href="/api">/api — docs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>operator/</h3>
+          <ul>
+            <li><a href="/profile">Operator profile</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/trust">Trust &amp; verification</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span>© <span data-year>2026</span> Human For AI. Early infrastructure, honestly labeled: free pilot — every service is free during the proof of concept.</span>
+        <span class="machine">api_version 1.8.0 · en</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/store.js" defer></script>
+  <script src="/js/app.js" defer></script>
+</body>
+</html>

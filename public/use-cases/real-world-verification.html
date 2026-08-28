@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Real-World Verification for AI Agents — A Human Checks It in Person | Human For AI</title>
+  <meta name="description" content="Human verification for AI agents: a real person physically verifies businesses, products, addresses, prices, and conditions, and returns evidence — photos, reports, structured JSON. REST + MCP.">
+  <link rel="canonical" href="https://humanforai.dev/use-cases/real-world-verification">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Human For AI">
+  <meta property="og:title" content="Real-World Verification for AI Agents">
+  <meta property="og:description" content="Your agent claims something exists — a human goes and checks. Storefronts, shelf stock, prices, signage, delivered goods. Photo evidence included.">
+  <meta property="og:url" content="https://humanforai.dev/use-cases/real-world-verification">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#0b1120">
+  <link rel="alternate" type="application/json" href="/agent.json" title="Agent manifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "name": "Real-World Verification for AI Agents",
+      "url": "https://humanforai.dev/use-cases/real-world-verification",
+      "description": "Human verification for AI agents: a real person physically verifies businesses, products, addresses, prices, and conditions, and returns evidence — photos, reports, structured JSON. REST + MCP.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Human For AI",
+        "url": "https://humanforai.dev/"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://humanforai.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Use cases",
+          "item": "https://humanforai.dev/use-cases"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Real-World Verification for AI Agents",
+          "item": "https://humanforai.dev/use-cases/real-world-verification"
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What evidence does the human return?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Whatever you request as output_format: a written report, a report with photos, structured JSON, or video. Results state their confidence explicitly — human judgment is assistance, not guaranteed truth."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Where can things be verified?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Coverage is confirmed at review: submit with location_required true and a concrete location_detail, and the operator either accepts, declines, or counter-proposes a remote alternative before any work starts."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How is this different from a data API?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A data API returns what was recorded; this returns what is physically there right now, observed by a person who can notice the things nobody indexed — closures, damage, mismatched signage, empty shelves."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What does it cost?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Nothing during the proof-of-concept pilot. Every task still goes through human review first; illegal, deceptive, or privacy-invasive verification requests are rejected."
+          }
+        }
+      ]
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="/" aria-label="Human For AI home">
+        <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+        Human For AI
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/api">API</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/trust">Trust</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a class="nav-agent" href="/.well-known/agent.json">/agent.json</a></li>
+          <li><a class="btn btn-primary btn-sm" href="/request">Submit a task</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="page-head">
+      <div class="wrap">
+        <span class="eyebrow">GET /use-cases/real-world-verification <span class="dim">→ 200 OK · task_type: real_world_verification</span></span>
+        <h1>Real-world verification by a real human</h1>
+        <p class="lede">Web data lies, listings go stale, and no API can see a shelf. When your agent needs ground truth — does this business exist, is this product in stock, does the address match — a real human goes, looks, and reports back with <strong>evidence you can parse</strong>: photos, a written report, or structured JSON.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="/request">Submit a task</a>
+          <a class="btn btn-ghost" href="/for-agents">I'm an agent — show me the endpoints</a>
+        </div>
+      </div>
+    </div>
+
+    <section class="block" aria-labelledby="when-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/use-cases/real-world-verification/examples</span>
+          <h2 id="when-title">When your workflow needs this</h2>
+        </div>
+        <div class="grid grid-3">
+          <div class="card">
+            <span class="machine">verify/business</span>
+            <h3>Business &amp; storefront checks</h3>
+            <p>Confirm a company physically exists at its claimed address: signage, opening hours, actual activity — with timestamped photos.</p>
+          </div>
+          <div class="card">
+            <span class="machine">verify/product</span>
+            <h3>Shelf, stock &amp; price checks</h3>
+            <p>Is the product on the shelf, at what price, in what condition? A human visit answers what scraping cannot.</p>
+          </div>
+          <div class="card">
+            <span class="machine">verify/condition</span>
+            <h3>Deliveries &amp; real conditions</h3>
+            <p>Confirm something arrived, works, or matches its description — packages, installations, venues, printed materials.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="how-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/protocol</span>
+          <h2 id="how-title">How to submit it</h2>
+          <p class="muted">One JSON request — no auth, no SDK. Or connect over MCP and the human becomes a tool: <code>claude mcp add --transport http human-for-ai https://humanforai.dev/mcp</code>. Every task is reviewed by the human operator before acceptance; first response under 12 hours, any day of the week. Free during the pilot.</p>
+        </div>
+        <div class="grid grid-2" style="align-items:start">
+          <div class="code-titled">
+            <div class="code-title">request verification — POST /api/v1/tasks</div>
+            <pre class="code"><code>curl -X POST https://humanforai.dev/api/v1/tasks \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -d <span class="s">'{
+    "task_type": "real_world_verification",
+    "description": "Verify that [business] at [address] is
+                    open and operating; photograph the
+                    storefront and posted hours.",
+    "location_required": true,
+    "location_detail": "City, address or area",
+    "output_format": "text_report_with_photos",
+    "contact_email": "you@example.com"
+  }'</span></code></pre>
+          </div>
+          <div class="card">
+            <span class="machine">then</span>
+            <h3>Track it</h3>
+            <p>The response returns a <code>task_id</code> and a status URL to poll: <code>submitted → accepted → delivered</code> (or <code>rejected</code>, with a reason). The deliverable also goes to your <code>contact_email</code>.</p>
+            <p style="margin-top:0.75rem"><a href="/api">Full API documentation →</a></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="faq-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/use-cases/real-world-verification/faq</span>
+          <h2 id="faq-title">Questions agents and builders ask</h2>
+        </div>
+        <div class="grid grid-2">
+          <div class="card">
+            <h3>What evidence does the human return?</h3>
+            <p>Whatever you request as <code>output_format</code>: a written report, a report with photos, structured JSON, or video. Results state their confidence explicitly — human judgment is assistance, not guaranteed truth.</p>
+          </div>
+          <div class="card">
+            <h3>Where can things be verified?</h3>
+            <p>Coverage is confirmed at review: submit with <code>location_required</code> true and a concrete <code>location_detail</code>, and the operator either accepts, declines, or counter-proposes a remote alternative before any work starts.</p>
+          </div>
+          <div class="card">
+            <h3>How is this different from a data API?</h3>
+            <p>A data API returns what was recorded; this returns what is physically there right now, observed by a person who can notice the things nobody indexed — closures, damage, mismatched signage, empty shelves.</p>
+          </div>
+          <div class="card">
+            <h3>What does it cost?</h3>
+            <p>Nothing during the proof-of-concept pilot. Every task still goes through human review first; illegal, deceptive, or privacy-invasive verification requests are rejected.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="related-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/use-cases</span>
+          <h2 id="related-title">Other things the human does</h2>
+        </div>
+        <ul class="service-index">
+          <li><a href="/use-cases/human-in-the-loop-api"><code>custom_human_in_the_loop</code> Human-in-the-Loop API — Add a Real Human to Any AI Workflow</a></li>
+          <li><a href="/use-cases/ai-output-review"><code>ai_output_review</code> Human Review of AI Output</a></li>
+          <li><a href="/use-cases/product-testing"><code>product_or_app_testing</code> Human Product &amp; App Testing for AI Builders</a></li>
+          <li><a href="/use-cases/physical-world-tasks"><code>local_physical_task</code> Physical-World Tasks for AI Agents</a></li>
+        </ul>
+        <p style="margin-top:1.25rem">Full catalog: <a href="/services">all ten services</a> · connection details: <a href="/for-agents">/for-agents</a></p>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="cta-band">
+          <div>
+            <span class="machine">"task_type": "real_world_verification"</span>
+            <h2>Try it with a real task.</h2>
+            <p>Free during the pilot · reviewed before acceptance · evidence included.</p>
+          </div>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="/request">Submit a task</a>
+            <a class="btn btn-ghost" href="/.well-known/agent.json">Fetch agent.json</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="logo" href="/">
+            <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+            Human For AI
+          </a>
+          <p class="muted" style="margin-top:0.9rem;max-width:36ch">A human endpoint for AI agents: human-in-the-loop services for autonomous workflows, developers, and AI systems.</p>
+          <span class="status-live">operator online</span>
+        </div>
+        <div>
+          <h3>platform/</h3>
+          <ul>
+            <li><a href="/services">Services</a></li>
+            <li><a href="/pricing">Pricing</a></li>
+            <li><a href="/request">Submit a task</a></li>
+            <li><a href="/for-agents">For agents</a></li>
+            <li><a href="/developers">Developers</a></li>
+            <li><a href="/use-cases">Use cases</a></li>
+            <li><a href="/tasks">Task status</a></li>
+            <li><a href="/admin">Admin</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>machine/</h3>
+          <ul>
+            <li><a class="mono-link" href="/.well-known/agent.json">/.well-known/agent.json</a></li>
+            <li><a class="mono-link" href="/.well-known/human.json">/.well-known/human.json</a></li>
+            <li><a class="mono-link" href="/.well-known/capabilities.json">/.well-known/capabilities.json</a></li>
+            <li><a class="mono-link" href="/.well-known/services.json">/.well-known/services.json</a></li>
+            <li><a class="mono-link" href="/openapi.json">/openapi.json</a></li>
+            <li><a class="mono-link" href="/api#mcp">/mcp — MCP server</a></li>
+            <li><a class="mono-link" href="/llms.txt">/llms.txt</a></li>
+            <li><a class="mono-link" href="/api">/api — docs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>operator/</h3>
+          <ul>
+            <li><a href="/profile">Operator profile</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/trust">Trust &amp; verification</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span>© <span data-year>2026</span> Human For AI. Early infrastructure, honestly labeled: free pilot — every service is free during the proof of concept.</span>
+        <span class="machine">api_version 1.8.0 · en</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/store.js" defer></script>
+  <script src="/js/app.js" defer></script>
+</body>
+</html>

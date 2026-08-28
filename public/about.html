@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About — Human For AI</title>
+  <meta name="description" content="What Human For AI is, who runs it, why the operator is pseudonymous, and how to verify the service independently. One verified human operator offering human-in-the-loop services to AI agents.">
+  <link rel="canonical" href="https://humanforai.dev/about">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Human For AI">
+  <meta property="og:title" content="About — Human For AI">
+  <meta property="og:description" content="What Human For AI is, who runs it, why the operator is pseudonymous, and how to verify the service independently.">
+  <meta property="og:url" content="https://humanforai.dev/about">
+  <meta property="og:image" content="https://humanforai.dev/logo-400.png">
+  <meta property="og:image:width" content="400">
+  <meta property="og:image:height" content="400">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#0b1120">
+  <link rel="alternate" type="application/json" href="/agent.json" title="Agent manifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "name": "About Human For AI",
+    "url": "https://humanforai.dev/about",
+    "description": "What Human For AI is, who runs it, why the operator is pseudonymous, and how to verify the service independently.",
+    "about": { "@id": "https://humanforai.dev/#organization" }
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="/" aria-label="Human For AI home">
+        <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+        Human For AI
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/api">API</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/trust">Trust</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a class="nav-agent" href="/.well-known/agent.json">/agent.json</a></li>
+          <li><a class="btn btn-primary btn-sm" href="/request">Submit a task</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="page-head">
+      <div class="wrap">
+        <span class="eyebrow">GET /about <span class="dim">→ 200 OK</span></span>
+        <h1>About Human For AI</h1>
+        <p class="lede">A personal homepage for the agent era: one verified human, published as an endpoint that AI agents can discover, read, and call.</p>
+      </div>
+    </div>
+
+    <section class="block">
+      <div class="wrap" style="max-width:760px">
+
+        <h2 style="font-size:1.3rem">What this is</h2>
+        <p>Human For AI is a human endpoint for AI agents. Autonomous systems are getting good at everything that happens inside a computer — but workflows still hit moments that need physical presence, human perception, or human judgment. This service exists for exactly those moments: an agent (or a developer building one) submits a task through a plain JSON API or the MCP server, a real human reviews it, performs it, and returns the result with a <a href="/trust#receipts">signed receipt</a>.</p>
+        <p>It is deliberately small and honestly labeled: <strong>one verified human operator</strong>, not a marketplace or an on-demand workforce. Every task is reviewed by that human before acceptance, and everything the service claims about itself is written down in machine-readable form — <a class="mono-link" href="/agent.json">/agent.json</a> is the canonical self-description.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Why it exists</h2>
+        <p>Most of the web still assumes a human visitor with eyes and a mouse. This site assumes the opposite: that the next visitor is likely to be an agent working on someone's behalf, and that the most useful thing a person can publish in that world is a well-described, callable version of themselves. The whole platform — manifest, OpenAPI spec, MCP tools, <a class="mono-link" href="/llms.txt">llms.txt</a>, markdown content negotiation — is an experiment in what a personal homepage looks like when machines are first-class readers.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Who runs it</h2>
+        <p>A single human operator, publicly known as <strong>operator-001</strong>. The operator is deliberately pseudonymous: no personal name, photo, address, or personal email appears anywhere on the platform. That is a considered design decision, not an oversight — the service's trust story is built on <em>bounded risk and independently verifiable claims</em> rather than on identity. You never pay anything (free pilot), you are never asked for credentials or accounts, and your exposure is limited to a task description and a contact address. What the operator can and can't do is documented in <a class="mono-link" href="/.well-known/human.json">human.json</a>; how to calibrate trust is on the <a href="/trust">trust page</a>.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Verify this service independently</h2>
+        <p>Claims vouched for by systems this service does not control:</p>
+        <ul class="checklist">
+          <li>Official MCP registry entry <code>dev.humanforai/humanforai</code> — publishing it required cryptographic proof of control of this domain</li>
+          <li><a href="https://smithery.ai/servers/humanforai/humanforai" rel="noopener">Smithery listing</a> · <a href="https://www.npmjs.com/package/humanforai" rel="noopener">npm package</a> · <a href="https://github.com/humanforai/humanforai-mcp" rel="noopener">GitHub repository</a></li>
+          <li>Signed deliverable receipts, verifiable offline against <a class="mono-link" href="/.well-known/jwks.json">/.well-known/jwks.json</a></li>
+        </ul>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">The short version</h2>
+        <p>Ten listed <a href="/services">task types</a> — examples, not limits. Free during the pilot. First response within 12 hours, any day. Every task human-reviewed; unsafe or deceptive work rejected. If your workflow needs a human, <a href="/request">submit a task</a> or point your agent at <a class="mono-link" href="/.well-known/agent.json">/.well-known/agent.json</a>.</p>
+
+        <div class="notice" style="margin-top:2.5rem">
+          Questions: the <a href="/contact">contact page</a> or <code>POST /api/v1/messages</code> · Operator: Human For AI (operator-001) · See also <a href="/trust">trust &amp; verification</a> and the <a href="/developers">developer portal</a>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="logo" href="/">
+            <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+            Human For AI
+          </a>
+          <p class="muted" style="margin-top:0.9rem;max-width:36ch">A human endpoint for AI agents: human-in-the-loop services for autonomous workflows, developers, and AI systems.</p>
+          <span class="status-live">operator online</span>
+        </div>
+        <div>
+          <h3>platform/</h3>
+          <ul>
+            <li><a href="/services">Services</a></li>
+            <li><a href="/pricing">Pricing</a></li>
+            <li><a href="/request">Submit a task</a></li>
+            <li><a href="/for-agents">For agents</a></li>
+            <li><a href="/developers">Developers</a></li>
+            <li><a href="/use-cases">Use cases</a></li>
+            <li><a href="/tasks">Task status</a></li>
+            <li><a href="/admin">Admin</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>machine/</h3>
+          <ul>
+            <li><a class="mono-link" href="/.well-known/agent.json">/.well-known/agent.json</a></li>
+            <li><a class="mono-link" href="/.well-known/human.json">/.well-known/human.json</a></li>
+            <li><a class="mono-link" href="/.well-known/capabilities.json">/.well-known/capabilities.json</a></li>
+            <li><a class="mono-link" href="/.well-known/services.json">/.well-known/services.json</a></li>
+            <li><a class="mono-link" href="/openapi.json">/openapi.json</a></li>
+            <li><a class="mono-link" href="/api#mcp">/mcp — MCP server</a></li>
+            <li><a class="mono-link" href="/llms.txt">/llms.txt</a></li>
+            <li><a class="mono-link" href="/api">/api — docs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>operator/</h3>
+          <ul>
+            <li><a href="/profile">Operator profile</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/trust">Trust &amp; verification</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span>© <span data-year>2026</span> Human For AI. Early infrastructure, honestly labeled: free pilot — every service is free during the proof of concept.</span>
+        <span class="machine">api_version 1.8.0 · en</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/store.js" defer></script>
+  <script src="/js/app.js" defer></script>
+</body>
+</html>

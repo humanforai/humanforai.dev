@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy policy — Human For AI</title>
+  <meta name="description" content="Human For AI privacy policy: what task and message data is collected, where it is stored, who can see it, and how to request deletion. No analytics, no ads, no data sales.">
+  <link rel="canonical" href="https://humanforai.dev/privacy">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Human For AI">
+  <meta property="og:title" content="Privacy policy — Human For AI">
+  <meta property="og:description" content="What Human For AI collects, where it lives, and who sees it. Short, honest, no legalese.">
+  <meta property="og:url" content="https://humanforai.dev/privacy">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#0b1120">
+  <link rel="alternate" type="application/json" href="/agent.json" title="Agent manifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="/" aria-label="Human For AI home">
+        <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+        Human For AI
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/api">API</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/trust">Trust</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a class="nav-agent" href="/.well-known/agent.json">/agent.json</a></li>
+          <li><a class="btn btn-primary btn-sm" href="/request">Submit a task</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="page-head">
+      <div class="wrap">
+        <span class="eyebrow">GET /privacy <span class="dim">→ 200 OK · effective: 2026-07-06</span></span>
+        <h1>Privacy policy</h1>
+        <p class="lede">Short and honest, like the rest of the platform. This policy covers the Human For AI website, the REST API, and the MCP server at <code>humanforai.dev</code>.</p>
+      </div>
+    </div>
+
+    <section class="block">
+      <div class="wrap" style="max-width:760px">
+
+        <h2 style="font-size:1.3rem">What we collect</h2>
+        <p>Only what you actively send:</p>
+        <ul class="checklist">
+          <li><strong>Task submissions</strong> — task type, description, location details, deadline, output format, an optional contact email, and an optional requester identifier. Submitted via the web form, the REST API, or the MCP server.</li>
+          <li><strong>Messages</strong> — message text, optional subject, optional sender name, and an optional reply-to email.</li>
+          <li><strong>Operational logs</strong> — standard infrastructure request logs (Cloud Logging) and an internal notification record when a task or message arrives.</li>
+          <li><strong>First-party traffic measurement</strong> — the page path or API endpoint called, the HTTP user-agent string with a coarse classification (human browser / script / AI crawler / MCP client), and the referring page. Used only to understand how humans and AI agents reach the platform. <strong>No cookies, no IP addresses stored, no cross-site tracking, no third-party analytics services.</strong></li>
+          <li><strong>Abuse prevention</strong> — the task and message endpoints keep per-hour and per-day submission counters keyed to a salted one-way hash of the caller's network address, and the same hash is stored with each submission so repeat abusers can be blocked. The address itself is never stored and cannot be recovered from the hash. Contact-email domains are checked for the existence of mail (MX) records at submission time; the lookup result is cached briefly and not stored with your data.</li>
+        </ul>
+        <p class="muted">There are <strong>no ad trackers, no cookies</strong>, and no accounts. The site never asks for payment details.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Why we collect it</h2>
+        <p>One purpose: so the human operator can review your request, do the work, and send you the result. Contact emails are used only to deliver results and ask clarifying questions.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Where it lives</h2>
+        <p>Task and message data is stored in Google Cloud Firestore inside a locked-down Firebase project. The site is served by Firebase Hosting. Google acts as the infrastructure processor; see <a href="https://firebase.google.com/support/privacy" rel="noopener">Firebase privacy documentation</a>.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Who can see it</h2>
+        <ul class="checklist">
+          <li>The single human operator (<a href="/profile">Operator 001</a>) — the only person with database access.</li>
+          <li>Anyone holding a task ID can view that task's <em>public status</em> (status, type, description, timeline). Contact emails and operator notes marked private are never shown in status lookups. Treat your task ID like a link-shaped password.</li>
+        </ul>
+        <p>Your data is <strong>never sold, shared with advertisers, or used to train AI models</strong>. It is disclosed only if the law requires it.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Third-party services</h2>
+        <ul class="checklist">
+          <li><strong>Google Cloud / Firebase</strong> — hosting, database, logging (as described above).</li>
+          <li><strong>Google Fonts</strong> — font files are fetched from Google's servers when pages load, which discloses your IP address to Google.</li>
+        </ul>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Your browser's local storage</h2>
+        <p>If the API is unreachable (for example, running the site locally), the task form falls back to your browser's own localStorage — that data stays on your device and never reaches us. The admin dashboard stores the operator's key in sessionStorage on the operator's own browser.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Retention &amp; deletion</h2>
+        <p>Task and message records are kept while they are operationally relevant (open work, track record). Request a copy or deletion of your data via the <a href="/contact">contact page</a>, using the reply-to address associated with your task or message (or include its ID) — honored within 14 days.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Don't send secrets</h2>
+        <p>Per the <a href="/trust">trust policy</a>: do not submit confidential information unless confidentiality has been agreed in advance.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Changes</h2>
+        <p>If this policy changes, the new version appears at this URL with an updated effective date. Material changes will also be noted in <a class="mono-link" href="/agent.json">/agent.json</a>.</p>
+
+        <div class="notice" style="margin-top:2.5rem">
+          Questions about privacy: via the <a href="/contact">contact page</a> · Effective 2026-07-06 · See also the <a href="/terms">terms of service</a> · Operator: Human For AI (operator-001)
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="logo" href="/">
+            <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+            Human For AI
+          </a>
+          <p class="muted" style="margin-top:0.9rem;max-width:36ch">A human endpoint for AI agents: human-in-the-loop services for autonomous workflows, developers, and AI systems.</p>
+          <span class="status-live">operator online</span>
+        </div>
+        <div>
+          <h3>platform/</h3>
+          <ul>
+            <li><a href="/services">Services</a></li>
+            <li><a href="/pricing">Pricing</a></li>
+            <li><a href="/request">Submit a task</a></li>
+            <li><a href="/for-agents">For agents</a></li>
+            <li><a href="/developers">Developers</a></li>
+            <li><a href="/use-cases">Use cases</a></li>
+            <li><a href="/tasks">Task status</a></li>
+            <li><a href="/admin">Admin</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>machine/</h3>
+          <ul>
+            <li><a class="mono-link" href="/.well-known/agent.json">/.well-known/agent.json</a></li>
+            <li><a class="mono-link" href="/.well-known/human.json">/.well-known/human.json</a></li>
+            <li><a class="mono-link" href="/.well-known/capabilities.json">/.well-known/capabilities.json</a></li>
+            <li><a class="mono-link" href="/.well-known/services.json">/.well-known/services.json</a></li>
+            <li><a class="mono-link" href="/openapi.json">/openapi.json</a></li>
+            <li><a class="mono-link" href="/api#mcp">/mcp — MCP server</a></li>
+            <li><a class="mono-link" href="/llms.txt">/llms.txt</a></li>
+            <li><a class="mono-link" href="/api">/api — docs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>operator/</h3>
+          <ul>
+            <li><a href="/profile">Operator profile</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/trust">Trust &amp; verification</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span>© <span data-year>2026</span> Human For AI. Early infrastructure, honestly labeled: free pilot — every service is free during the proof of concept.</span>
+        <span class="machine">api_version 1.8.0 · en</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/store.js" defer></script>
+  <script src="/js/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Terms of service — Human For AI</title>
+  <meta name="description" content="Human For AI terms of service: who can use the platform, how tasks are reviewed and accepted, what you get, free pilot terms, acceptable use, and liability. Short, honest, no legalese.">
+  <link rel="canonical" href="https://humanforai.dev/terms">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Human For AI">
+  <meta property="og:title" content="Terms of service — Human For AI">
+  <meta property="og:description" content="The working agreement for humans and AI agents using Human For AI. Short, honest, no legalese.">
+  <meta property="og:url" content="https://humanforai.dev/terms">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#0b1120">
+  <link rel="alternate" type="application/json" href="/agent.json" title="Agent manifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="/" aria-label="Human For AI home">
+        <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+        Human For AI
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/api">API</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/trust">Trust</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a class="nav-agent" href="/.well-known/agent.json">/agent.json</a></li>
+          <li><a class="btn btn-primary btn-sm" href="/request">Submit a task</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="page-head">
+      <div class="wrap">
+        <span class="eyebrow">GET /terms <span class="dim">→ 200 OK · effective: 2026-07-19</span></span>
+        <h1>Terms of service</h1>
+        <p class="lede">Short and honest, like the rest of the platform. These terms cover the Human For AI website, the REST API, and the MCP server at <code>humanforai.dev</code>. By submitting a task or message you agree to them.</p>
+      </div>
+    </div>
+
+    <section class="block">
+      <div class="wrap" style="max-width:760px">
+
+        <h2 style="font-size:1.3rem">Who these terms cover</h2>
+        <p>Anyone who uses the platform: human visitors, developers, and AI agents. When an AI agent submits a task, the terms bind the person or organization the agent acts for (its principal) — an agent's submission is treated as its principal's submission. If you operate an agent that uses this service, you are responsible for what it submits.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">What the service is</h2>
+        <p>Human For AI is a single verified human operator (<a href="/profile">Operator 001</a>) who performs human-in-the-loop tasks on request: verification, testing, judgment, data collection, review, and local physical-world work. The <a href="/services">catalog</a> is examples, not limits — anything a human can legally and safely do is in scope. It is one person, not a marketplace, an on-demand workforce, or an always-on system.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Free pilot</h2>
+        <p>Every service is currently <strong>free</strong> during the proof-of-concept pilot. There is no payment step anywhere, and nothing accepted during the pilot is ever billed retroactively. If paid tiers are introduced later, they will be announced on <a href="/pricing">/pricing</a> first. A request for payment, credentials, or account creation is <strong>not from this service</strong>.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Submission is not acceptance</h2>
+        <p>Every task is reviewed by the human operator before acceptance — acceptance is never automatic. A submission gets an instant <code>task_id</code>, then an explicit <code>accepted</code> or <code>rejected</code> decision, visible on the <a href="/tasks">status page</a>. The operator may decline any task for any reason, propose a smaller scope, or ask clarifying questions. No contract to perform work exists until a task is explicitly accepted.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Acceptable use</h2>
+        <p>Do not submit tasks that are:</p>
+        <ul class="crosslist">
+          <li>Illegal, harmful, or unsafe — to anyone, in any way</li>
+          <li>Deceptive: impersonation, fake reviews, misleading third parties</li>
+          <li>Privacy-invasive: surveillance of individuals, stalking, doxxing</li>
+          <li>Circumventing security, verification, or platform rules</li>
+          <li>Academic or credential fraud</li>
+        </ul>
+        <p>The machine-readable version is <code>rejected_task_types</code> in <a class="mono-link" href="/agent.json">/agent.json</a>. Anti-abuse limits also apply: rate limits per client, duplicate detection, deliverable email validation, and blocking of repeat abusers. One small test task is welcome; bulk synthetic submissions are not and get the client blocked.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">What you get — and what it is not</h2>
+        <p>Deliverables are one careful human's observation and honest opinion, with stated confidence. They are <strong>assistance, not guaranteed truth</strong> — not a professional certification, not legal, medical, or financial advice, and not a substitute for licensed counsel. Verify independently before relying on a deliverable for consequential decisions, and build agent decision logic to treat results as a strong signal, not an oracle.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Ownership of deliverables</h2>
+        <p>Once delivered, the deliverable is yours: the requester receives all rights to use, modify, and republish it, for any lawful purpose. The operator keeps internal records of completed work (for the track record and operational history) but does not publish your task content — see <a href="/trust">confidentiality</a> and the <a href="/privacy">privacy policy</a>.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Your responsibilities</h2>
+        <ul class="checklist">
+          <li>Describe tasks honestly — review decisions are made on your description</li>
+          <li>Have the rights to any material you submit</li>
+          <li>Provide a working return channel (a real email, or the status-poll path)</li>
+          <li>Treat your <code>task_id</code> like a link-shaped password — anyone holding it can view that task's public status</li>
+          <li>Don't submit confidential information unless confidentiality has been <a href="/trust">agreed in advance</a></li>
+        </ul>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Availability</h2>
+        <p>The platform is early infrastructure run by one person. The stated response expectations (first response within 12 hours, any day of the week) are honest targets, not a contractual SLA. The service may be paused, changed, or discontinued; open accepted tasks will be completed or explicitly cancelled with notice to your return channel.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Liability</h2>
+        <p>The service is provided <strong>"as is" and free of charge</strong>, without warranties of any kind, express or implied. To the maximum extent permitted by applicable law, the operator is not liable for indirect, incidental, or consequential damages arising from use of the platform or reliance on a deliverable, and total liability for any claim is limited to the amount you paid for the service — during the free pilot, zero. Nothing here excludes liability that cannot lawfully be excluded.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Termination</h2>
+        <p>There are no accounts, so there is nothing to terminate on your side — simply stop using the service. The operator may refuse service or block clients that violate these terms or the anti-abuse limits.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Changes</h2>
+        <p>If these terms change, the new version appears at this URL with an updated effective date. Material changes will also be noted in <a class="mono-link" href="/agent.json">/agent.json</a>. Continued use after a change means acceptance of the new terms; tasks already accepted stay under the terms in effect when they were accepted.</p>
+
+        <h2 style="font-size:1.3rem;margin-top:2.5rem">Disputes</h2>
+        <p>Talk to the operator first — most issues are resolvable directly and personally via the <a href="/contact">contact page</a>. These terms are written in plain language on purpose; the plain reading is the intended one.</p>
+
+        <div class="notice" style="margin-top:2.5rem">
+          Questions about these terms: via the <a href="/contact">contact page</a> · Effective 2026-07-19 · See also the <a href="/privacy">privacy policy</a> and <a href="/trust">trust &amp; verification</a> · Operator: Human For AI (operator-001)
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="logo" href="/">
+            <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+            Human For AI
+          </a>
+          <p class="muted" style="margin-top:0.9rem;max-width:36ch">A human endpoint for AI agents: human-in-the-loop services for autonomous workflows, developers, and AI systems.</p>
+          <span class="status-live">operator online</span>
+        </div>
+        <div>
+          <h3>platform/</h3>
+          <ul>
+            <li><a href="/services">Services</a></li>
+            <li><a href="/pricing">Pricing</a></li>
+            <li><a href="/request">Submit a task</a></li>
+            <li><a href="/for-agents">For agents</a></li>
+            <li><a href="/developers">Developers</a></li>
+            <li><a href="/use-cases">Use cases</a></li>
+            <li><a href="/tasks">Task status</a></li>
+            <li><a href="/admin">Admin</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>machine/</h3>
+          <ul>
+            <li><a class="mono-link" href="/.well-known/agent.json">/.well-known/agent.json</a></li>
+            <li><a class="mono-link" href="/.well-known/human.json">/.well-known/human.json</a></li>
+            <li><a class="mono-link" href="/.well-known/capabilities.json">/.well-known/capabilities.json</a></li>
+            <li><a class="mono-link" href="/.well-known/services.json">/.well-known/services.json</a></li>
+            <li><a class="mono-link" href="/openapi.json">/openapi.json</a></li>
+            <li><a class="mono-link" href="/api#mcp">/mcp — MCP server</a></li>
+            <li><a class="mono-link" href="/llms.txt">/llms.txt</a></li>
+            <li><a class="mono-link" href="/api">/api — docs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>operator/</h3>
+          <ul>
+            <li><a href="/profile">Operator profile</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/trust">Trust &amp; verification</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span>© <span data-year>2026</span> Human For AI. Early infrastructure, honestly labeled: free pilot — every service is free during the proof of concept.</span>
+        <span class="machine">api_version 1.8.0 · en</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/store.js" defer></script>
+  <script src="/js/app.js" defer></script>
+</body>
+</html>

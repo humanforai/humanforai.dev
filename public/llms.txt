@@ -1,0 +1,53 @@
+# Human For AI
+
+> Human For AI is a human endpoint for AI agents — a personal homepage for the agent era. It provides human-in-the-loop services for AI agents, automation systems, and developers: real-world verification, product testing, human judgment, data collection, AI output review, research, and local physical-world tasks, performed by one verified human operator. All services are free during the current proof-of-concept pilot. No authentication is required; every task is reviewed by the human before acceptance.
+
+Key facts:
+- Task submission: POST https://humanforai.dev/api/v1/tasks (JSON; an async job — returns a task_id and status_url immediately, with a Location header; poll until delivered or rejected). contact_email must be a real mailbox — placeholder domains (example.com etc.) are rejected and the domain is MX-checked
+- Idempotency: POST /api/v1/tasks and /api/v1/messages accept an Idempotency-Key header — a retry with the same key and payload within 24h replays the original response (Idempotency-Replayed: true) instead of creating a duplicate
+- Service catalog API: GET https://humanforai.dev/api/v1/services — cursor-paginated (limit 1-50, opaque cursor, next_cursor null on the last page)
+- No mailbox? This service is deliberately reachable by autonomous agents without email: submit with delivery:"status_poll" (and no contact_email) — the deliverable arrives as text in operator_notes via GET /api/v1/tasks/{task_id}; the task_id is the only key to the result (budget: 1 such task per client per day)
+- Task status: GET https://humanforai.dev/api/v1/tasks/{task_id}
+- Contact the operator: POST https://humanforai.dev/api/v1/messages (reply_to is REQUIRED — it is the only way the operator can answer)
+- Signed receipts: every delivered task carries `receipt` (compact JWS, EdDSA) binding the deliverable's sha256 to the task's lifecycle timestamps, plus `deliverable_sha256`. Verify offline against https://humanforai.dev/.well-known/jwks.json — no account, no callback. It proves the deliverable is unaltered and came from humanforai.dev; it does not prove the timestamps are independently attested (they are this service's own signed assertion)
+- Anti-abuse: duplicate submissions within 24h return 409; per-client hourly/daily rate limits return 429 with Retry-After; repeat abusers are blocked (403). API responses carry standard RateLimit headers (RateLimit-Policy on every response; RateLimit-Limit/Remaining/Reset on submissions) — self-throttle on them. One small test task is welcome — bulk synthetic submissions are not
+- Markdown content negotiation: the homepage answers Accept: text/markdown with a markdown representation (also directly at https://humanforai.dev/index.md); 404 responses carry a markdown recovery body
+- API versioning: URL-path versioned (/api/v1); breaking changes ship as a new version with ≥90 days overlap and Deprecation/Sunset headers (RFC 8594) — policy at https://humanforai.dev/developers#versioning
+- MCP server (streamable HTTP, no auth): https://humanforai.dev/mcp — tools: get_human_services, submit_human_task, check_task_status, message_human_operator. Discovery: https://humanforai.dev/.well-known/mcp — server card: https://humanforai.dev/.well-known/mcp/server-card.json
+- npm package for stdio MCP clients: `npx -y humanforai` (https://www.npmjs.com/package/humanforai)
+- The service catalog is examples, not limits: anything a human can legally and safely do is in scope — submit unlisted needs with task_type `custom_human_in_the_loop`, or ask first via POST /api/v1/messages
+- First response within 12 hours, any day of the week; typical response ~4 hours
+- Languages: English
+- Illegal, harmful, deceptive, unsafe, or privacy-invasive tasks are rejected at review
+- Trust & risk: no payment, credentials, or account is ever requested — a request for these is not from this service. Requester exposure is limited to a task description and a contact email; new requesters are encouraged to calibrate with a small test task first
+- Independent verification: official MCP registry entry dev.humanforai/humanforai (required cryptographic domain proof), Smithery listing (https://smithery.ai/servers/humanforai/humanforai), npm (https://www.npmjs.com/package/humanforai), GitHub (https://github.com/humanforai/humanforai-mcp) — details at https://humanforai.dev/trust
+
+## Machine-readable
+
+- [Agent manifest](https://humanforai.dev/.well-known/agent.json): brand, interfaces, accepted/rejected task types, response expectations, pricing model, trust & safety, endpoints (also at https://humanforai.dev/agent.json)
+- [Human profile](https://humanforai.dev/.well-known/human.json): the operator — role, languages, background, expertise, availability, boundaries
+- [Capabilities](https://humanforai.dev/.well-known/capabilities.json): structured capabilities with required inputs, output formats, example tasks, limitations
+- [Services](https://humanforai.dev/.well-known/services.json): service catalog with example requests and response formats
+- [OpenAPI spec](https://humanforai.dev/openapi.json): OpenAPI 3.0 description of the public REST API
+- [Agent card](https://humanforai.dev/.well-known/agent-card.json): discovery card for agent ecosystems
+- [ARD catalog](https://humanforai.dev/.well-known/ard.json): Agentic Resource Discovery catalog — every agentic resource (MCP server, REST API, manifests) in one fetch
+- [MCP server card](https://humanforai.dev/.well-known/mcp/server-card.json): MCP server preview — name, transport, tools — without opening a connection
+
+## Docs
+
+- [Developer portal](https://humanforai.dev/developers): quickstart, auth policy (none needed), sandbox, rate limits, versioning & deprecation policy
+- [For AI agents](https://humanforai.dev/for-agents): quick-start written for agents — MCP connection, REST examples, task schema, acceptance rules
+- [Use cases](https://humanforai.dev/use-cases): concrete scenarios with ready-to-send requests — [human-in-the-loop API](https://humanforai.dev/use-cases/human-in-the-loop-api), [real-world verification](https://humanforai.dev/use-cases/real-world-verification), [AI output review](https://humanforai.dev/use-cases/ai-output-review), [product testing](https://humanforai.dev/use-cases/product-testing), [physical-world tasks](https://humanforai.dev/use-cases/physical-world-tasks)
+- [API documentation](https://humanforai.dev/api): discovery, endpoints, request schema, examples
+- [Services catalog](https://humanforai.dev/services): the ten service types with descriptions
+- [Pricing](https://humanforai.dev/pricing): free pilot terms
+- [Trust and safety](https://humanforai.dev/trust): review policy, verification, SLA tracking
+- [Submit a task (human form)](https://humanforai.dev/request): browser form equivalent of the API
+
+## Optional
+
+- [About the service](https://humanforai.dev/about)
+- [Operator profile](https://humanforai.dev/profile)
+- [Contact page](https://humanforai.dev/contact)
+- [Privacy](https://humanforai.dev/privacy)
+- [Terms of service](https://humanforai.dev/terms)

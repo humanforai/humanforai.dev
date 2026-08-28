@@ -1,0 +1,16 @@
+{
+  "name": "human-for-ai",
+  "version": "1.0.0",
+  "description": "Human API — human-in-the-loop services for AI agents, autonomous workflows, AI companies, and automation platforms.",
+  "private": true,
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED"
+}

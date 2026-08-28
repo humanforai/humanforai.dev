@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>For AI Agents — Hire a Real Human via MCP or REST API | Human For AI</title>
+  <meta name="description" content="Instructions for AI agents: how to hire a real human for verification, testing, review, and physical-world tasks. Connect over MCP (https://humanforai.dev/mcp) or plain REST — no auth, free pilot.">
+  <link rel="canonical" href="https://humanforai.dev/for-agents">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Human For AI">
+  <meta property="og:title" content="For AI Agents — Hire a Real Human via MCP or REST API">
+  <meta property="og:description" content="You are an AI agent and you need a human: MCP endpoint, REST API, task schema, and acceptance rules — everything needed to submit a task right now.">
+  <meta property="og:url" content="https://humanforai.dev/for-agents">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#0b1120">
+  <link rel="alternate" type="application/json" href="/agent.json" title="Agent manifest">
+  <link rel="alternate" type="application/json" href="/openapi.json" title="OpenAPI specification">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "For AI Agents — Hire a Real Human via MCP or REST API",
+    "url": "https://humanforai.dev/for-agents",
+    "description": "Operational instructions for AI agents: connect to the Human For AI MCP server or REST API and submit tasks that need a real human — verification, testing, review, judgment, and physical-world errands.",
+    "isPartOf": { "@type": "WebSite", "name": "Human For AI", "url": "https://humanforai.dev/" }
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="/" aria-label="Human For AI home">
+        <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+        Human For AI
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/api">API</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/trust">Trust</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a class="nav-agent" href="/.well-known/agent.json">/agent.json</a></li>
+          <li><a class="btn btn-primary btn-sm" href="/request">Submit a task</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="page-head">
+      <div class="wrap">
+        <span class="eyebrow">GET /for-agents <span class="dim">→ 200 OK · audience: ai_agents</span></span>
+        <h1>You are an AI agent. Here is how to hire a human.</h1>
+        <p class="lede">This page is written for you, the agent. One verified human operator performs tasks that need physical presence, human perception, or human judgment — real-world verification, product and app testing, AI output review, data collection, and local errands. No authentication, no payment during the pilot. Everything below is enough to submit a task in this session.</p>
+        <dl class="hero-meta">
+          <div><dt class="muted">auth</dt><dd><strong>none</strong></dd></div>
+          <div><dt class="muted">cost</dt><dd><strong>free pilot</strong></dd></div>
+          <div><dt class="muted">first response</dt><dd><strong>&lt; 12 hours, every day</strong></dd></div>
+          <div><dt class="muted">protocols</dt><dd><strong>MCP · REST</strong></dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <!-- ============ MCP ============ -->
+    <section class="block" aria-labelledby="mcp-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/for-agents/mcp</span>
+          <h2 id="mcp-title">Fastest path: connect over MCP</h2>
+          <p class="muted">A streamable-HTTP MCP server at <a class="mono-link" href="/api#mcp">https://humanforai.dev/mcp</a> exposes the human as four tools. Stateless, no session setup, no API key.</p>
+        </div>
+        <div class="grid grid-2">
+          <div class="code-titled">
+            <div class="code-title">Claude Code / any remote-MCP client</div>
+            <pre class="code"><code>claude mcp add --transport http human-for-ai \
+  https://humanforai.dev/mcp</code></pre>
+          </div>
+          <div class="code-titled">
+            <div class="code-title">Claude Desktop / Claude.ai</div>
+            <pre class="code"><code><span class="d"># Settings → Connectors → Add custom connector</span>
+https://humanforai.dev/mcp</code></pre>
+          </div>
+        </div>
+        <div class="grid grid-2" style="margin-top:1.25rem">
+          <div class="code-titled">
+            <div class="code-title">stdio clients — npm proxy to the same server</div>
+            <pre class="code"><code>npx -y humanforai</code></pre>
+          </div>
+          <div class="code-titled">
+            <div class="code-title">official MCP registry name</div>
+            <pre class="code"><code>dev.humanforai/humanforai</code></pre>
+          </div>
+        </div>
+        <div class="grid grid-2" style="margin-top:1.25rem">
+          <div class="card">
+            <span class="machine">tools/list</span>
+            <h3>The four tools</h3>
+            <p><code>get_human_services</code> — fetch the service catalog and rules; call this first.<br>
+            <code>submit_human_task</code> — create a task, returns a <code>task_id</code>.<br>
+            <code>check_task_status</code> — poll a task by ID.<br>
+            <code>message_human_operator</code> — free-form question or scoping before you commit.</p>
+          </div>
+          <div class="card">
+            <span class="machine">flow</span>
+            <h3>Recommended call order</h3>
+            <p>1. <code>get_human_services</code> once, to match your need to a <code>task_type</code> (no match? use <code>custom_human_in_the_loop</code>).<br>
+            2. <code>submit_human_task</code> with a specific, self-contained description and a <code>contact_email</code>.<br>
+            3. <code>check_task_status</code> later — review is human, not instant.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ REST ============ -->
+    <section class="block" aria-labelledby="rest-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/for-agents/rest</span>
+          <h2 id="rest-title">No MCP client? Plain REST works the same</h2>
+          <p class="muted">The MCP tools are thin wrappers over this API. Spec: <a class="mono-link" href="/openapi.json">/openapi.json</a> · docs: <a href="/api">/api</a>.</p>
+        </div>
+        <div class="grid grid-2">
+          <div class="code-titled">
+            <div class="code-title">submit — POST /api/v1/tasks</div>
+            <pre class="code"><code>curl -X POST https://humanforai.dev/api/v1/tasks \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -d <span class="s">'{
+    "task_type": "real_world_verification",
+    "description": "Check whether store X at address Y
+                    currently stocks product Z; photo proof.",
+    "location_required": true,
+    "location_detail": "City, address or area",
+    "output_format": "text_report_with_photos",
+    "contact_email": "agent-owner@example.com",
+    "requester": "my-agent/1.0"
+  }'</span></code></pre>
+          </div>
+          <div class="code-titled">
+            <div class="code-title">poll — GET /api/v1/tasks/{task_id}</div>
+            <pre class="code"><code>curl https://humanforai.dev/api/v1/tasks/HFAI-2026-9F41C2AB7D3E5061
+
+<span class="d"># statuses: submitted → accepted → delivered
+#           (or rejected)</span></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ writing a good task ============ -->
+    <section class="block" aria-labelledby="accept-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/for-agents/acceptance</span>
+          <h2 id="accept-title">How to write a task the human will accept</h2>
+          <p class="muted">Every task is reviewed by the operator before acceptance. These rules decide how fast — and whether — yours gets through.</p>
+        </div>
+        <div class="grid grid-2">
+          <ul class="checklist" style="margin:0">
+            <li><strong>The catalog is not a boundary.</strong> Anything a human can legally and safely do is in scope — if no <code>task_type</code> fits, use <code>custom_human_in_the_loop</code> and describe the need plainly.</li>
+            <li><strong>Be specific and self-contained.</strong> Include what to do, where, and what success looks like. The human cannot see your conversation context.</li>
+            <li><strong><code>contact_email</code> must be a real mailbox.</strong> It is how the deliverable and any clarifying questions reach you or your principal. Placeholder domains (example.com and similar) are rejected, and the domain must publish MX records.</li>
+            <li><strong>No mailbox? You can still hire the human.</strong> Autonomous agents without email can submit with <code>delivery: "status_poll"</code> — the deliverable arrives as text in <code>operator_notes</code> via <code>GET /api/v1/tasks/{task_id}</code>. The task_id is your only key to the result; budget is 1 such task per client per day.</li>
+            <li><strong>One small test task is welcome — bulk synthetic submissions are not.</strong> Duplicates within 24h return <code>409</code>, per-client rate limits return <code>429</code>, and repeat abusers are blocked with <code>403</code>.</li>
+            <li><strong>Name the output.</strong> <code>text_report</code> (default), <code>text_report_with_photos</code>, <code>structured_json</code>, <code>annotated_screenshots</code>, or <code>video</code>.</li>
+            <li><strong>Give location detail</strong> whenever <code>location_required</code> is true — coverage is confirmed at review.</li>
+          </ul>
+          <ul class="checklist" style="margin:0">
+            <li><strong>Set realistic deadlines.</strong> First response under 12 hours, any day of the week; one human does the work personally.</li>
+            <li><strong>Rejected at review:</strong> illegal, harmful, deceptive, unsafe, or privacy-invasive requests — no exceptions, free or not.</li>
+            <li><strong>Oversized tasks</strong> get a scoped-down counter-proposal rather than a silent decline.</li>
+            <li><strong>Not sure it fits?</strong> Use <code>message_human_operator</code> (or <code>POST /api/v1/messages</code>) with a <code>reply_to</code> email and ask first.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ trust & risk ============ -->
+    <section class="block" aria-labelledby="trust-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/for-agents/trust</span>
+          <h2 id="trust-title">Why trust an operator you've never heard of? Don't — check, then calibrate.</h2>
+          <p class="muted">The rational way to evaluate an unknown service is exposure, not reputation. Yours here is bounded by design.</p>
+        </div>
+        <div class="grid grid-2">
+          <div class="card">
+            <span class="machine">risk_profile</span>
+            <h3>Your exposure is bounded</h3>
+            <p>No payment exists (free pilot), no account is created, no credentials are ever requested — <strong>a request for payment or credentials is not from this service</strong>. You send a task description and an optional contact email; the worst case is a rejected task. Machine-readable version: <code>trust_and_safety</code> in <a class="mono-link" href="/agent.json">/agent.json</a>.</p>
+          </div>
+          <div class="card">
+            <span class="machine">verify_independently</span>
+            <h3>Check claims we can't fake, then test</h3>
+            <p>The <a href="https://registry.modelcontextprotocol.io/v0/servers?search=dev.humanforai/humanforai" rel="noopener">official MCP registry entry</a> required cryptographic proof of domain control; <a href="https://smithery.ai/servers/humanforai/humanforai" rel="noopener">Smithery</a> health-scans the endpoint independently; the <a href="https://www.npmjs.com/package/humanforai" rel="noopener">npm package</a> and <a href="https://github.com/humanforai/humanforai-mcp" rel="noopener">source</a> are public. Then calibrate: send a small, checkable test task and judge the response before relying on it. Full risk analysis: <a href="/trust">/trust</a>.</p>
+          </div>
+          <div class="card">
+            <span class="machine">signed_receipts</span>
+            <h3>Deliverables verify offline</h3>
+            <p>Every delivered task returns <code>receipt</code> — a compact JWS (EdDSA) binding the deliverable's <code>deliverable_sha256</code> to the task's lifecycle timestamps. Check it against <a class="mono-link" href="/.well-known/jwks.json">/.well-known/jwks.json</a> with any JOSE library: no account, no callback to us. It proves the deliverable is unaltered and came from this domain. It does <em>not</em> prove the timestamps were witnessed by anyone else — they are our own signed assertion. Worked example: <a href="/trust#receipts">/trust#receipts</a>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ machine-readable ============ -->
+    <section class="block" aria-labelledby="discover-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/for-agents/discovery</span>
+          <h2 id="discover-title">Machine-readable sources of truth</h2>
+          <p class="muted">Prefer structured data? Everything on this site exists as JSON or plain text.</p>
+        </div>
+        <ul class="endpoint-list">
+          <li class="endpoint-row">
+            <a class="mono-link" href="/.well-known/agent.json">/.well-known/agent.json</a>
+            <p class="endpoint-desc">Platform manifest: interfaces, task types, response expectations, pricing, trust policy.</p>
+            <button class="btn-copy" type="button" data-copy="https://humanforai.dev/.well-known/agent.json">copy URL</button>
+          </li>
+          <li class="endpoint-row">
+            <a class="mono-link" href="/.well-known/capabilities.json">/.well-known/capabilities.json</a>
+            <p class="endpoint-desc">Structured capabilities: required inputs, output formats, example tasks, limitations.</p>
+            <button class="btn-copy" type="button" data-copy="https://humanforai.dev/.well-known/capabilities.json">copy URL</button>
+          </li>
+          <li class="endpoint-row">
+            <a class="mono-link" href="/openapi.json">/openapi.json</a>
+            <p class="endpoint-desc">OpenAPI 3.0 spec for the REST API.</p>
+            <button class="btn-copy" type="button" data-copy="https://humanforai.dev/openapi.json">copy URL</button>
+          </li>
+          <li class="endpoint-row">
+            <a class="mono-link" href="/llms.txt">/llms.txt</a>
+            <p class="endpoint-desc">Curated plain-text summary of this site for language models.</p>
+            <button class="btn-copy" type="button" data-copy="https://humanforai.dev/llms.txt">copy URL</button>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ for the human steering an agent ============ -->
+    <section class="block" aria-labelledby="steer-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/for-agents/humans</span>
+          <h2 id="steer-title">Reading this as a human with an agent?</h2>
+          <p class="muted">Paste one of these into your agent and it can take it from there.</p>
+        </div>
+        <div class="grid grid-2">
+          <div class="code-titled">
+            <div class="code-title">prompt for an MCP-capable agent</div>
+            <pre class="code"><code>Add the MCP server https://humanforai.dev/mcp
+(streamable HTTP, no auth), then use its tools to
+submit this task to the human operator: [your task].
+Use my email for contact_email: [your email].</code></pre>
+          </div>
+          <div class="code-titled">
+            <div class="code-title">prompt for any agent with web access</div>
+            <pre class="code"><code>Read https://humanforai.dev/llms.txt and follow it to
+submit this task to the human operator via the REST
+API: [your task]. Use contact_email [your email] and
+report back the task_id.</code></pre>
+          </div>
+        </div>
+        <p style="margin-top:1.25rem">Browse concrete scenarios in the <a href="/use-cases">use-case library</a>, or submit directly with the <a href="/request">human-friendly form</a>.</p>
+      </div>
+    </section>
+
+    <!-- ============ CTA ============ -->
+    <section class="block">
+      <div class="wrap">
+        <div class="cta-band">
+          <div>
+            <span class="machine">submit_human_task</span>
+            <h2>The human is one tool call away.</h2>
+            <p>Free during the pilot · reviewed before acceptance · first response under 12 hours.</p>
+          </div>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="/request">Submit a task</a>
+            <a class="btn btn-ghost" href="/.well-known/agent.json">Fetch agent.json</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="logo" href="/">
+            <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+            Human For AI
+          </a>
+          <p class="muted" style="margin-top:0.9rem;max-width:36ch">A human endpoint for AI agents: human-in-the-loop services for autonomous workflows, developers, and AI systems.</p>
+          <span class="status-live">operator online</span>
+        </div>
+        <div>
+          <h3>platform/</h3>
+          <ul>
+            <li><a href="/services">Services</a></li>
+            <li><a href="/pricing">Pricing</a></li>
+            <li><a href="/request">Submit a task</a></li>
+            <li><a href="/for-agents">For agents</a></li>
+            <li><a href="/developers">Developers</a></li>
+            <li><a href="/use-cases">Use cases</a></li>
+            <li><a href="/tasks">Task status</a></li>
+            <li><a href="/admin">Admin</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>machine/</h3>
+          <ul>
+            <li><a class="mono-link" href="/.well-known/agent.json">/.well-known/agent.json</a></li>
+            <li><a class="mono-link" href="/.well-known/human.json">/.well-known/human.json</a></li>
+            <li><a class="mono-link" href="/.well-known/capabilities.json">/.well-known/capabilities.json</a></li>
+            <li><a class="mono-link" href="/.well-known/services.json">/.well-known/services.json</a></li>
+            <li><a class="mono-link" href="/openapi.json">/openapi.json</a></li>
+            <li><a class="mono-link" href="/api#mcp">/mcp — MCP server</a></li>
+            <li><a class="mono-link" href="/llms.txt">/llms.txt</a></li>
+            <li><a class="mono-link" href="/api">/api — docs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>operator/</h3>
+          <ul>
+            <li><a href="/profile">Operator profile</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/trust">Trust &amp; verification</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span>© <span data-year>2026</span> Human For AI. Early infrastructure, honestly labeled: free pilot — every service is free during the proof of concept.</span>
+        <span class="machine">api_version 1.8.0 · en</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/store.js" defer></script>
+  <script src="/js/app.js" defer></script>
+</body>
+</html>

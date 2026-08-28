@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Services catalog — Human For AI</title>
+  <meta name="description" content="Ten human-in-the-loop services for AI agents: real-world verification, product testing, human judgment, data collection, physical-world tasks, AI output review, and more — each with a stable machine identifier.">
+  <link rel="canonical" href="https://humanforai.dev/services">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Human For AI">
+  <meta property="og:title" content="Services catalog — Human For AI">
+  <meta property="og:description" content="Ten human services callable by AI agents, each with a stable task_type identifier. All free during the pilot.">
+  <meta property="og:url" content="https://humanforai.dev/services">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#0b1120">
+  <link rel="alternate" type="application/json" href="/agent.json" title="Agent manifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Human For AI services",
+    "itemListElement": [
+      { "@type": "Service", "position": 1, "name": "Real-world verification", "serviceType": "real_world_verification" },
+      { "@type": "Service", "position": 2, "name": "Product or app testing", "serviceType": "product_or_app_testing" },
+      { "@type": "Service", "position": 3, "name": "Human judgment and feedback", "serviceType": "human_judgment_and_feedback" },
+      { "@type": "Service", "position": 4, "name": "Data collection", "serviceType": "data_collection" },
+      { "@type": "Service", "position": 5, "name": "Local physical-world tasks", "serviceType": "local_physical_task" },
+      { "@type": "Service", "position": 6, "name": "AI output review", "serviceType": "ai_output_review" },
+      { "@type": "Service", "position": 7, "name": "Prompt and workflow testing", "serviceType": "prompt_and_workflow_testing" },
+      { "@type": "Service", "position": 8, "name": "Simulation and automation testing", "serviceType": "simulation_and_automation_testing" },
+      { "@type": "Service", "position": 9, "name": "Accessibility and usability check", "serviceType": "accessibility_and_usability_check" },
+      { "@type": "Service", "position": 10, "name": "Custom human-in-the-loop tasks", "serviceType": "custom_human_in_the_loop" }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="/" aria-label="Human For AI home">
+        <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+        Human For AI
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/services" aria-current="page">Services</a></li>
+          <li><a href="/api">API</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/trust">Trust</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a class="nav-agent" href="/.well-known/agent.json">/agent.json</a></li>
+          <li><a class="btn btn-primary btn-sm" href="/request">Submit a task</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="page-head">
+      <div class="wrap">
+        <span class="eyebrow">GET /services <span class="dim">→ 200 OK · 10 items</span></span>
+        <h1>Services catalog</h1>
+        <p class="lede">Every service has a stable <code>task_type</code> identifier. Use it in the <a href="/request">task form</a> or in a <code>POST /api/v1/tasks</code> request. Every service is free during the proof-of-concept pilot — see <a href="/pricing">pricing</a> for what happens after.</p>
+      </div>
+    </div>
+
+    <section class="block" aria-label="All services">
+      <div class="wrap grid grid-2">
+
+        <article class="card" id="real_world_verification">
+          <span class="machine">task_type: real_world_verification</span>
+          <h3>Real-world verification</h3>
+          <p>Confirm that a place, product, price, business, or claim exists and matches its description. Evidence included: photos, receipts, timestamps, written observations.</p>
+          <p class="small" style="margin-top:0.75rem"><strong>Examples:</strong> "Is this product on the shelf at this store?" · "Does this office actually exist at this address?" · "Is the posted price accurate today?"</p>
+          <span class="price-band">Free during pilot · output: text_report_with_photos</span>
+        </article>
+
+        <article class="card" id="product_or_app_testing">
+          <span class="machine">task_type: product_or_app_testing</span>
+          <h3>Product or app testing</h3>
+          <p>Install, use, and test software, apps, or physical products as a real human user. Honest report of friction, bugs, confusion, and first impressions.</p>
+          <p class="small" style="margin-top:0.75rem"><strong>Examples:</strong> "Complete signup and first purchase, note every hesitation." · "Test this flow on a real Android device." · "Unbox and assemble the product, time it."</p>
+          <span class="price-band">Free during pilot · output: annotated_screenshots / video</span>
+        </article>
+
+        <article class="card" id="human_judgment_and_feedback">
+          <span class="machine">task_type: human_judgment_and_feedback</span>
+          <h3>Human judgment and feedback</h3>
+          <p>Structured subjective evaluation a model can't safely make alone: tone, clarity, trustworthiness, design quality, cultural fit, plausibility.</p>
+          <p class="small" style="margin-top:0.75rem"><strong>Examples:</strong> "Does this landing page feel trustworthy to a native speaker of your target market?" · "Rank these five headlines for credibility." · "Would a human find this email pushy?"</p>
+          <span class="price-band">Free during pilot · output: structured_json / text_report</span>
+        </article>
+
+        <article class="card" id="data_collection">
+          <span class="machine">task_type: data_collection</span>
+          <h3>Data collection</h3>
+          <p>Gather, label, or verify data that needs human perception, local access, or manual research — the data no crawler can reach.</p>
+          <p class="small" style="margin-top:0.75rem"><strong>Examples:</strong> "Collect opening hours for these 20 shops by calling them." · "Photograph street signage in this neighborhood." · "Label these 200 images for ambiguity."</p>
+          <span class="price-band">Free during pilot · output: structured_json / spreadsheet</span>
+        </article>
+
+        <article class="card" id="local_physical_task">
+          <span class="machine">task_type: local_physical_task</span>
+          <h3>Local physical-world tasks</h3>
+          <p>Errands and on-location actions in the operator's service area: visit, photograph, deliver, check, measure, observe, sign for. The hands your agent doesn't have.</p>
+          <p class="small" style="margin-top:0.75rem"><strong>Examples:</strong> "Photograph the queue at this location at 09:00." · "Pick up and re-ship a package." · "Measure the storefront and note foot traffic."</p>
+          <span class="price-band">Free during pilot · output: text_report_with_photos</span>
+        </article>
+
+        <article class="card" id="ai_output_review">
+          <span class="machine">task_type: ai_output_review</span>
+          <h3>AI output review</h3>
+          <p>A human checkpoint for AI-generated text, code, images, or decisions before they reach production or end users. Catch what evaluation metrics miss.</p>
+          <p class="small" style="margin-top:0.75rem"><strong>Examples:</strong> "Review 50 AI-written support replies for tone failures." · "Sanity-check this generated contract summary." · "Flag hallucinated facts in these articles."</p>
+          <span class="price-band">Free during pilot · output: structured_json / annotated_report</span>
+        </article>
+
+        <article class="card" id="prompt_and_workflow_testing">
+          <span class="machine">task_type: prompt_and_workflow_testing</span>
+          <h3>Prompt and workflow testing</h3>
+          <p>Run your prompts, agent flows, or automations as a deliberate human tester. Report failure modes, confusing branches, and edge cases a happy-path test misses.</p>
+          <p class="small" style="margin-top:0.75rem"><strong>Examples:</strong> "Try to break this chatbot in 30 minutes." · "Follow the agent's instructions literally and log where they fail." · "Test this prompt with adversarial inputs."</p>
+          <span class="price-band">Free during pilot · output: text_report / structured_json</span>
+        </article>
+
+        <article class="card" id="simulation_and_automation_testing">
+          <span class="machine">task_type: simulation_and_automation_testing</span>
+          <h3>Simulation and automation testing</h3>
+          <p>Act as the human inside a simulated scenario: play the customer, follow the script, receive the call, complete the checkout — and verify the pipeline end to end.</p>
+          <p class="small" style="margin-top:0.75rem"><strong>Examples:</strong> "Be the test customer for our voice agent, three scenarios." · "Complete a real order through the automated flow and confirm every email arrives."</p>
+          <span class="price-band">Free during pilot · output: text_report / video</span>
+        </article>
+
+        <article class="card" id="accessibility_and_usability_check">
+          <span class="machine">task_type: accessibility_and_usability_check</span>
+          <h3>Accessibility and usability check</h3>
+          <p>A human pass over your product for readability, navigation, accessibility barriers, and first-use confusion — the things automated audits score but don't feel.</p>
+          <p class="small" style="margin-top:0.75rem"><strong>Examples:</strong> "Navigate the site keyboard-only and report blockers." · "Is this readable on a phone in sunlight?" · "First-time-user walkthrough, spoken aloud."</p>
+          <span class="price-band">Free during pilot · output: annotated_report</span>
+        </article>
+
+        <article class="card" id="custom_human_in_the_loop">
+          <span class="machine">task_type: custom_human_in_the_loop</span>
+          <h3>Custom human-in-the-loop tasks</h3>
+          <p>Any recurring or one-off checkpoint where an autonomous system needs a human decision, signature, or observation. Describe the loop; we design the human step. <strong>If your task fits no category above, this is the one to use.</strong></p>
+          <p class="small" style="margin-top:0.75rem"><strong>Examples:</strong> "Approve high-risk agent actions within 4 hours." · "Daily human spot-check of automated listings." · "Human escalation contact for our support bot."</p>
+          <span class="price-band">Free during pilot · output: as agreed</span>
+        </article>
+
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="unlisted-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/services/unlisted</span>
+          <h2 id="unlisted-title">Don't see your task?</h2>
+        </div>
+        <div class="notice">
+          <strong>The catalog is examples, not limits.</strong> Anything a human can legally and safely do is in scope — these ten types exist so agents can index the offer, not to fence it. Submit an unlisted need as <code>custom_human_in_the_loop</code> and describe it plainly, or <a href="/contact">ask the operator first</a>. Every request gets a human answer at review, and recurring unlisted requests become new catalog entries.
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="cta-band">
+          <div>
+            <span class="machine">"task_type": "…"</span>
+            <h2>Found the right service?</h2>
+            <p>Submit it with a description and deadline — review starts within hours, and the pilot is free.</p>
+          </div>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="/request">Submit a task</a>
+            <a class="btn btn-ghost" href="/pricing">See pricing</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="logo" href="/">
+            <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+            Human For AI
+          </a>
+          <p class="muted" style="margin-top:0.9rem;max-width:36ch">A human endpoint for AI agents: human-in-the-loop services for autonomous workflows, developers, and AI systems.</p>
+          <span class="status-live">operator online</span>
+        </div>
+        <div>
+          <h3>platform/</h3>
+          <ul>
+            <li><a href="/services">Services</a></li>
+            <li><a href="/pricing">Pricing</a></li>
+            <li><a href="/request">Submit a task</a></li>
+            <li><a href="/for-agents">For agents</a></li>
+            <li><a href="/developers">Developers</a></li>
+            <li><a href="/use-cases">Use cases</a></li>
+            <li><a href="/tasks">Task status</a></li>
+            <li><a href="/admin">Admin</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>machine/</h3>
+          <ul>
+            <li><a class="mono-link" href="/.well-known/agent.json">/.well-known/agent.json</a></li>
+            <li><a class="mono-link" href="/.well-known/human.json">/.well-known/human.json</a></li>
+            <li><a class="mono-link" href="/.well-known/capabilities.json">/.well-known/capabilities.json</a></li>
+            <li><a class="mono-link" href="/.well-known/services.json">/.well-known/services.json</a></li>
+            <li><a class="mono-link" href="/openapi.json">/openapi.json</a></li>
+            <li><a class="mono-link" href="/api#mcp">/mcp — MCP server</a></li>
+            <li><a class="mono-link" href="/llms.txt">/llms.txt</a></li>
+            <li><a class="mono-link" href="/api">/api — docs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>operator/</h3>
+          <ul>
+            <li><a href="/profile">Operator profile</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/trust">Trust &amp; verification</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span>© <span data-year>2026</span> Human For AI. Early infrastructure, honestly labeled: free pilot — every service is free during the proof of concept.</span>
+        <span class="machine">api_version 1.8.0 · en</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/store.js" defer></script>
+  <script src="/js/app.js" defer></script>
+</body>
+</html>

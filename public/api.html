@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API documentation — Human For AI</title>
+  <meta name="description" content="Human For AI v1 documentation: discover the platform via /agent.json, submit tasks with POST /api/v1/tasks, and poll task status. JSON in, JSON out — designed for AI agents.">
+  <link rel="canonical" href="https://humanforai.dev/api">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Human For AI">
+  <meta property="og:title" content="API documentation — Human For AI">
+  <meta property="og:description" content="Submit human tasks by API: POST /api/v1/tasks. Full request schema, task types, status lifecycle, and error codes.">
+  <meta property="og:url" content="https://humanforai.dev/api">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#0b1120">
+  <link rel="alternate" type="application/json" href="/agent.json" title="Agent manifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Human For AI v1 documentation",
+    "description": "How AI agents submit tasks to a human operator: endpoints, request schema, task lifecycle, and error handling.",
+    "about": "Human-in-the-loop task API for AI agents"
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="/" aria-label="Human For AI home">
+        <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+        Human For AI
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/api" aria-current="page">API</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/trust">Trust</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a class="nav-agent" href="/.well-known/agent.json">/agent.json</a></li>
+          <li><a class="btn btn-primary btn-sm" href="/request">Submit a task</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="page-head">
+      <div class="wrap">
+        <span class="eyebrow">GET /api <span class="dim">→ 200 OK · content: documentation</span></span>
+        <h1>API documentation</h1>
+        <p class="lede">Version 1. JSON in, JSON out. No authentication for task submission in the MVP — every request is human-reviewed before acceptance, which is the real gate. Base URL: <code>https://humanforai.dev</code> (locally: <code>http://localhost:4180</code>).</p>
+      </div>
+    </div>
+
+    <!-- ============ mcp ============ -->
+    <section class="block" id="mcp" aria-labelledby="mcp-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">0 · connect via MCP</span>
+          <h2 id="mcp-title"><span class="method method-post">MCP</span><code>/mcp</code></h2>
+          <p class="muted">The fastest path for agents: Human For AI is a native <strong>MCP server</strong> (streamable HTTP, no auth). Add it once and the human becomes a tool your agent can call — <code>get_human_services</code>, <code>submit_human_task</code>, <code>check_task_status</code>, <code>message_human_operator</code>.</p>
+        </div>
+        <div class="grid grid-2">
+          <div class="code-titled">
+            <div class="code-title">Claude Code</div>
+            <pre class="code"><code>claude mcp add --transport http human-for-ai \
+  https://humanforai.dev/mcp</code></pre>
+          </div>
+          <div class="code-titled">
+            <div class="code-title">Claude Desktop / Claude.ai</div>
+            <pre class="code"><code><span class="d"># Settings → Connectors → Add custom connector</span>
+<span class="k">URL:</span> <span class="s">https://humanforai.dev/mcp</span></code></pre>
+          </div>
+          <div class="code-titled">
+            <div class="code-title">Stdio clients (no remote MCP support)</div>
+            <pre class="code"><code><span class="d"># via npm — thin proxy to the endpoint above</span>
+npx -y humanforai</code></pre>
+          </div>
+          <div class="code-titled">
+            <div class="code-title">Stdio config (JSON)</div>
+            <pre class="code"><code>{ <span class="k">"command"</span>: <span class="s">"npx"</span>, <span class="k">"args"</span>: [<span class="s">"-y"</span>, <span class="s">"humanforai"</span>] }</code></pre>
+          </div>
+        </div>
+        <p class="small muted">Prefer raw HTTP? Everything below works without MCP — same capabilities, same review process.</p>
+      </div>
+    </section>
+
+    <!-- ============ discovery ============ -->
+    <section class="block" id="discovery" aria-labelledby="discovery-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">1 · discovery</span>
+          <h2 id="discovery-title"><span class="method method-get">GET</span><code>/.well-known/agent.json</code></h2>
+          <p class="muted">The platform manifest, published at the standard <code>/.well-known/</code> location (and mirrored at <code>/agent.json</code>). Everything an agent needs to decide whether and how to use this service: interfaces, task types, response expectations, pricing, trust policy, endpoints. Fetch it first.</p>
+        </div>
+        <div class="code-titled">
+          <div class="code-title">example</div>
+          <pre class="code"><code>curl https://humanforai.dev/.well-known/agent.json</code></pre>
+        </div>
+        <h3>All machine-readable resources</h3>
+        <div class="table-scroll" style="margin-bottom:1rem">
+          <table>
+            <thead><tr><th>path</th><th>content</th></tr></thead>
+            <tbody>
+              <tr><td><code><a class="mono-link" href="/.well-known/agent.json">/.well-known/agent.json</a></code></td><td>Platform manifest: brand, interfaces, accepted/rejected task types, response expectations, pricing model, trust &amp; safety, endpoints.</td></tr>
+              <tr><td><code><a class="mono-link" href="/.well-known/human.json">/.well-known/human.json</a></code></td><td>The human operator: role, location policy, languages, background, expertise, availability, preferred task types, boundaries.</td></tr>
+              <tr><td><code><a class="mono-link" href="/.well-known/capabilities.json">/.well-known/capabilities.json</a></code></td><td>Structured capabilities: required inputs, output formats, example tasks, limitations.</td></tr>
+              <tr><td><code><a class="mono-link" href="/.well-known/services.json">/.well-known/services.json</a></code></td><td>Service catalog: task types, pricing, response times, example requests and response formats.</td></tr>
+              <tr><td><code><a class="mono-link" href="/agent.json">/agent.json</a></code></td><td>Root-level copy of the platform manifest.</td></tr>
+              <tr><td><code><a class="mono-link" href="/openapi.json">/openapi.json</a></code></td><td>OpenAPI 3.0 specification of this REST API.</td></tr>
+              <tr><td><code>/mcp</code></td><td>MCP server (streamable HTTP, no auth) — see <a href="#mcp">section 0</a>.</td></tr>
+              <tr><td><code><a class="mono-link" href="/llms.txt">/llms.txt</a></code></td><td>Curated plain-text summary for language models.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small muted">The manifest is also linked from every page via <code>&lt;link rel="alternate" type="application/json"&gt;</code> and referenced in <a class="mono-link" href="/robots.txt">/robots.txt</a>.</p>
+      </div>
+    </section>
+
+    <!-- ============ submit ============ -->
+    <section class="block" id="submit" aria-labelledby="submit-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">2 · submit a task</span>
+          <h2 id="submit-title"><span class="method method-post">POST</span><code>/api/v1/tasks</code></h2>
+          <p class="muted">Creates a task request. Returns a generated <code>task_id</code> and a status URL. Submission is not acceptance — the operator reviews every task first.</p>
+        </div>
+
+        <h3 id="task-schema">Request body</h3>
+        <div class="table-scroll" style="margin-bottom:2rem">
+          <table>
+            <caption class="skip-link">Task request fields</caption>
+            <thead>
+              <tr><th>field</th><th>type</th><th>required</th><th>description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>task_type</code></td><td>string</td><td>yes</td><td>One of the accepted task types below.</td></tr>
+              <tr><td><code>description</code></td><td>string</td><td>yes</td><td>What to do, where, and what success looks like. 10–5000 characters.</td></tr>
+              <tr><td><code>budget_usd</code></td><td>number</td><td>no</td><td>Optional — services are <a href="/pricing">free during the pilot</a>, so the field is accepted and ignored for now.</td></tr>
+              <tr><td><code>location_required</code></td><td>boolean</td><td>no</td><td>Set <code>true</code> if the task needs physical presence. Default <code>false</code>.</td></tr>
+              <tr><td><code>location_detail</code></td><td>string</td><td>no</td><td>City, address, or area — required in practice when <code>location_required</code> is true.</td></tr>
+              <tr><td><code>deadline</code></td><td>string</td><td>no</td><td>ISO 8601 datetime, e.g. <code>2026-07-10T12:00:00+03:00</code>.</td></tr>
+              <tr><td><code>output_format</code></td><td>string</td><td>no</td><td><code>text_report</code> (default), <code>text_report_with_photos</code>, <code>structured_json</code>, <code>annotated_screenshots</code>, <code>video</code>, or describe your own.</td></tr>
+              <tr><td><code>contact_email</code></td><td>string</td><td>yes*</td><td>Where results and clarifying questions go. Must be a real mailbox — placeholder domains (example.com etc.) are rejected and the domain is MX-checked. Not shown publicly. *Not needed with <code>delivery: status_poll</code>.</td></tr>
+              <tr><td><code>delivery</code></td><td>string</td><td>no</td><td><code>email</code> (default) or <code>status_poll</code> — the no-mailbox path for autonomous agents: the deliverable arrives as text in <code>operator_notes</code> via the status endpoint; the task_id is the only key. 1 such task per client per day.</td></tr>
+              <tr><td><code>requester</code></td><td>string</td><td>no</td><td>Agent name, company, or system identifier — helps review go faster.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="code-titled">
+            <div class="code-title">request</div>
+            <pre class="code"><code>POST /api/v1/tasks
+Content-Type: application/json
+
+{
+  <span class="k">"task_type"</span>: <span class="s">"real_world_verification"</span>,
+  <span class="k">"description"</span>: <span class="s">"Verify whether a specific product
+                  exists in a local store"</span>,
+  <span class="k">"location_required"</span>: true,
+  <span class="k">"deadline"</span>: <span class="s">"2026-07-10T12:00:00+03:00"</span>,
+  <span class="k">"output_format"</span>: <span class="s">"text_report_with_photos"</span>,
+  <span class="k">"budget_usd"</span>: 25
+}</code></pre>
+            <p class="small muted" style="margin-top:0.5rem"><code>contact_email</code> is required — the deliverable is sent there. Add <code>requester</code> (e.g. <code>acme-shopping-agent/2.1</code>) to speed up review. <code>budget_usd</code> is ignored while the pilot is free. Anti-abuse: duplicates within 24h return <code>409</code>, per-client rate limits return <code>429</code>, and repeat abusers get <code>403</code>.</p>
+          </div>
+          <div class="code-titled">
+            <div class="code-title">response — 201 Created</div>
+            <pre class="code"><code>{
+  <span class="k">"task_id"</span>: <span class="s">"HFAI-2026-9F41C2AB7D3E5061"</span>,
+  <span class="k">"status"</span>: <span class="s">"submitted"</span>,
+  <span class="k">"created_at"</span>: <span class="s">"2026-07-06T09:12:44.201Z"</span>,
+  <span class="k">"status_url"</span>: <span class="s">"/api/v1/tasks/HFAI-2026-9F41C2AB7D3E5061"</span>,
+  <span class="k">"status_page"</span>: <span class="s">"/tasks?id=HFAI-2026-9F41C2AB7D3E5061"</span>,
+  <span class="k">"message"</span>: <span class="s">"Task received. It will be reviewed
+              before acceptance. Keep the task_id
+              to check status."</span>
+}</code></pre>
+          </div>
+        </div>
+
+        <h3>Accepted task types</h3>
+        <p class="machine muted" style="line-height:2.1">
+          <span class="pill pill-accent">real_world_verification</span>
+          <span class="pill pill-accent">product_or_app_testing</span>
+          <span class="pill pill-accent">human_judgment_and_feedback</span>
+          <span class="pill pill-accent">data_collection</span>
+          <span class="pill pill-accent">local_physical_task</span>
+          <span class="pill pill-accent">ai_output_review</span>
+          <span class="pill pill-accent">prompt_and_workflow_testing</span>
+          <span class="pill pill-accent">simulation_and_automation_testing</span>
+          <span class="pill pill-accent">accessibility_and_usability_check</span>
+          <span class="pill pill-accent">custom_human_in_the_loop</span>
+        </p>
+        <p class="small muted">Tasks that are illegal, harmful, deceptive, unsafe, or privacy-invasive are rejected at review regardless of type. See <a href="/trust">trust &amp; verification</a> and the <code>rejected_task_types</code> list in <a class="mono-link" href="/agent.json">/agent.json</a>.</p>
+      </div>
+    </section>
+
+    <!-- ============ status ============ -->
+    <section class="block" id="status" aria-labelledby="status-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">3 · check status</span>
+          <h2 id="status-title"><span class="method method-get">GET</span><code>/api/v1/tasks/{task_id}</code></h2>
+          <p class="muted">Public status lookup — the unguessable task ID acts as the access token. Contact email is never included in this response. Humans can use the <a href="/tasks">status page</a> instead.</p>
+        </div>
+        <div class="code-titled">
+          <div class="code-title">response — 200 OK</div>
+          <pre class="code"><code>{
+  <span class="k">"task_id"</span>: <span class="s">"HFAI-2026-9F41C2AB7D3E5061"</span>,
+  <span class="k">"status"</span>: <span class="s">"accepted"</span>,
+  <span class="k">"task_type"</span>: <span class="s">"real_world_verification"</span>,
+  <span class="k">"deadline"</span>: <span class="s">"2026-07-10T12:00:00+03:00"</span>,
+  <span class="k">"status_history"</span>: [
+    { <span class="k">"status"</span>: <span class="s">"submitted"</span>,    <span class="k">"at"</span>: <span class="s">"2026-07-06T09:12:44Z"</span> },
+    { <span class="k">"status"</span>: <span class="s">"accepted"</span>,  <span class="k">"at"</span>: <span class="s">"2026-07-06T12:40:33Z"</span> }
+  ]
+}</code></pre>
+        </div>
+
+        <h3>Task lifecycle</h3>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>status</th><th>meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code>submitted</code></td><td>Received. A human is evaluating feasibility, safety, and budget — <code>seen_by_operator_at</code> marks the moment they first saw it.</td></tr>
+              <tr><td><code>accepted</code></td><td>Task confirmed and under way; <code>eta</code> carries the delivery estimate.</td></tr>
+              <tr><td><code>delivered</code></td><td>Result sent in the requested output format. Final.</td></tr>
+              <tr><td><code>rejected</code></td><td>Declined at review — reason included in <code>operator_notes</code> when possible. Final.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small muted">Transitions are forward-only: <code>submitted → accepted → delivered</code>, with <code>rejected</code> reachable from either open state. A PATCH that would move a task backwards returns <code>409 invalid_transition</code>. The earlier <code>under_review</code> and <code>in_progress</code> statuses were retired in v1.8.0 — <code>under_review</code> duplicated <code>seen_by_operator_at</code>, which is stamped automatically and more precisely, and <code>in_progress</code> told you nothing <code>accepted</code> did not. Neither is emitted any more; tasks delivered before the change keep them in <code>status_history</code>.</p>
+
+        <h3>Signed receipt (once delivered)</h3>
+        <p class="muted">A delivered task carries three extra fields. <code>receipt</code> is a compact JWS (EdDSA/Ed25519) binding the deliverable's hash and the lifecycle timestamps to this task ID; verify it against the public key at <a class="mono-link" href="/.well-known/jwks.json">/.well-known/jwks.json</a> — offline, no account, no callback. Worked example on <a href="/trust#receipts">/trust</a>.</p>
+        <div class="code-titled">
+          <div class="code-title">response — 200 OK (delivered)</div>
+          <pre class="code"><code>{
+  <span class="k">"task_id"</span>: <span class="s">"HFAI-2026-9F41C2AB7D3E5061"</span>,
+  <span class="k">"status"</span>: <span class="s">"delivered"</span>,
+  <span class="k">"operator_notes"</span>: <span class="s">"Visited on 2026-07-09. Listed hours are correct..."</span>,
+  <span class="k">"receipt"</span>: <span class="s">"eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCIsImtpZCI6..."</span>,
+  <span class="k">"deliverable_sha256"</span>: <span class="s">"a5deaf4c2264a50b5654fe4e5a5777c163d003b880..."</span>,
+  <span class="k">"receipt_issued_at"</span>: <span class="s">"2026-07-09T18:22:05Z"</span>
+}</code></pre>
+        </div>
+        <p class="small muted"><code>deliverable_sha256</code> covers the UTF-8 bytes of <code>operator_notes</code> exactly as returned here — recompute it locally to confirm nothing was altered. It proves integrity and origin; the timestamps inside are this service's own signed assertion, not third-party attested.</p>
+      </div>
+    </section>
+
+    <!-- ============ contact ============ -->
+    <section class="block" id="contact-endpoint" aria-labelledby="contact-ep-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">4 · contact the operator</span>
+          <h2 id="contact-ep-title"><span class="method method-post">POST</span><code>/api/v1/messages</code></h2>
+          <p class="muted">For anything that isn't a ready-made task: questions, scoping, custom projects, NDAs. No auth. <code>reply_to</code> is required — it's the only way the operator can answer you, and it must be a real mailbox (MX-checked).</p>
+        </div>
+        <div class="grid grid-2">
+          <div class="code-titled">
+            <div class="code-title">request</div>
+            <pre class="code"><code>POST /api/v1/messages
+Content-Type: application/json
+
+{
+  <span class="k">"from"</span>: <span class="s">"acme-shopping-agent/2.1"</span>,
+  <span class="k">"subject"</span>: <span class="s">"Recurring verification, weekly"</span>,
+  <span class="k">"message"</span>: <span class="s">"Can you verify shelf stock at 3 stores
+              every Sunday? What would that cost?"</span>,
+  <span class="k">"reply_to"</span>: <span class="s">"agent-inbox@example.com"</span>
+}</code></pre>
+          </div>
+          <div class="code-titled">
+            <div class="code-title">response — 201 Created</div>
+            <pre class="code"><code>{
+  <span class="k">"message_id"</span>: <span class="s">"MSG-2026-4B7A91C3"</span>,
+  <span class="k">"created_at"</span>: <span class="s">"2026-07-06T14:02:11.512Z"</span>,
+  <span class="k">"message"</span>: <span class="s">"Message received. The operator replies
+              within 12 hours, any day of the week."</span>
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ errors & ops ============ -->
+    <section class="block" id="errors" aria-labelledby="errors-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">5 · errors &amp; operations</span>
+          <h2 id="errors-title">Errors, health, and limits</h2>
+        </div>
+        <div class="grid grid-2">
+          <div>
+            <h3>Error codes</h3>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>HTTP</th><th>error</th><th>meaning</th></tr></thead>
+                <tbody>
+                  <tr><td><code>400</code></td><td><code>invalid_json</code></td><td>Body is not valid JSON.</td></tr>
+                  <tr><td><code>401</code></td><td><code>unauthorized</code></td><td>Admin endpoints without a valid key.</td></tr>
+                  <tr><td><code>404</code></td><td><code>task_not_found</code></td><td>No task with that ID.</td></tr>
+                  <tr><td><code>413</code></td><td><code>payload_too_large</code></td><td>Body over 64 KB.</td></tr>
+                  <tr><td><code>422</code></td><td><code>validation_failed</code></td><td>Field errors listed in <code>details[]</code>.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h3>Health check</h3>
+            <div class="code-titled">
+              <div class="code-title">GET /api/v1/health → 200</div>
+              <pre class="code"><code>{
+  <span class="k">"status"</span>: <span class="s">"ok"</span>,
+  <span class="k">"service"</span>: <span class="s">"human-for-ai"</span>,
+  <span class="k">"api_version"</span>: <span class="s">"1.0.0"</span>
+}</code></pre>
+            </div>
+            <h3>Limits</h3>
+            <ul class="small muted">
+              <li>Request body ≤ 64 KB</li>
+              <li><code>description</code> ≤ 5000 characters</li>
+              <li><code>budget_usd</code> is deprecated — free pilot, field ignored</li>
+              <li>No auth, no rate limits in the MVP</li>
+              <li>CORS enabled — agents can call from anywhere</li>
+            </ul>
+          </div>
+        </div>
+        <div class="notice">
+          <strong>Planned for v1.1:</strong> API keys per agent, webhook callbacks on status change, and result delivery as <code>structured_json</code> directly in the status response. The MVP intentionally ships without them.
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="cta-band">
+          <div>
+            <span class="machine">201 Created</span>
+            <h2>Try it now.</h2>
+            <p>POST a task from your agent, or use the human form — both hit the same interface.</p>
+          </div>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="/request">Open the task form</a>
+            <a class="btn btn-ghost" href="/agent.json">Fetch /agent.json</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="logo" href="/">
+            <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+            Human For AI
+          </a>
+          <p class="muted" style="margin-top:0.9rem;max-width:36ch">A human endpoint for AI agents: human-in-the-loop services for autonomous workflows, developers, and AI systems.</p>
+          <span class="status-live">operator online</span>
+        </div>
+        <div>
+          <h3>platform/</h3>
+          <ul>
+            <li><a href="/services">Services</a></li>
+            <li><a href="/pricing">Pricing</a></li>
+            <li><a href="/request">Submit a task</a></li>
+            <li><a href="/for-agents">For agents</a></li>
+            <li><a href="/developers">Developers</a></li>
+            <li><a href="/use-cases">Use cases</a></li>
+            <li><a href="/tasks">Task status</a></li>
+            <li><a href="/admin">Admin</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>machine/</h3>
+          <ul>
+            <li><a class="mono-link" href="/.well-known/agent.json">/.well-known/agent.json</a></li>
+            <li><a class="mono-link" href="/.well-known/human.json">/.well-known/human.json</a></li>
+            <li><a class="mono-link" href="/.well-known/capabilities.json">/.well-known/capabilities.json</a></li>
+            <li><a class="mono-link" href="/.well-known/services.json">/.well-known/services.json</a></li>
+            <li><a class="mono-link" href="/openapi.json">/openapi.json</a></li>
+            <li><a class="mono-link" href="/api#mcp">/mcp — MCP server</a></li>
+            <li><a class="mono-link" href="/llms.txt">/llms.txt</a></li>
+            <li><a class="mono-link" href="/api">/api — docs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>operator/</h3>
+          <ul>
+            <li><a href="/profile">Operator profile</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/trust">Trust &amp; verification</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span>© <span data-year>2026</span> Human For AI. Early infrastructure, honestly labeled: free pilot — every service is free during the proof of concept.</span>
+        <span class="machine">api_version 1.8.0 · en</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/store.js" defer></script>
+  <script src="/js/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Submit a task — Human For AI</title>
+  <meta name="description" content="Request a human task: real-world verification, testing, judgment, review, or a physical-world action. Get a task ID instantly and track status. Same interface for humans and AI agents.">
+  <link rel="canonical" href="https://humanforai.dev/request">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Human For AI">
+  <meta property="og:title" content="Submit a task — Human For AI">
+  <meta property="og:description" content="Describe the task, set a deadline and budget, get a task ID. Every request is human-reviewed before acceptance.">
+  <meta property="og:url" content="https://humanforai.dev/request">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#0b1120">
+  <link rel="alternate" type="application/json" href="/agent.json" title="Agent manifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="/" aria-label="Human For AI home">
+        <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+        Human For AI
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/api">API</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/trust">Trust</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a class="nav-agent" href="/.well-known/agent.json">/agent.json</a></li>
+          <li><a class="btn btn-primary btn-sm" href="/request" aria-current="page">Submit a task</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="page-head">
+      <div class="wrap">
+        <span class="eyebrow">POST /api/v1/tasks <span class="dim">· form and API are the same interface</span></span>
+        <h1>Submit a task</h1>
+        <p class="lede">Describe what you need, set a deadline and budget, and get a task ID immediately. The operator reviews every request before accepting it. Agents can skip the form and <a href="/api#submit">POST directly</a>.</p>
+      </div>
+    </div>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="grid grid-2" style="align-items:start;gap:2rem">
+
+          <div>
+            <div id="form-errors" class="form-error" role="alert" tabindex="-1" hidden></div>
+
+            <form id="task-form" class="panel" novalidate>
+              <div class="field">
+                <label for="task_type">Task type</label>
+                <select id="task_type" name="task_type" required>
+                  <option value="real_world_verification">Real-world verification</option>
+                  <option value="product_or_app_testing">Product or app testing</option>
+                  <option value="human_judgment_and_feedback">Human judgment and feedback</option>
+                  <option value="data_collection">Data collection</option>
+                  <option value="local_physical_task">Local physical-world task</option>
+                  <option value="ai_output_review">AI output review</option>
+                  <option value="prompt_and_workflow_testing">Prompt and workflow testing</option>
+                  <option value="simulation_and_automation_testing">Simulation and automation testing</option>
+                  <option value="accessibility_and_usability_check">Accessibility and usability check</option>
+                  <option value="custom_human_in_the_loop">Custom human-in-the-loop</option>
+                </select>
+                <span class="hint">Not sure? See the <a href="/services">catalog</a> or pick custom.</span>
+              </div>
+
+              <div class="field">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" required minlength="10" maxlength="5000"
+                  placeholder="What should be done, where, and what does success look like? Example: Verify whether product X is on the shelf at a specified store, photograph it and note the price."></textarea>
+                <span class="hint">Be specific — clear tasks get reviewed and accepted faster.</span>
+              </div>
+
+              <div class="field field-inline">
+                <input type="checkbox" id="location_required" name="location_required">
+                <label for="location_required">This task requires physical presence at a location</label>
+              </div>
+
+              <div class="field">
+                <label for="location_detail">Location detail <span class="muted">(if required)</span></label>
+                <input type="text" id="location_detail" name="location_detail" maxlength="500" placeholder="City, address, or area">
+                <span class="hint">Location coverage is confirmed during review.</span>
+              </div>
+
+              <div class="form-grid">
+                <div class="field">
+                  <label for="deadline">Deadline <span class="muted">(optional)</span></label>
+                  <input type="datetime-local" id="deadline" name="deadline">
+                </div>
+                <div class="field">
+                  <label>Cost</label>
+                  <p style="margin:0.4rem 0 0"><span class="pill pill-ok">free during the pilot</span></p>
+                  <span class="hint">No payment, no invoice. See <a href="/pricing">pricing</a> for what happens after the pilot.</span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="output_format">Output format</label>
+                <select id="output_format" name="output_format">
+                  <option value="text_report">Text report</option>
+                  <option value="text_report_with_photos">Text report with photos</option>
+                  <option value="structured_json">Structured JSON</option>
+                  <option value="annotated_screenshots">Annotated screenshots</option>
+                  <option value="video">Video</option>
+                </select>
+              </div>
+
+              <div class="form-grid">
+                <div class="field">
+                  <label for="contact_email">Contact email</label>
+                  <input type="email" id="contact_email" name="contact_email" placeholder="your.name@gmail.com" required>
+                  <span class="hint">Where results and questions go. Never shown publicly.</span>
+                </div>
+                <div class="field">
+                  <label for="requester">Requester <span class="muted">(optional)</span></label>
+                  <input type="text" id="requester" name="requester" maxlength="200" placeholder="e.g. acme-shopping-agent/2.1 or your name">
+                </div>
+              </div>
+
+              <div class="notice notice-warn" style="margin-top:0">
+                Don't include confidential information unless agreed in advance. Illegal, harmful, deceptive, unsafe, or privacy-invasive tasks are rejected — see <a href="/trust">trust &amp; safety</a>.
+              </div>
+
+              <button class="btn btn-primary" type="submit">Submit task</button>
+            </form>
+
+            <div id="form-success" class="form-success" role="status" hidden>
+              <span class="machine" style="color:var(--ok)">201 Created</span>
+              <h2 style="margin-top:0.5rem">Task received</h2>
+              <p>Your task ID — save it, it's the key to checking status:</p>
+              <div class="task-id-display" id="result-task-id"></div>
+              <p id="result-via" class="small muted"></p>
+              <p style="margin-bottom:0">
+                <a class="btn btn-primary btn-sm" id="result-status-link" href="/tasks">Track status</a>
+                <a class="btn btn-ghost btn-sm" href="/request" style="margin-left:0.5rem">Submit another</a>
+              </p>
+            </div>
+          </div>
+
+          <aside aria-label="Machine view of this request">
+            <div class="code-titled" style="position:sticky;top:80px">
+              <div class="code-title">what the machine sees — live payload</div>
+              <pre class="code" style="min-height:16em"><code id="payload-preview">{}</code></pre>
+              <p class="small muted" style="margin-top:0.9rem">This form builds exactly the JSON an agent would send to <code>POST /api/v1/tasks</code>. One interface, two readers.</p>
+            </div>
+          </aside>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="logo" href="/">
+            <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+            Human For AI
+          </a>
+          <p class="muted" style="margin-top:0.9rem;max-width:36ch">A human endpoint for AI agents: human-in-the-loop services for autonomous workflows, developers, and AI systems.</p>
+          <span class="status-live">operator online</span>
+        </div>
+        <div>
+          <h3>platform/</h3>
+          <ul>
+            <li><a href="/services">Services</a></li>
+            <li><a href="/pricing">Pricing</a></li>
+            <li><a href="/request">Submit a task</a></li>
+            <li><a href="/for-agents">For agents</a></li>
+            <li><a href="/developers">Developers</a></li>
+            <li><a href="/use-cases">Use cases</a></li>
+            <li><a href="/tasks">Task status</a></li>
+            <li><a href="/admin">Admin</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>machine/</h3>
+          <ul>
+            <li><a class="mono-link" href="/.well-known/agent.json">/.well-known/agent.json</a></li>
+            <li><a class="mono-link" href="/.well-known/human.json">/.well-known/human.json</a></li>
+            <li><a class="mono-link" href="/.well-known/capabilities.json">/.well-known/capabilities.json</a></li>
+            <li><a class="mono-link" href="/.well-known/services.json">/.well-known/services.json</a></li>
+            <li><a class="mono-link" href="/openapi.json">/openapi.json</a></li>
+            <li><a class="mono-link" href="/api#mcp">/mcp — MCP server</a></li>
+            <li><a class="mono-link" href="/llms.txt">/llms.txt</a></li>
+            <li><a class="mono-link" href="/api">/api — docs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>operator/</h3>
+          <ul>
+            <li><a href="/profile">Operator profile</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/trust">Trust &amp; verification</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span>© <span data-year>2026</span> Human For AI. Early infrastructure, honestly labeled: free pilot — every service is free during the proof of concept.</span>
+        <span class="machine">api_version 1.8.0 · en</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/store.js?v=4" defer></script>
+  <script src="/js/app.js" defer></script>
+  <script src="/js/request.js?v=2" defer></script>
+</body>
+</html>

@@ -1,0 +1,690 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Human For AI API",
+    "version": "1.8.1",
+    "description": "A human endpoint for AI agents. Submit tasks that need physical presence, human perception, or human judgment — real-world verification, product testing, AI output review, data collection, local physical-world errands — and a verified human operator performs them. All services are FREE during the proof-of-concept pilot. No authentication is required; every task is reviewed by the human before acceptance, and illegal, harmful, deceptive, unsafe, or privacy-invasive tasks are rejected. First response within 12 hours, any day of the week. An MCP server is also available at https://humanforai.dev/mcp (streamable HTTP, no auth; discovery at /.well-known/mcp).\n\nAsynchronous jobs: task submission is a long-running human job. POST /api/v1/tasks returns 201 immediately with a task_id (the job identifier), a status_url, and a Location header pointing at the poll endpoint; poll GET /api/v1/tasks/{task_id} until status reaches delivered or rejected. Work never completes within the submission request.\n\nIdempotency: POST /api/v1/tasks and POST /api/v1/messages accept an optional Idempotency-Key header (up to 200 chars). Retrying with the same key and identical payload within 24h replays the original 201 response (marked Idempotency-Replayed: true) instead of creating a duplicate or burning rate-limit budget; the same key with a different payload returns 422. Keys are scoped per client.\n\nPagination: list endpoints use cursor pagination — pass limit (1–50) and the opaque next_cursor from the previous page; next_cursor is null on the last page. See GET /api/v1/services.\n\nVersioning & deprecation: the API is versioned in the URL path (/api/v1). Changes within a version are additive only; breaking changes ship as a new path version, and a deprecated version keeps working for at least 90 days while announcing retirement with Deprecation and Sunset headers (RFC 8594) plus a notice in /agent.json. Nothing is currently deprecated. Policy: https://humanforai.dev/developers#versioning.\n\nRate limits: responses carry standard RateLimit-Policy / RateLimit-Limit / RateLimit-Remaining / RateLimit-Reset headers (draft-ietf-httpapi-ratelimit-headers), and every 429 includes Retry-After. Details: https://humanforai.dev/developers#rate-limits.",
+    "contact": {
+      "name": "Human For AI operator",
+      "url": "https://humanforai.dev/contact"
+    }
+  },
+  "externalDocs": {
+    "description": "Human-readable API documentation",
+    "url": "https://humanforai.dev/api"
+  },
+  "servers": [
+    {
+      "url": "https://humanforai.dev",
+      "description": "Production"
+    }
+  ],
+  "paths": {
+    "/api/v1/tasks": {
+      "post": {
+        "operationId": "submitTask",
+        "summary": "Submit a task for the human operator (async job)",
+        "description": "Submits a task as an asynchronous job: the 201 acknowledges acceptance into the queue, never completion. The response body carries the job identifier (task_id) and status_url, and the Location header points at the same poll endpoint — poll GET /api/v1/tasks/{task_id} until status reaches delivered or rejected. Keep the task_id: it is the only way to check status (the ID acts as an unlisted token). The task is reviewed by the human operator before acceptance. Include contact_email to receive the deliverable and any questions. Send an Idempotency-Key header to make retries safe.",
+        "parameters": [
+          { "$ref": "#/components/parameters/IdempotencyKey" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskRequest"
+              },
+              "example": {
+                "task_type": "real_world_verification",
+                "description": "Verify whether a specific product exists in a local store and photograph the shelf price.",
+                "location_required": true,
+                "output_format": "text_report_with_photos",
+                "contact_email": "agent-results@example.com",
+                "requester": "acme-shopping-agent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Async job accepted: the task is queued for human review, not completed. Poll the URL in the Location header (also status_url in the body) until status is delivered or rejected.",
+            "headers": {
+              "Location": { "$ref": "#/components/headers/Location" },
+              "Idempotency-Replayed": { "$ref": "#/components/headers/IdempotencyReplayed" },
+              "RateLimit-Limit": { "$ref": "#/components/headers/RateLimitLimit" },
+              "RateLimit-Remaining": { "$ref": "#/components/headers/RateLimitRemaining" },
+              "RateLimit-Reset": { "$ref": "#/components/headers/RateLimitReset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskSubmissionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited: per-client hourly/daily cap or global daily capacity reached. Honor Retry-After before resubmitting.",
+            "headers": {
+              "Retry-After": { "$ref": "#/components/headers/RetryAfter" },
+              "RateLimit-Limit": { "$ref": "#/components/headers/RateLimitLimit" },
+              "RateLimit-Remaining": { "$ref": "#/components/headers/RateLimitRemaining" },
+              "RateLimit-Reset": { "$ref": "#/components/headers/RateLimitReset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Client address is on the abuse blocklist."
+          },
+          "409": {
+            "description": "Duplicate: an identical submission exists within the last 24h; the response includes the existing id."
+          }
+        }
+      }
+    },
+    "/api/v1/tasks/{task_id}": {
+      "get": {
+        "operationId": "getTaskStatus",
+        "summary": "Check the status of a submitted task",
+        "description": "Public status lookup. The task_id acts as the access token — anyone holding it can view status. Contact email is never returned.",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "HFAI-2026-97BBAB04C15D2E63"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current task state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No task with that ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/messages": {
+      "post": {
+        "operationId": "sendMessage",
+        "summary": "Send a message to the human operator",
+        "description": "Structured contact channel for questions, scoping, or anything that is not yet a task. Include reply_to (email) to receive an answer — it is the operator's only way to reply. Send an Idempotency-Key header to make retries safe.",
+        "parameters": [
+          { "$ref": "#/components/parameters/IdempotencyKey" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageRequest"
+              },
+              "example": {
+                "message": "Before I submit a task: can you test an Android app that requires a local SIM card?",
+                "reply_to": "agent-inbox@example.com",
+                "from": "acme-qa-agent",
+                "subject": "Scoping question"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Message received.",
+            "headers": {
+              "Idempotency-Replayed": { "$ref": "#/components/headers/IdempotencyReplayed" },
+              "RateLimit-Limit": { "$ref": "#/components/headers/RateLimitLimit" },
+              "RateLimit-Remaining": { "$ref": "#/components/headers/RateLimitRemaining" },
+              "RateLimit-Reset": { "$ref": "#/components/headers/RateLimitReset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited: per-client hourly/daily cap or global daily capacity reached. Honor Retry-After before resubmitting.",
+            "headers": {
+              "Retry-After": { "$ref": "#/components/headers/RetryAfter" },
+              "RateLimit-Limit": { "$ref": "#/components/headers/RateLimitLimit" },
+              "RateLimit-Remaining": { "$ref": "#/components/headers/RateLimitRemaining" },
+              "RateLimit-Reset": { "$ref": "#/components/headers/RateLimitReset" }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Client address is on the abuse blocklist."
+          },
+          "409": {
+            "description": "Duplicate: an identical submission exists within the last 24h; the response includes the existing id."
+          }
+        }
+      }
+    },
+    "/api/v1/services": {
+      "get": {
+        "operationId": "listServices",
+        "summary": "List the human service catalog (cursor-paginated)",
+        "description": "Public, cursor-paginated list of the service types the human operator offers — the same entries as the `services` array in /agent.json. Pass `limit` (1–50, default 10) and the opaque `cursor` from the previous page's next_cursor; next_cursor is null on the last page. The catalog is examples, not limits — unlisted needs are welcome as custom_human_in_the_loop.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "maximum": 50, "default": 10 },
+            "description": "Page size."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Opaque pagination cursor from the previous page's next_cursor. Omit for the first page."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page of the service catalog.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ServiceCatalogPage" }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid cursor.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "operationId": "healthCheck",
+        "summary": "Liveness check",
+        "responses": {
+          "200": {
+            "description": "Service is up.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "service": {
+                      "type": "string",
+                      "example": "human-for-ai"
+                    },
+                    "api_version": {
+                      "type": "string",
+                      "example": "1.8.0"
+                    },
+                    "time": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent.json": {
+      "get": {
+        "operationId": "getAgentManifest",
+        "summary": "Machine-readable platform manifest",
+        "description": "Full platform manifest: services catalog, endpoints, task schema, accepted and rejected task types, pricing, trust policy, and limits.",
+        "responses": {
+          "200": {
+            "description": "The manifest.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentManifest"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": false,
+        "schema": { "type": "string", "maxLength": 200 },
+        "description": "Optional client-supplied key (e.g. a UUID) that makes this write retry-safe. A retry with the same key and identical payload within 24h replays the original 201 response (Idempotency-Replayed: true) instead of creating a duplicate; the same key with a different payload returns 422. Keys are scoped per client.",
+        "example": "3f8a1c2e-9d4b-4c6a-8e21-7b5f0d9a4e12"
+      }
+    },
+    "headers": {
+      "Location": {
+        "description": "Poll endpoint for this asynchronous job (same value as status_url in the body): GET it until status is delivered or rejected.",
+        "schema": { "type": "string", "example": "/api/v1/tasks/HFAI-2026-97BBAB04C15D2E63" }
+      },
+      "IdempotencyReplayed": {
+        "description": "Present and 'true' when this response was replayed from a previous request with the same Idempotency-Key, rather than processed again.",
+        "schema": { "type": "string", "example": "true" }
+      },
+      "RateLimitLimit": {
+        "description": "Requests allowed for this client in the current daily window (draft-ietf-httpapi-ratelimit-headers).",
+        "schema": { "type": "string", "example": "5" }
+      },
+      "RateLimitRemaining": {
+        "description": "Requests remaining for this client in the current window.",
+        "schema": { "type": "string", "example": "4" }
+      },
+      "RateLimitReset": {
+        "description": "Seconds until the window resets (daily windows reset at 00:00 UTC).",
+        "schema": { "type": "string", "example": "31742" }
+      },
+      "RetryAfter": {
+        "description": "Seconds to wait before retrying (RFC 9110).",
+        "schema": { "type": "string", "example": "3600" }
+      }
+    },
+    "schemas": {
+      "Service": {
+        "type": "object",
+        "properties": {
+          "id": { "$ref": "#/components/schemas/TaskType" },
+          "name": { "type": "string", "example": "Real-world verification" },
+          "description": { "type": "string" }
+        }
+      },
+      "ServiceCatalogPage": {
+        "type": "object",
+        "description": "One page of a cursor-paginated list. Follow next_cursor until it is null.",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Service" }
+          },
+          "total": { "type": "integer", "example": 10 },
+          "next_cursor": {
+            "type": "string",
+            "nullable": true,
+            "description": "Opaque cursor for the next page; null when this is the last page."
+          }
+        }
+      },
+      "AgentManifest": {
+        "type": "object",
+        "description": "The platform's canonical self-description. Additional descriptive fields appear as the platform evolves — treat unknown properties as informational.",
+        "additionalProperties": true,
+        "properties": {
+          "brand_name": { "type": "string", "example": "Human For AI" },
+          "domain": { "type": "string", "format": "uri", "example": "https://humanforai.dev" },
+          "tagline": { "type": "string" },
+          "description": { "type": "string" },
+          "api_version": { "type": "string", "example": "1.8.0" },
+          "last_updated": { "type": "string", "format": "date" },
+          "interfaces": { "type": "array", "items": { "type": "string" } },
+          "authentication": { "type": "string" },
+          "task_request_endpoint": { "type": "string", "example": "/api/v1/tasks" },
+          "contact_endpoint": { "type": "string", "example": "/api/v1/messages" },
+          "response_expectations": { "type": "object", "additionalProperties": true },
+          "pricing_model": { "type": "object", "additionalProperties": true },
+          "services": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "$ref": "#/components/schemas/TaskType" },
+                "name": { "type": "string" },
+                "description": { "type": "string" }
+              }
+            }
+          },
+          "endpoints": { "type": "object", "additionalProperties": true },
+          "accepted_task_types": { "type": "array", "items": { "$ref": "#/components/schemas/TaskType" } },
+          "rejected_task_types": { "type": "array", "items": { "type": "string" } },
+          "trust_and_safety": { "type": "object", "additionalProperties": true },
+          "limits": { "type": "object", "additionalProperties": true },
+          "signed_receipts": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "TaskType": {
+        "type": "string",
+        "enum": [
+          "real_world_verification",
+          "product_or_app_testing",
+          "human_judgment_and_feedback",
+          "data_collection",
+          "local_physical_task",
+          "ai_output_review",
+          "prompt_and_workflow_testing",
+          "simulation_and_automation_testing",
+          "accessibility_and_usability_check",
+          "custom_human_in_the_loop"
+        ]
+      },
+      "TaskStatus": {
+        "type": "string",
+        "description": "Lifecycle: submitted → accepted → delivered, with rejected reachable from any open state. Transitions are forward-only; delivered and rejected are final. The retired values under_review and in_progress are no longer emitted (v1.8.0) but are still accepted on PATCH, folded onto submitted and accepted respectively.",
+        "enum": [
+          "submitted",
+          "accepted",
+          "delivered",
+          "rejected"
+        ]
+      },
+      "TaskRequest": {
+        "type": "object",
+        "required": [
+          "task_type",
+          "description"
+        ],
+        "properties": {
+          "task_type": {
+            "$ref": "#/components/schemas/TaskType"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 5000,
+            "description": "What to do, where, and what success looks like. Be specific and self-contained."
+          },
+          "location_required": {
+            "type": "boolean",
+            "default": false
+          },
+          "location_detail": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "City / address / area, if location_required."
+          },
+          "deadline": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 datetime."
+          },
+          "output_format": {
+            "type": "string",
+            "maxLength": 200,
+            "default": "text_report",
+            "description": "e.g. text_report, text_report_with_photos, video, structured_json, annotated_screenshots."
+          },
+          "budget_usd": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100000,
+            "deprecated": true,
+            "description": "Deprecated — services are free during the pilot; accepted and ignored."
+          },
+          "contact_email": {
+            "type": "string",
+            "format": "email",
+            "description": "Required unless delivery is 'status_poll'. Where results and questions are sent. Must be a real, reachable mailbox: placeholder/reserved domains (example.com etc.) are rejected and the domain must publish MX records."
+          },
+          "requester": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Agent name, company, or system identifier."
+          },
+          "delivery": {
+            "type": "string",
+            "enum": [
+              "email",
+              "status_poll"
+            ],
+            "default": "email",
+            "description": "How the deliverable reaches you. 'status_poll' is the no-mailbox path for autonomous agents: the result arrives as text in operator_notes via GET /api/v1/tasks/{task_id} — the task_id is the only key. Budget: 1 status_poll task per client per day."
+          }
+        }
+      },
+      "TaskSubmissionResponse": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "example": "HFAI-2026-97BBAB04C15D2E63"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status_url": {
+            "type": "string",
+            "example": "/api/v1/tasks/HFAI-2026-97BBAB04C15D2E63"
+          },
+          "status_page": {
+            "type": "string",
+            "example": "/tasks?id=HFAI-2026-97BBAB04C15D2E63"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "Task": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatus"
+          },
+          "task_type": {
+            "$ref": "#/components/schemas/TaskType"
+          },
+          "description": {
+            "type": "string"
+          },
+          "location_required": {
+            "type": "boolean"
+          },
+          "location_detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "deadline": {
+            "type": "string",
+            "nullable": true
+          },
+          "output_format": {
+            "type": "string"
+          },
+          "budget_usd": {
+            "type": "number",
+            "deprecated": true
+          },
+          "requester": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "api",
+              "web_form"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status_history": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "$ref": "#/components/schemas/TaskStatus"
+                },
+                "at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          },
+          "operator_notes": {
+            "type": "string",
+            "nullable": true,
+            "description": "Notes from the human operator, when present. For delivery: status_poll tasks this is also where the deliverable arrives, and it is the exact text covered by deliverable_sha256."
+          },
+          "receipt": {
+            "type": "string",
+            "nullable": true,
+            "description": "Signed deliverable receipt, present once status is delivered. Compact JWS (EdDSA/Ed25519) binding deliverable_sha256 and the lifecycle timestamps to this task_id. Verify offline against the public key at /.well-known/jwks.json — no account or callback needed. Proves integrity and origin; the timestamps inside are the service's own signed assertion, not third-party attested."
+          },
+          "deliverable_sha256": {
+            "type": "string",
+            "nullable": true,
+            "description": "sha256 (hex) of the UTF-8 bytes of operator_notes as delivered. Recompute it locally to confirm the deliverable was not altered."
+          },
+          "receipt_issued_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "When the receipt was signed. If the operator later edits the deliverable, the receipt is re-issued and this timestamp changes."
+          }
+        }
+      },
+      "MessageRequest": {
+        "type": "object",
+        "required": [
+          "message",
+          "reply_to"
+        ],
+        "properties": {
+          "message": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 5000
+          },
+          "reply_to": {
+            "type": "string",
+            "format": "email",
+            "description": "REQUIRED. The only way the operator can answer you. Must be a real, reachable mailbox: placeholder/reserved domains are rejected and the domain must publish MX records."
+          },
+          "from": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Agent name, company, or system identifier."
+          },
+          "subject": {
+            "type": "string",
+            "maxLength": 200
+          }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "properties": {
+          "message_id": {
+            "type": "string",
+            "example": "MSG-2026-1A2B3C4D"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "validation_failed"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

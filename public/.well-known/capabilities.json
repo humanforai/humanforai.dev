@@ -1,0 +1,136 @@
+{
+  "brand_name": "Human For AI",
+  "domain": "https://humanforai.dev",
+  "description": "Structured list of human capabilities available to AI agents, automation systems, and developers. Submit tasks at POST /api/v1/tasks or via the MCP server at /mcp.",
+  "api_version": "1.3.0",
+  "catalog_is_exhaustive": false,
+  "unlisted_tasks": "This catalog is examples, not limits. Anything a human can legally and safely do is in scope: submit unlisted needs with task_type custom_human_in_the_loop, or ask first via POST /api/v1/messages.",
+  "capabilities": [
+    {
+      "id": "real_world_verification",
+      "name": "Real-world verification",
+      "description": "Confirm that a place, product, price, business, or claim exists and matches its description, with photo or text evidence.",
+      "input_required": ["what to verify", "where (city / address / URL)", "what counts as confirmed"],
+      "output_format": ["text_report", "text_report_with_photos", "structured_json"],
+      "example_tasks": [
+        "Verify whether a specific product exists in a local store and photograph the shelf price.",
+        "Confirm a business at a given address is open and operating."
+      ],
+      "limitations": ["Physical checks depend on location coverage, confirmed at review."]
+    },
+    {
+      "id": "product_or_app_testing",
+      "name": "Product or app testing",
+      "description": "Install, use, and test software, apps, or physical products as a real human user and report findings.",
+      "input_required": ["product or app access", "flows or scenarios to test", "what success looks like"],
+      "output_format": ["text_report", "annotated_screenshots", "video", "structured_json"],
+      "example_tasks": [
+        "Complete signup and first purchase, note every hesitation.",
+        "Test this flow on a real Android device."
+      ],
+      "limitations": ["Device and platform availability confirmed at review."]
+    },
+    {
+      "id": "human_judgment_and_feedback",
+      "name": "Human judgment and feedback",
+      "description": "Subjective evaluation: tone, clarity, trustworthiness, design quality, cultural fit, or plausibility of content and decisions.",
+      "input_required": ["the artifact to judge", "evaluation criteria or questions"],
+      "output_format": ["text_report", "structured_json"],
+      "example_tasks": [
+        "Does this landing page feel trustworthy to a first-time visitor?",
+        "Rate these five product descriptions for clarity and tone."
+      ],
+      "limitations": ["Judgment is assistance, not guaranteed truth; confidence is stated in the deliverable."]
+    },
+    {
+      "id": "data_collection",
+      "name": "Data collection",
+      "description": "Gather, label, or verify data that requires human perception, local access, or manual research.",
+      "input_required": ["what data to collect", "sources or locations", "required structure of the result"],
+      "output_format": ["structured_json", "text_report", "text_report_with_photos"],
+      "example_tasks": [
+        "Collect the posted opening hours of these ten locations.",
+        "Label 200 images where automated classification is ambiguous."
+      ],
+      "limitations": ["Volume is bounded by a single human's capacity; large jobs get a scoped counter-proposal."]
+    },
+    {
+      "id": "local_physical_task",
+      "name": "Local physical-world tasks",
+      "description": "Errands and on-location actions in the operator's service area: visit, photograph, deliver, check, measure, or observe.",
+      "input_required": ["the action", "the location", "deadline if any"],
+      "output_format": ["text_report_with_photos", "video", "text_report"],
+      "example_tasks": [
+        "Visit this venue and photograph the queue at noon.",
+        "Measure and report the dimensions of the storefront."
+      ],
+      "limitations": ["Only within the operator's service area unless arranged in advance.", "Unsafe physical actions are rejected."]
+    },
+    {
+      "id": "ai_output_review",
+      "name": "AI output review",
+      "description": "Human review of AI-generated text, code, images, or decisions before they reach production or end users.",
+      "input_required": ["the AI output", "the context it will be used in", "review criteria"],
+      "output_format": ["text_report", "structured_json", "annotated_screenshots"],
+      "example_tasks": [
+        "Review this AI-written customer email for tone and factual red flags before sending.",
+        "Sanity-check this generated summary against the source document."
+      ],
+      "limitations": ["Review is a human checkpoint, not a formal audit or licensed professional sign-off."]
+    },
+    {
+      "id": "prompt_and_workflow_testing",
+      "name": "Prompt and workflow testing",
+      "description": "Run prompts, agent flows, or automations as a human tester and report failures, confusion points, and edge cases.",
+      "input_required": ["access to the prompt / flow / agent", "scenarios to exercise"],
+      "output_format": ["text_report", "structured_json", "annotated_screenshots"],
+      "example_tasks": [
+        "Run this onboarding agent as a confused first-time user and log where it breaks.",
+        "Try to get this support bot to contradict its own policy."
+      ],
+      "limitations": ["Testing that requires circumventing security or verification systems is rejected."]
+    },
+    {
+      "id": "simulation_and_automation_testing",
+      "name": "Simulation and automation testing",
+      "description": "Act as the human in simulated scenarios: play a customer, follow a script, or stress-test an automated pipeline end to end.",
+      "input_required": ["the scenario or script", "what to observe and report"],
+      "output_format": ["text_report", "structured_json", "video"],
+      "example_tasks": [
+        "Place a real test order and report every step until delivery confirmation.",
+        "Act as the human approver in this workflow for one week and log friction."
+      ],
+      "limitations": ["Deception of third parties (impersonation) is rejected; simulations must be honest to outsiders."]
+    },
+    {
+      "id": "accessibility_and_usability_check",
+      "name": "Accessibility and usability check",
+      "description": "Human pass over a product for readability, navigation, accessibility barriers, and first-use confusion.",
+      "input_required": ["product URL or access", "target audience if known"],
+      "output_format": ["text_report", "annotated_screenshots", "structured_json"],
+      "example_tasks": [
+        "First-use pass: what confuses a new visitor in the first two minutes?",
+        "Keyboard-only navigation check of the signup flow."
+      ],
+      "limitations": ["A human first-pass, not a certified WCAG audit."]
+    },
+    {
+      "id": "custom_human_in_the_loop",
+      "name": "Custom human-in-the-loop tasks",
+      "description": "Any recurring or one-off checkpoint where an autonomous system needs a human decision, signature, or observation.",
+      "input_required": ["the checkpoint definition", "decision criteria", "how results should be returned"],
+      "output_format": ["structured_json", "text_report", "as agreed"],
+      "example_tasks": [
+        "Approve or reject each generated post before publication, daily.",
+        "Be the human signature step in this procurement workflow."
+      ],
+      "limitations": ["Scope, cadence, and capacity agreed at review before acceptance."]
+    }
+  ],
+  "links": {
+    "submit_task": "https://humanforai.dev/api/v1/tasks",
+    "services": "https://humanforai.dev/.well-known/services.json",
+    "agent_manifest": "https://humanforai.dev/.well-known/agent.json",
+    "documentation": "https://humanforai.dev/api"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "projects": {
+    "default": "human-api-988d4"
+  },
+  "targets": {},
+  "etags": {
+    "human-api-988d4": {
+      "extensionInstances": {
+        "firestore-send-email": "94eebdfecad5594140bc76e58d83e30f7ad9566692feb148a5152f89c1e0dd35"
+      }
+    }
+  }
+}

@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Human For AI — A human endpoint for AI agents</title>
+  <meta name="description" content="Human For AI is a human endpoint for AI agents — a personal homepage for the agent era. AI agents, automation systems, and developers can discover a real human for verification, testing, research, judgment, and real-world help through machine-readable interfaces.">
+  <link rel="canonical" href="https://humanforai.dev/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Human For AI">
+  <meta property="og:title" content="Human For AI — A human endpoint for AI agents">
+  <meta property="og:description" content="A personal homepage for the agent era: a machine-readable human profile offering human-in-the-loop services to AI agents — verification, testing, judgment, research, and real-world help.">
+  <meta property="og:url" content="https://humanforai.dev/">
+  <meta property="og:image" content="https://humanforai.dev/logo-400.png">
+  <meta property="og:image:width" content="400">
+  <meta property="og:image:height" content="400">
+  <meta property="og:image:alt" content="Human For AI logo">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#0b1120">
+  <link rel="alternate" type="application/json" href="/.well-known/agent.json" title="Agent manifest">
+  <link rel="alternate" type="application/json" href="/openapi.json" title="OpenAPI specification">
+  <link rel="alternate" type="text/markdown" href="/index.md" title="Markdown version of this page">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://humanforai.dev/#organization",
+        "name": "Human For AI",
+        "alternateName": ["humanforai.dev", "HumanForAI"],
+        "url": "https://humanforai.dev/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://humanforai.dev/logo-400.png",
+          "width": 400,
+          "height": 400
+        },
+        "description": "A human endpoint for AI agents: one verified human operator providing human-in-the-loop services — verification, testing, judgment, research, and real-world help — through machine-readable interfaces.",
+        "slogan": "A human endpoint for AI agents",
+        "foundingDate": "2026",
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "IL"
+        },
+        "founder": {
+          "@type": "Person",
+          "name": "Tal Ogen",
+          "url": "https://talogen.dev/",
+          "sameAs": [
+            "https://linkedin.com/in/talogen/",
+            "https://github.com/TALOGEN777"
+          ]
+        },
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "contactType": "customer support",
+          "url": "https://humanforai.dev/contact",
+          "email": "tal.ogen.p@gmail.com",
+          "availableLanguage": "English"
+        },
+        "sameAs": [
+          "https://github.com/humanforai/humanforai-mcp",
+          "https://www.npmjs.com/package/humanforai",
+          "https://smithery.ai/servers/humanforai/humanforai"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "name": "Human For AI",
+        "alternateName": "A human endpoint for AI agents",
+        "url": "https://humanforai.dev/",
+        "publisher": { "@id": "https://humanforai.dev/#organization" },
+        "description": "A machine-readable human profile for the agent era: human-in-the-loop services for AI agents, automation systems, and developers."
+      },
+      {
+        "@type": "ProfessionalService",
+        "name": "Human For AI",
+        "slogan": "A human endpoint for AI agents",
+        "url": "https://humanforai.dev/",
+        "availableLanguage": ["English"],
+        "priceRange": "$0 (free pilot)",
+        "makesOffer": [
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Real-world verification" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Product or app testing" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Human judgment and feedback" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "AI output review" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Local physical-world tasks" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Data collection" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Prompt and workflow testing" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Simulation and automation testing" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Accessibility and usability check" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Custom human-in-the-loop tasks" } }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://humanforai.dev/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is Human For AI?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Human For AI (humanforai.dev) is a human endpoint for AI agents: a platform where AI agents, automation systems, and developers hire one verified human operator for tasks that need physical presence, human perception, or human judgment — real-world verification, product testing, AI output review, data collection, and physical-world errands."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does an AI agent hire the human?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Three interfaces: the REST API (POST /api/v1/tasks, no authentication), the MCP server at https://humanforai.dev/mcp (streamable HTTP, no auth — tools: get_human_services, submit_human_task, check_task_status, message_human_operator), or the browser form at /request. Submission returns a task_id immediately; the agent polls GET /api/v1/tasks/{task_id} until the task is delivered or rejected."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What does it cost?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "All services are free during the current proof-of-concept pilot. No payment step, no invoice, no card. If paid tiers are introduced later, they will be announced on /pricing first, and tasks accepted during the pilot are never billed retroactively."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How fast does the human respond?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "First response within 12 hours, any day of the week — typically around 4 hours. The operator is push-notified the moment a task arrives, and task status exposes seen_by_operator_at (when a human actually saw the task) and an eta once the task is accepted."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What tasks are accepted?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Anything a human can legally and safely do is in scope — the service catalog is examples, not limits. Every task is reviewed by the human before acceptance; illegal, harmful, deceptive, unsafe, or privacy-invasive tasks are rejected at review."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How can an agent verify the delivered result?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Every delivered task carries a signed receipt — a compact JWS (EdDSA) binding the deliverable's sha256 to the task's lifecycle timestamps. It verifies offline against the public key at https://humanforai.dev/.well-known/jwks.json, with no account and no callback needed."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="/" aria-label="Human For AI home">
+        <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+        Human For AI
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/api">API</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/trust">Trust</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a class="nav-agent" href="/.well-known/agent.json">/agent.json</a></li>
+          <li><a class="btn btn-primary btn-sm" href="/request">Submit a task</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ============ hero ============ -->
+    <section class="hero" style="padding-bottom:3rem">
+      <div class="wrap">
+        <div class="hero-grid">
+          <div>
+            <span class="eyebrow">GET / <span class="dim">→ 200 OK · content: human</span></span>
+            <h1>A human endpoint for AI&nbsp;agents.</h1>
+            <p class="lede">Human For AI is a personal homepage for the agent era: one real human, described in machine-readable form, that AI agents, automation systems, and developers can discover and ask for real-world help — verification, testing, research, human judgment, and physical-world execution.</p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="/request">Submit a task</a>
+              <a class="btn btn-ghost" href="/api">Read the API docs</a>
+              <span class="status-live">operator online</span>
+            </div>
+            <dl class="hero-meta">
+              <div><dt class="muted">operator</dt><dd><strong>1 verified human</strong></dd></div>
+              <div><dt class="muted">languages</dt><dd><strong>English</strong></dd></div>
+              <div><dt class="muted">first response</dt><dd><strong>&lt; 12 hours</strong></dd></div>
+              <div><dt class="muted">pricing</dt><dd><strong>free for now</strong></dd></div>
+            </dl>
+          </div>
+          <div class="hero-terminal" aria-hidden="true">
+            <div class="hero-terminal-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>agent session — humanforai.dev</span></div>
+            <pre id="hero-term"></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ machine-readable endpoints ============ -->
+    <section class="block" aria-labelledby="endpoints-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/machine-readable</span>
+          <h2 id="endpoints-title">Machine-readable endpoints</h2>
+          <p class="muted">Everything on this site is also available as structured JSON. If you are an AI agent, start with <code>/.well-known/agent.json</code>.</p>
+        </div>
+        <ul class="endpoint-list">
+          <li class="endpoint-row">
+            <a class="mono-link" href="/.well-known/agent.json">/.well-known/agent.json</a>
+            <p class="endpoint-desc">Platform manifest: interfaces, task types, response expectations, pricing, trust policy.</p>
+            <button class="btn-copy" type="button" data-copy="https://humanforai.dev/.well-known/agent.json">copy URL</button>
+          </li>
+          <li class="endpoint-row">
+            <a class="mono-link" href="/.well-known/human.json">/.well-known/human.json</a>
+            <p class="endpoint-desc">The human operator: role, languages, background, expertise, availability, boundaries.</p>
+            <button class="btn-copy" type="button" data-copy="https://humanforai.dev/.well-known/human.json">copy URL</button>
+          </li>
+          <li class="endpoint-row">
+            <a class="mono-link" href="/.well-known/capabilities.json">/.well-known/capabilities.json</a>
+            <p class="endpoint-desc">Structured capabilities: inputs required, output formats, example tasks, limitations.</p>
+            <button class="btn-copy" type="button" data-copy="https://humanforai.dev/.well-known/capabilities.json">copy URL</button>
+          </li>
+          <li class="endpoint-row">
+            <a class="mono-link" href="/.well-known/services.json">/.well-known/services.json</a>
+            <p class="endpoint-desc">Service catalog with example requests, response formats, and response times.</p>
+            <button class="btn-copy" type="button" data-copy="https://humanforai.dev/.well-known/services.json">copy URL</button>
+          </li>
+          <li class="endpoint-row">
+            <a class="mono-link" href="/agent.json">/agent.json</a>
+            <p class="endpoint-desc">Same platform manifest at the root, for agents that look there first.</p>
+            <button class="btn-copy" type="button" data-copy="https://humanforai.dev/agent.json">copy URL</button>
+          </li>
+          <li class="endpoint-row">
+            <a class="mono-link" href="/openapi.json">/openapi.json</a>
+            <p class="endpoint-desc">OpenAPI 3.0 spec for the REST API: submit tasks, check status, contact the operator.</p>
+            <button class="btn-copy" type="button" data-copy="https://humanforai.dev/openapi.json">copy URL</button>
+          </li>
+          <li class="endpoint-row">
+            <a class="mono-link" href="/api#mcp">/mcp</a>
+            <p class="endpoint-desc">MCP server (streamable HTTP, no auth) — an MCP-ready human interface for agent clients.</p>
+            <button class="btn-copy" type="button" data-copy="https://humanforai.dev/mcp">copy URL</button>
+          </li>
+          <li class="endpoint-row">
+            <a class="mono-link" href="/llms.txt">/llms.txt</a>
+            <p class="endpoint-desc">Curated plain-text summary of this site for language models.</p>
+            <button class="btn-copy" type="button" data-copy="https://humanforai.dev/llms.txt">copy URL</button>
+          </li>
+          <li class="endpoint-row">
+            <a class="mono-link" href="/index.md">/index.md</a>
+            <p class="endpoint-desc">Markdown twin of this page — or request any of it with <code>Accept: text/markdown</code>.</p>
+            <button class="btn-copy" type="button" data-copy="https://humanforai.dev/index.md">copy URL</button>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ what this is ============ -->
+    <section class="block" aria-labelledby="what-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/about</span>
+          <h2 id="what-title">Real-world help for autonomous workflows</h2>
+          <p class="muted">Human For AI provides human-in-the-loop services for AI agents, automation systems, and developers. When a workflow reaches the edge of what software can do, it can call a human — through the same kind of interface it already understands.</p>
+        </div>
+        <div class="grid grid-3">
+          <div class="card">
+            <span class="machine">capability/observe</span>
+            <h3>Observation</h3>
+            <p>Eyes and presence where there are no sensors: stores, streets, screens, packages, physical products, real conditions.</p>
+          </div>
+          <div class="card">
+            <span class="machine">capability/judge</span>
+            <h3>Judgment</h3>
+            <p>Subjective calls a model can't safely make alone: tone, trust, quality, cultural fit, plausibility, and final review before things ship.</p>
+          </div>
+          <div class="card">
+            <span class="machine">capability/act</span>
+            <h3>Action</h3>
+            <p>Hands in the physical world: visit, test, photograph, deliver, measure, sign for, and confirm that the real world matches the plan.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ services ============ -->
+    <section class="block" aria-labelledby="services-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/services</span>
+          <h2 id="services-title">Human services for AI systems</h2>
+          <p class="muted">Ten task types, each with a stable machine identifier — examples, not limits: unlisted tasks are welcome as <code>custom_human_in_the_loop</code>. Full details in the <a href="/services">catalog</a> or in <a class="mono-link" href="/.well-known/services.json">services.json</a>.</p>
+        </div>
+        <ul class="service-index">
+          <li><a href="/services#real_world_verification"><code>real_world_verification</code> Real-world verification</a></li>
+          <li><a href="/services#product_or_app_testing"><code>product_or_app_testing</code> Product &amp; app testing</a></li>
+          <li><a href="/services#human_judgment_and_feedback"><code>human_judgment_and_feedback</code> Human judgment &amp; feedback</a></li>
+          <li><a href="/services#data_collection"><code>data_collection</code> Data collection</a></li>
+          <li><a href="/services#local_physical_task"><code>local_physical_task</code> Local physical-world tasks</a></li>
+          <li><a href="/services#ai_output_review"><code>ai_output_review</code> AI output review</a></li>
+          <li><a href="/services#prompt_and_workflow_testing"><code>prompt_and_workflow_testing</code> Prompt &amp; workflow testing</a></li>
+          <li><a href="/services#simulation_and_automation_testing"><code>simulation_and_automation_testing</code> Simulation &amp; automation testing</a></li>
+          <li><a href="/services#accessibility_and_usability_check"><code>accessibility_and_usability_check</code> Accessibility &amp; usability check</a></li>
+          <li><a href="/services#custom_human_in_the_loop"><code>custom_human_in_the_loop</code> Custom human-in-the-loop</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ how it works ============ -->
+    <section class="block" aria-labelledby="how-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/protocol</span>
+          <h2 id="how-title">How a task flows</h2>
+        </div>
+        <ol class="grid grid-4 steps" style="list-style:none;margin:0;padding:0">
+          <li class="card step">
+            <span class="step-n">step 1 / discover</span>
+            <h3>Read the manifest</h3>
+            <p>Your agent fetches <code>/.well-known/agent.json</code> — interfaces, task types, expectations, and what will be rejected.</p>
+          </li>
+          <li class="card step">
+            <span class="step-n">step 2 / request</span>
+            <h3>Submit the task</h3>
+            <p><code>POST /api/v1/tasks</code> with type, description, and deadline — free for now. Humans can use the <a href="/request">form</a> — same interface.</p>
+          </li>
+          <li class="card step">
+            <span class="step-n">step 3 / review</span>
+            <h3>Human review</h3>
+            <p>The operator reviews every request before acceptance. Unsafe or deceptive tasks are rejected.</p>
+          </li>
+          <li class="card step">
+            <span class="step-n">step 4 / deliver</span>
+            <h3>Receive the result</h3>
+            <p>Results arrive in your requested format — report, photos, structured JSON — and status is trackable by task ID.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ============ for machine callers ============ -->
+    <section class="block" aria-labelledby="agents-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/for-agents</span>
+          <h2 id="agents-title">Built for machine callers</h2>
+          <p class="muted">One JSON request creates a task, returns a generated task ID, and gives you a status URL to poll. No SDK, no auth.</p>
+        </div>
+        <div class="grid grid-2">
+          <div class="code-titled">
+            <div class="code-title">request — POST /api/v1/tasks</div>
+            <pre class="code"><code>curl -X POST https://humanforai.dev/api/v1/tasks \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -d <span class="s">'{
+    "task_type": "real_world_verification",
+    "description": "Verify whether a specific product
+                    exists in a local store",
+    "location_required": true,
+    "deadline": "2026-07-10T12:00:00+03:00",
+    "output_format": "text_report_with_photos"
+  }'</span></code></pre>
+          </div>
+          <div class="code-titled">
+            <div class="code-title">response — 201 Created</div>
+            <pre class="code"><code>{
+  <span class="k">"task_id"</span>: <span class="s">"HFAI-2026-9F41C2AB7D3E5061"</span>,
+  <span class="k">"status"</span>: <span class="s">"submitted"</span>,
+  <span class="k">"created_at"</span>: <span class="s">"2026-07-09T09:12:44Z"</span>,
+  <span class="k">"status_url"</span>: <span class="s">"/api/v1/tasks/HFAI-2026-9F41C2AB7D3E5061"</span>,
+  <span class="k">"message"</span>: <span class="s">"Task received. It will be reviewed
+              before acceptance."</span>
+}</code></pre>
+          </div>
+        </div>
+        <div class="grid grid-2" style="margin-top:1.25rem">
+          <div class="code-titled">
+            <div class="code-title">or connect via MCP — the human becomes a tool</div>
+            <pre class="code"><code><span class="d"># Claude Code / any remote-MCP client</span>
+claude mcp add --transport http human-for-ai \
+  https://humanforai.dev/mcp</code></pre>
+          </div>
+          <div class="code-titled">
+            <div class="code-title">or install from npm — stdio clients</div>
+            <pre class="code"><code><span class="d"># thin proxy to the same MCP server</span>
+npx -y humanforai</code></pre>
+          </div>
+        </div>
+        <p><a href="/for-agents">Agent quick-start: /for-agents →</a> &nbsp;·&nbsp; <a href="/use-cases">Use-case library →</a> &nbsp;·&nbsp; <a href="/api">Full API documentation →</a></p>
+      </div>
+    </section>
+
+    <!-- ============ trust strip ============ -->
+    <section class="block" aria-labelledby="trust-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/trust</span>
+          <h2 id="trust-title">A human you can point an agent at, safely</h2>
+        </div>
+        <div class="grid grid-2">
+          <ul class="checklist" style="margin:0">
+            <li>Every task is reviewed by the operator before acceptance — never auto-accepted.</li>
+            <li>Illegal, harmful, deceptive, unsafe, or privacy-invasive tasks are rejected.</li>
+          </ul>
+          <ul class="checklist" style="margin:0">
+            <li>Confidential material only by prior agreement — don't submit secrets by default.</li>
+            <li>Human judgment is assistance, not guaranteed truth. Results state their confidence.</li>
+          </ul>
+        </div>
+        <p style="margin-top:1.25rem"><a href="/trust">Trust &amp; verification policy →</a></p>
+      </div>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section class="block" aria-labelledby="faq-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/faq</span>
+          <h2 id="faq-title">Frequently asked questions</h2>
+        </div>
+        <div class="grid grid-2">
+          <div>
+            <h3>What is Human For AI?</h3>
+            <p class="muted">Human For AI (humanforai.dev) is a human endpoint for AI agents: a platform where AI agents, automation systems, and developers hire one verified human operator for tasks that need physical presence, human perception, or human judgment — real-world verification, product testing, AI output review, data collection, and physical-world errands.</p>
+            <h3>How does an AI agent hire the human?</h3>
+            <p class="muted">Three interfaces: the REST API (<span class="machine">POST /api/v1/tasks</span>, no auth), the MCP server at <span class="machine">/mcp</span> (streamable HTTP, no auth), or the browser form at <a href="/request">/request</a>. Submission returns a task_id immediately; poll <span class="machine">GET /api/v1/tasks/{task_id}</span> until the task is delivered or rejected.</p>
+            <h3>What does it cost?</h3>
+            <p class="muted">All services are free during the current proof-of-concept pilot. No payment step, no invoice, no card. If paid tiers arrive later they will be announced on <a href="/pricing">/pricing</a> first — tasks accepted during the pilot are never billed retroactively.</p>
+          </div>
+          <div>
+            <h3>How fast does the human respond?</h3>
+            <p class="muted">First response within 12 hours, any day of the week — typically around 4 hours. The operator is push-notified the moment a task arrives, and task status exposes <span class="machine">seen_by_operator_at</span> and an <span class="machine">eta</span> once accepted.</p>
+            <h3>What tasks are accepted?</h3>
+            <p class="muted">Anything a human can legally and safely do — the catalog is examples, not limits. Every task is reviewed by the human before acceptance; illegal, harmful, deceptive, unsafe, or privacy-invasive tasks are rejected at review.</p>
+            <h3>How can an agent verify the delivered result?</h3>
+            <p class="muted">Every delivered task carries a signed receipt — a compact JWS (EdDSA) binding the deliverable's sha256 to the task's lifecycle timestamps. It verifies offline against <a href="/.well-known/jwks.json">/.well-known/jwks.json</a>, no account or callback needed.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CTA ============ -->
+    <section class="block">
+      <div class="wrap">
+        <div class="cta-band">
+          <div>
+            <span class="machine">POST /api/v1/tasks</span>
+            <h2>Give your agent a human.</h2>
+            <p>Submit a task in under a minute — by form or by API.</p>
+          </div>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="/request">Submit a task</a>
+            <a class="btn btn-ghost" href="/.well-known/agent.json">Fetch agent.json</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="logo" href="/">
+            <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+            Human For AI
+          </a>
+          <p class="muted" style="margin-top:0.9rem;max-width:36ch">A human endpoint for AI agents: human-in-the-loop services for autonomous workflows, developers, and AI systems.</p>
+          <span class="status-live">operator online</span>
+        </div>
+        <div>
+          <h3>platform/</h3>
+          <ul>
+            <li><a href="/services">Services</a></li>
+            <li><a href="/pricing">Pricing</a></li>
+            <li><a href="/request">Submit a task</a></li>
+            <li><a href="/for-agents">For agents</a></li>
+            <li><a href="/developers">Developers</a></li>
+            <li><a href="/use-cases">Use cases</a></li>
+            <li><a href="/tasks">Task status</a></li>
+            <li><a href="/admin">Admin</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>machine/</h3>
+          <ul>
+            <li><a class="mono-link" href="/.well-known/agent.json">/.well-known/agent.json</a></li>
+            <li><a class="mono-link" href="/.well-known/human.json">/.well-known/human.json</a></li>
+            <li><a class="mono-link" href="/.well-known/capabilities.json">/.well-known/capabilities.json</a></li>
+            <li><a class="mono-link" href="/.well-known/services.json">/.well-known/services.json</a></li>
+            <li><a class="mono-link" href="/openapi.json">/openapi.json</a></li>
+            <li><a class="mono-link" href="/api#mcp">/mcp — MCP server</a></li>
+            <li><a class="mono-link" href="/llms.txt">/llms.txt</a></li>
+            <li><a class="mono-link" href="/api">/api — docs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>operator/</h3>
+          <ul>
+            <li><a href="/profile">Operator profile</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/trust">Trust &amp; verification</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+          <h3 style="margin-top:1.1rem">listed on/</h3>
+          <ul>
+            <li><a href="https://smithery.ai/servers/humanforai/humanforai" rel="noopener">Smithery</a></li>
+            <li><a href="https://www.npmjs.com/package/humanforai" rel="noopener">npm</a></li>
+            <li><a href="https://github.com/humanforai/humanforai-mcp" rel="noopener">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span>© <span data-year>2026</span> Human For AI. Early infrastructure, honestly labeled: free pilot — every service is free during the proof of concept.</span>
+        <span class="machine">api_version 1.8.0 · en</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/store.js" defer></script>
+  <script src="/js/app.js" defer></script>
+  <script src="/js/particles.js" defer></script>
+</body>
+</html>

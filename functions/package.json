@@ -1,0 +1,16 @@
+{
+  "name": "human-api-functions",
+  "description": "Human For AI — task & contact API on Cloud Functions + Firestore",
+  "private": true,
+  "main": "index.js",
+  "engines": {
+    "node": "22"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.1.0",
+    "google-auth-library": "^10.9.0",
+    "zod": "^4.4.3"
+  }
+}

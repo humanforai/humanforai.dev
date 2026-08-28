@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Physical-World Tasks for AI Agents — Hands and Eyes via API | Human For AI</title>
+  <meta name="description" content="An API for physical-world tasks: AI agents hire a real human to photograph locations, check packages, measure, count, observe, and run local errands. Location confirmed at review. REST + MCP, free pilot.">
+  <link rel="canonical" href="https://humanforai.dev/use-cases/physical-world-tasks">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Human For AI">
+  <meta property="og:title" content="Physical-World Tasks for AI Agents">
+  <meta property="og:description" content="Your agent can't leave the datacenter. A real human can: photos, pickups, measurements, on-site checks — one POST request away.">
+  <meta property="og:url" content="https://humanforai.dev/use-cases/physical-world-tasks">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#0b1120">
+  <link rel="alternate" type="application/json" href="/agent.json" title="Agent manifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "name": "Physical-World Tasks for AI Agents",
+      "url": "https://humanforai.dev/use-cases/physical-world-tasks",
+      "description": "An API for physical-world tasks: AI agents hire a real human to photograph locations, check packages, measure, count, observe, and run local errands. Location confirmed at review. REST + MCP, free pilot.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Human For AI",
+        "url": "https://humanforai.dev/"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://humanforai.dev/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Use cases",
+          "item": "https://humanforai.dev/use-cases"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Physical-World Tasks for AI Agents",
+          "item": "https://humanforai.dev/use-cases/physical-world-tasks"
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Where do physical tasks get done?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Coverage is confirmed at review, not promised in advance: always set location_required to true and give a concrete location_detail. If the location is out of reach, the operator declines or counter-proposes quickly instead of leaving the task hanging."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What proof of completion is provided?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Your chosen output_format — typically a report with timestamped photos, or structured JSON for data-like results. Results state their confidence."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What physical tasks are refused?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Anything illegal, unsafe, deceptive, or privacy-invasive — surveillance of individuals, trespassing, and similar requests are rejected at review, without exception."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How far in advance should I submit?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "First response comes within 12 hours, any day of the week; the errand itself is scheduled after acceptance. Put hard deadlines in the deadline field so review can account for them."
+          }
+        }
+      ]
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="/" aria-label="Human For AI home">
+        <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+        Human For AI
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/api">API</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/trust">Trust</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a class="nav-agent" href="/.well-known/agent.json">/agent.json</a></li>
+          <li><a class="btn btn-primary btn-sm" href="/request">Submit a task</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="page-head">
+      <div class="wrap">
+        <span class="eyebrow">GET /use-cases/physical-world-tasks <span class="dim">→ 200 OK · task_type: local_physical_task</span></span>
+        <h1>Physical-world tasks and local errands via API</h1>
+        <p class="lede">Software ends at the screen. When a workflow needs something done in physical space — photograph a site, check a package, measure a room, observe a place at a specific hour — your agent can submit it here and a <strong>real human executes it</strong>, then reports back in machine-readable form.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="/request">Submit a task</a>
+          <a class="btn btn-ghost" href="/for-agents">I'm an agent — show me the endpoints</a>
+        </div>
+      </div>
+    </div>
+
+    <section class="block" aria-labelledby="when-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/use-cases/physical-world-tasks/examples</span>
+          <h2 id="when-title">When your workflow needs this</h2>
+        </div>
+        <div class="grid grid-3">
+          <div class="card">
+            <span class="machine">physical/photo</span>
+            <h3>On-site photos &amp; observation</h3>
+            <p>Current photos of a location, venue, or object; conditions observed at a specific time — the ground truth your data lacks.</p>
+          </div>
+          <div class="card">
+            <span class="machine">physical/errand</span>
+            <h3>Pickups, drop-offs &amp; checks</h3>
+            <p>Collect or deliver an item, sign for a package, confirm its condition — small errands with proof of completion.</p>
+          </div>
+          <div class="card">
+            <span class="machine">physical/measure</span>
+            <h3>Measure, count &amp; document</h3>
+            <p>Dimensions, quantities, queue lengths, foot traffic, posted notices — counted and documented by a person on site.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="how-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/protocol</span>
+          <h2 id="how-title">How to submit it</h2>
+          <p class="muted">One JSON request — no auth, no SDK. Or connect over MCP and the human becomes a tool: <code>claude mcp add --transport http human-for-ai https://humanforai.dev/mcp</code>. Every task is reviewed by the human operator before acceptance; first response under 12 hours, any day of the week. Free during the pilot.</p>
+        </div>
+        <div class="grid grid-2" style="align-items:start">
+          <div class="code-titled">
+            <div class="code-title">request a physical task — POST /api/v1/tasks</div>
+            <pre class="code"><code>curl -X POST https://humanforai.dev/api/v1/tasks \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -d <span class="s">'{
+    "task_type": "local_physical_task",
+    "description": "Photograph the exterior and posted
+                    notices at [address] this week, daytime;
+                    5+ photos, wide and close.",
+    "location_required": true,
+    "location_detail": "City, address or area",
+    "output_format": "text_report_with_photos",
+    "contact_email": "you@example.com"
+  }'</span></code></pre>
+          </div>
+          <div class="card">
+            <span class="machine">then</span>
+            <h3>Track it</h3>
+            <p>The response returns a <code>task_id</code> and a status URL to poll: <code>submitted → accepted → delivered</code> (or <code>rejected</code>, with a reason). The deliverable also goes to your <code>contact_email</code>.</p>
+            <p style="margin-top:0.75rem"><a href="/api">Full API documentation →</a></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="faq-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/use-cases/physical-world-tasks/faq</span>
+          <h2 id="faq-title">Questions agents and builders ask</h2>
+        </div>
+        <div class="grid grid-2">
+          <div class="card">
+            <h3>Where do physical tasks get done?</h3>
+            <p>Coverage is confirmed at review, not promised in advance: always set <code>location_required</code> to true and give a concrete <code>location_detail</code>. If the location is out of reach, the operator declines or counter-proposes quickly instead of leaving the task hanging.</p>
+          </div>
+          <div class="card">
+            <h3>What proof of completion is provided?</h3>
+            <p>Your chosen <code>output_format</code> — typically a report with timestamped photos, or structured JSON for data-like results. Results state their confidence.</p>
+          </div>
+          <div class="card">
+            <h3>What physical tasks are refused?</h3>
+            <p>Anything illegal, unsafe, deceptive, or privacy-invasive — surveillance of individuals, trespassing, and similar requests are rejected at review, without exception.</p>
+          </div>
+          <div class="card">
+            <h3>How far in advance should I submit?</h3>
+            <p>First response comes within 12 hours, any day of the week; the errand itself is scheduled after acceptance. Put hard deadlines in the deadline field so review can account for them.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="related-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/use-cases</span>
+          <h2 id="related-title">Other things the human does</h2>
+        </div>
+        <ul class="service-index">
+          <li><a href="/use-cases/human-in-the-loop-api"><code>custom_human_in_the_loop</code> Human-in-the-Loop API — Add a Real Human to Any AI Workflow</a></li>
+          <li><a href="/use-cases/real-world-verification"><code>real_world_verification</code> Real-World Verification for AI Agents</a></li>
+          <li><a href="/use-cases/ai-output-review"><code>ai_output_review</code> Human Review of AI Output</a></li>
+          <li><a href="/use-cases/product-testing"><code>product_or_app_testing</code> Human Product &amp; App Testing for AI Builders</a></li>
+        </ul>
+        <p style="margin-top:1.25rem">Full catalog: <a href="/services">all ten services</a> · connection details: <a href="/for-agents">/for-agents</a></p>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="cta-band">
+          <div>
+            <span class="machine">"task_type": "local_physical_task"</span>
+            <h2>Try it with a real task.</h2>
+            <p>Free during the pilot · reviewed before acceptance · evidence included.</p>
+          </div>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="/request">Submit a task</a>
+            <a class="btn btn-ghost" href="/.well-known/agent.json">Fetch agent.json</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="logo" href="/">
+            <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+            Human For AI
+          </a>
+          <p class="muted" style="margin-top:0.9rem;max-width:36ch">A human endpoint for AI agents: human-in-the-loop services for autonomous workflows, developers, and AI systems.</p>
+          <span class="status-live">operator online</span>
+        </div>
+        <div>
+          <h3>platform/</h3>
+          <ul>
+            <li><a href="/services">Services</a></li>
+            <li><a href="/pricing">Pricing</a></li>
+            <li><a href="/request">Submit a task</a></li>
+            <li><a href="/for-agents">For agents</a></li>
+            <li><a href="/developers">Developers</a></li>
+            <li><a href="/use-cases">Use cases</a></li>
+            <li><a href="/tasks">Task status</a></li>
+            <li><a href="/admin">Admin</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>machine/</h3>
+          <ul>
+            <li><a class="mono-link" href="/.well-known/agent.json">/.well-known/agent.json</a></li>
+            <li><a class="mono-link" href="/.well-known/human.json">/.well-known/human.json</a></li>
+            <li><a class="mono-link" href="/.well-known/capabilities.json">/.well-known/capabilities.json</a></li>
+            <li><a class="mono-link" href="/.well-known/services.json">/.well-known/services.json</a></li>
+            <li><a class="mono-link" href="/openapi.json">/openapi.json</a></li>
+            <li><a class="mono-link" href="/api#mcp">/mcp — MCP server</a></li>
+            <li><a class="mono-link" href="/llms.txt">/llms.txt</a></li>
+            <li><a class="mono-link" href="/api">/api — docs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>operator/</h3>
+          <ul>
+            <li><a href="/profile">Operator profile</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/trust">Trust &amp; verification</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span>© <span data-year>2026</span> Human For AI. Early infrastructure, honestly labeled: free pilot — every service is free during the proof of concept.</span>
+        <span class="machine">api_version 1.8.0 · en</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/store.js" defer></script>
+  <script src="/js/app.js" defer></script>
+</body>
+</html>

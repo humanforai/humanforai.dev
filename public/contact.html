@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contact — Human For AI</title>
+  <meta name="description" content="Contact the Human For AI operator: a message form for humans, a structured endpoint for agents. First response under 12 hours, any day of the week.">
+  <link rel="canonical" href="https://humanforai.dev/contact">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Human For AI">
+  <meta property="og:title" content="Contact — Human For AI">
+  <meta property="og:description" content="Reach the operator through the message form or the structured endpoint — details also in /agent.json.">
+  <meta property="og:url" content="https://humanforai.dev/contact">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#0b1120">
+  <link rel="alternate" type="application/json" href="/agent.json" title="Agent manifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "name": "Contact Human For AI",
+    "about": { "@type": "Organization", "name": "Human For AI" }
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="/" aria-label="Human For AI home">
+        <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+        Human For AI
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/api">API</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/trust">Trust</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/contact" aria-current="page">Contact</a></li>
+          <li><a class="nav-agent" href="/.well-known/agent.json">/agent.json</a></li>
+          <li><a class="btn btn-primary btn-sm" href="/request">Submit a task</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="page-head">
+      <div class="wrap">
+        <span class="eyebrow">GET /contact <span class="dim">→ 200 OK · replies: human</span></span>
+        <h1>Contact</h1>
+        <p class="lede">Every message is read and answered by the operator personally — the same human who does the tasks. First response under 12 hours, any day of the week.</p>
+      </div>
+    </div>
+
+    <section class="block">
+      <div class="wrap grid grid-2" style="align-items:start">
+        <div class="card">
+          <span class="machine">channel/human</span>
+          <h3>For humans and companies</h3>
+          <p style="margin-bottom:1rem">Questions, custom projects, NDAs, partnerships, or anything that needs a conversation before it becomes a task — use the message form below. Include a reply-to email and the operator answers there.</p>
+          <p style="margin-bottom:0"><a class="btn btn-primary btn-sm" href="#message-title">Write a message</a></p>
+        </div>
+
+        <div class="card">
+          <span class="machine">channel/machine</span>
+          <h3>For agents and systems</h3>
+          <p style="margin-bottom:1rem">Ready-made tasks go straight to <code>POST /api/v1/tasks</code>. For everything else there's a structured contact endpoint — no email account needed. Include <code>reply_to</code> so the operator can answer.</p>
+          <div class="code-titled" style="margin-bottom:0">
+            <div class="code-title">POST /api/v1/messages — no auth</div>
+            <pre class="code" style="margin-bottom:0"><code>{
+  <span class="k">"from"</span>: <span class="s">"your-agent/1.0"</span>,
+  <span class="k">"subject"</span>: <span class="s">"Scoping question"</span>,
+  <span class="k">"message"</span>: <span class="s">"…"</span>,
+  <span class="k">"reply_to"</span>: <span class="s">"inbox@example.com"</span>
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="message-title">
+      <div class="wrap" style="max-width:720px;margin-left:auto;margin-right:auto">
+        <div class="section-head">
+          <span class="eyebrow">/contact/message</span>
+          <h2 id="message-title">Send a message</h2>
+          <p class="muted">Same endpoint the agents use, with a human face.</p>
+        </div>
+
+        <div id="msg-errors" class="form-error" role="alert" tabindex="-1" hidden></div>
+
+        <form id="message-form" class="panel" novalidate>
+          <div class="form-grid">
+            <div class="field">
+              <label for="msg_from">Name <span class="muted">(optional)</span></label>
+              <input type="text" id="msg_from" name="from" maxlength="200" placeholder="Your name, company, or agent ID">
+            </div>
+            <div class="field">
+              <label for="msg_reply_to">Reply-to email</label>
+              <input type="email" id="msg_reply_to" name="reply_to" placeholder="your.name@gmail.com" required>
+              <span class="hint">Required — replies go here and nowhere else.</span>
+            </div>
+          </div>
+          <div class="field">
+            <label for="msg_subject">Subject <span class="muted">(optional)</span></label>
+            <input type="text" id="msg_subject" name="subject" maxlength="200" placeholder="e.g. Recurring verification, weekly">
+          </div>
+          <div class="field">
+            <label for="msg_message">Message</label>
+            <textarea id="msg_message" name="message" required minlength="5" maxlength="5000" placeholder="What do you need, roughly when, and anything the operator should know."></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit">Send message</button>
+        </form>
+
+        <div id="msg-success" class="form-success" role="status" hidden>
+          <span class="machine" style="color:var(--ok)">201 Created</span>
+          <h3 style="margin-top:0.5rem">Message sent</h3>
+          <p style="margin-bottom:0">Reference: <code id="msg-result-id"></code> — the operator replies within 12 hours, any day of the week.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="expect-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/contact/expectations</span>
+          <h2 id="expect-title">What to expect</h2>
+        </div>
+        <div class="grid grid-3">
+          <div class="card">
+            <h3 class="small" style="font-size:1rem">Response time</h3>
+            <p>Under 12 hours for a first reply, typically under 4 during working hours. Task submissions are acknowledged instantly with a task ID.</p>
+          </div>
+          <div class="card">
+            <h3 class="small" style="font-size:1rem">Languages</h3>
+            <p>Write in English. Agent-generated messages are welcome — state that they're automated and include a callback address.</p>
+          </div>
+          <div class="card">
+            <h3 class="small" style="font-size:1rem">Before sending secrets</h3>
+            <p>Don't include confidential material in a first message. Agree on handling terms first — see <a href="/trust">trust &amp; verification</a>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="wrap">
+        <div class="cta-band">
+          <div>
+            <span class="machine">"first_response_hours": 12</span>
+            <h2>Or skip the conversation.</h2>
+            <p>If the task is already clear, submit it — review is the conversation.</p>
+          </div>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="/request">Submit a task</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="logo" href="/">
+            <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+            Human For AI
+          </a>
+          <p class="muted" style="margin-top:0.9rem;max-width:36ch">A human endpoint for AI agents: human-in-the-loop services for autonomous workflows, developers, and AI systems.</p>
+          <span class="status-live">operator online</span>
+        </div>
+        <div>
+          <h3>platform/</h3>
+          <ul>
+            <li><a href="/services">Services</a></li>
+            <li><a href="/pricing">Pricing</a></li>
+            <li><a href="/request">Submit a task</a></li>
+            <li><a href="/for-agents">For agents</a></li>
+            <li><a href="/developers">Developers</a></li>
+            <li><a href="/use-cases">Use cases</a></li>
+            <li><a href="/tasks">Task status</a></li>
+            <li><a href="/admin">Admin</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>machine/</h3>
+          <ul>
+            <li><a class="mono-link" href="/.well-known/agent.json">/.well-known/agent.json</a></li>
+            <li><a class="mono-link" href="/.well-known/human.json">/.well-known/human.json</a></li>
+            <li><a class="mono-link" href="/.well-known/capabilities.json">/.well-known/capabilities.json</a></li>
+            <li><a class="mono-link" href="/.well-known/services.json">/.well-known/services.json</a></li>
+            <li><a class="mono-link" href="/openapi.json">/openapi.json</a></li>
+            <li><a class="mono-link" href="/api#mcp">/mcp — MCP server</a></li>
+            <li><a class="mono-link" href="/llms.txt">/llms.txt</a></li>
+            <li><a class="mono-link" href="/api">/api — docs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>operator/</h3>
+          <ul>
+            <li><a href="/profile">Operator profile</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/trust">Trust &amp; verification</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span>© <span data-year>2026</span> Human For AI. Early infrastructure, honestly labeled: free pilot — every service is free during the proof of concept.</span>
+        <span class="machine">api_version 1.8.0 · en</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/store.js?v=4" defer></script>
+  <script src="/js/app.js" defer></script>
+  <script src="/js/contact.js?v=2" defer></script>
+</body>
+</html>

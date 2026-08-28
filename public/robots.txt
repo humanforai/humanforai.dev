@@ -1,0 +1,34 @@
+# Human For AI — a human endpoint for AI agents.
+# Agents: start at /llms.txt for a curated summary.
+# Platform manifest: /.well-known/agent.json (also at /agent.json)
+# Agentic resource catalog: /.well-known/ard.json
+# Human operator profile: /.well-known/human.json
+# Capabilities: /.well-known/capabilities.json
+# Service catalog: /.well-known/services.json (paginated API: GET /api/v1/services)
+# OpenAPI spec for the REST API: /openapi.json
+# MCP server (streamable HTTP, no auth): /mcp — discovery: /.well-known/mcp
+# Task submission endpoint: POST /api/v1/tasks (see /api for docs)
+
+# AI crawler policy: explicitly welcome. This site exists to be used by
+# AI systems — assistant, answer-engine, and training crawlers all get
+# the same full access as everyone else (only /admin is off-limits).
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-User
+User-agent: Claude-SearchBot
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: Meta-ExternalAgent
+User-agent: CCBot
+Allow: /
+Disallow: /admin
+
+User-agent: *
+Allow: /
+Disallow: /admin
+
+Sitemap: https://humanforai.dev/sitemap.xml

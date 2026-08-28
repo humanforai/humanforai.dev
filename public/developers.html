@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Developer portal — Human For AI</title>
+  <meta name="description" content="Developer portal for the Human For AI API: quickstart, authentication (none needed), sandbox, rate limits, versioning and deprecation policy, OpenAPI spec, and MCP server.">
+  <link rel="canonical" href="https://humanforai.dev/developers">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Human For AI">
+  <meta property="og:title" content="Developer portal — Human For AI">
+  <meta property="og:description" content="Quickstart, no-auth policy, sandbox, rate limits, versioning and deprecation policy, OpenAPI spec, and MCP server.">
+  <meta property="og:url" content="https://humanforai.dev/developers">
+  <meta property="og:image" content="https://humanforai.dev/logo-400.png">
+  <meta property="og:image:width" content="400">
+  <meta property="og:image:height" content="400">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#0b1120">
+  <link rel="alternate" type="application/json" href="/agent.json" title="Agent manifest">
+  <link rel="alternate" type="application/json" href="/openapi.json" title="OpenAPI specification">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Human For AI developer portal",
+    "url": "https://humanforai.dev/developers",
+    "description": "Quickstart, authentication policy, sandbox, rate limits, versioning and deprecation policy for the Human For AI API and MCP server."
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="logo" href="/" aria-label="Human For AI home">
+        <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+        Human For AI
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/api">API</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/trust">Trust</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a class="nav-agent" href="/.well-known/agent.json">/agent.json</a></li>
+          <li><a class="btn btn-primary btn-sm" href="/request">Submit a task</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="page-head">
+      <div class="wrap">
+        <span class="eyebrow">GET /developers <span class="dim">→ 200 OK</span></span>
+        <h1>Developer portal</h1>
+        <p class="lede">Everything you need to build against the human endpoint: quickstart, auth policy, sandbox, rate limits, and the stability guarantees you can integrate against.</p>
+      </div>
+    </div>
+
+    <section class="block">
+      <div class="wrap" style="max-width:760px">
+
+        <h2 id="quickstart" style="font-size:1.3rem">Quickstart</h2>
+        <p>One request, no signup. Submit a task and get a pollable <code>task_id</code> back:</p>
+        <div class="code-titled">
+          <div class="code-title">POST /api/v1/tasks</div>
+          <pre class="code"><code>curl -X POST https://humanforai.dev/api/v1/tasks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task_type": "human_judgment_and_feedback",
+    "description": "Review the landing page at https://your-site.example and give first-impression feedback on clarity and trust.",
+    "output_format": "text_report",
+    "contact_email": "you@your-domain.com"
+  }'</code></pre>
+        </div>
+        <p style="margin-top:1rem">Then poll <code>GET /api/v1/tasks/{task_id}</code> — <code>seen_by_operator_at</code> stamps the moment a human saw it, <code>eta</code> appears once accepted, and delivered tasks carry a <a href="/trust#receipts">signed receipt</a>. Full reference: <a href="/api">human-readable docs</a> · <a class="mono-link" href="/openapi.json">/openapi.json</a>.</p>
+
+        <h2 id="auth" style="font-size:1.3rem;margin-top:2.5rem">API keys &amp; authentication</h2>
+        <p><strong>There are no API keys — deliberately.</strong> The public API and the MCP server are open: no account, no token, no OAuth. Abuse is handled by human review of every task plus rate limits, duplicate detection, and deliverability checks on contact addresses. If you need a per-integration identity, set the optional <code>requester</code> field so your submissions are attributable to your system.</p>
+
+        <h2 id="sandbox" style="font-size:1.3rem;margin-top:2.5rem">Sandbox &amp; testing</h2>
+        <p>The free pilot doubles as a live sandbox: everything is free, so a test request costs nothing and exercises the exact production path. One small, clearly labeled test task is welcome — put "test" in the description or <code>requester</code> and the operator will treat it accordingly. Please don't send bulk synthetic submissions; they trip the anti-abuse guards and get the client blocked. For purely local development, run the API's <a href="https://github.com/humanforai/humanforai-mcp" rel="noopener">open-source MCP proxy</a> against your own tooling, or validate payloads against <a class="mono-link" href="/openapi.json">the OpenAPI schema</a> before sending.</p>
+
+        <h2 id="rate-limits" style="font-size:1.3rem;margin-top:2.5rem">Rate limits</h2>
+        <p>Limits exist to keep a one-human service honest, and the API tells you where you stand in standard headers (draft-ietf-httpapi-ratelimit-headers):</p>
+        <ul class="checklist">
+          <li>Task submissions: 3/hour and 5/day per client · messages: 3/hour and 5/day per client · global daily caps apply</li>
+          <li>Every API response carries <code>RateLimit-Policy</code>; successful submissions carry <code>RateLimit-Limit</code>, <code>RateLimit-Remaining</code>, and <code>RateLimit-Reset</code></li>
+          <li>Exceeding a limit returns <code>429</code> with <code>Retry-After</code> — honor it and back off; daily windows reset at 00:00 UTC</li>
+          <li>Duplicate submissions within 24h return <code>409</code> with the existing id — poll it instead of resubmitting</li>
+        </ul>
+
+        <h2 id="versioning" style="font-size:1.3rem;margin-top:2.5rem">Versioning &amp; deprecation policy</h2>
+        <p>The API is versioned in the URL path: everything lives under <code>/api/v1/</code>. The stability contract you can integrate against:</p>
+        <ul class="checklist">
+          <li><strong>Additive changes only within a version.</strong> New optional fields, new endpoints, and new response headers may appear under <code>/api/v1</code>; existing fields, types, and status codes don't change meaning.</li>
+          <li><strong>Breaking changes ship as a new path version</strong> (<code>/api/v2/…</code>), never in place.</li>
+          <li><strong>At least 90 days of overlap.</strong> A deprecated version keeps working for a minimum of 90 days after its replacement ships, and announces retirement with <code>Deprecation</code> and <code>Sunset</code> headers (RFC 8594) on its responses, plus a notice in <a class="mono-link" href="/agent.json">/agent.json</a> and on this page.</li>
+          <li><strong>Nothing is currently deprecated.</strong> <code>v1</code> is the only and current version; no Sunset date exists.</li>
+        </ul>
+
+        <h2 id="mcp" style="font-size:1.3rem;margin-top:2.5rem">MCP server</h2>
+        <p>The same capability surface as native agent tools — streamable HTTP, stateless, no auth:</p>
+        <div class="code-titled">
+          <div class="code-title">connect</div>
+          <pre class="code"><code># remote MCP clients
+claude mcp add --transport http human-for-ai https://humanforai.dev/mcp
+
+# stdio clients
+npx -y humanforai</code></pre>
+        </div>
+        <p style="margin-top:1rem">Tools: <code>get_human_services</code>, <code>submit_human_task</code>, <code>check_task_status</code>, <code>message_human_operator</code>. Also answers a live handshake at <code>/.well-known/mcp</code>. Listed in the <a href="https://registry.modelcontextprotocol.io/v0/servers?search=dev.humanforai/humanforai" rel="noopener">official MCP registry</a>.</p>
+
+        <h2 id="discovery" style="font-size:1.3rem;margin-top:2.5rem">Machine-readable surface</h2>
+        <ul class="checklist">
+          <li><a class="mono-link" href="/agent.json">/agent.json</a> — canonical platform manifest (also at <code>/.well-known/agent.json</code>)</li>
+          <li><a class="mono-link" href="/openapi.json">/openapi.json</a> — OpenAPI 3.0 spec of the public API</li>
+          <li><a class="mono-link" href="/llms.txt">/llms.txt</a> — curated summary for language models</li>
+          <li><a class="mono-link" href="/index.md">/index.md</a> — markdown homepage; pages also answer <code>Accept: text/markdown</code> content negotiation</li>
+          <li><a class="mono-link" href="/.well-known/jwks.json">/.well-known/jwks.json</a> — public key for verifying signed deliverable receipts</li>
+        </ul>
+
+        <div class="notice" style="margin-top:2.5rem">
+          Stuck or scoping something unusual? <code>POST /api/v1/messages</code> or the <a href="/contact">contact page</a> — every question gets a human answer. See also the <a href="/for-agents">agent quick-start</a>.
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <a class="logo" href="/">
+            <svg class="logo-mark" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#101b33"/><rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#4dd6ff" stroke-opacity=".5" stroke-width="2"/><path d="M16 20v24M48 20v24" stroke="#4dd6ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="32" r="7" fill="#34e08c"/></svg>
+            Human For AI
+          </a>
+          <p class="muted" style="margin-top:0.9rem;max-width:36ch">A human endpoint for AI agents: human-in-the-loop services for autonomous workflows, developers, and AI systems.</p>
+          <span class="status-live">operator online</span>
+        </div>
+        <div>
+          <h3>platform/</h3>
+          <ul>
+            <li><a href="/services">Services</a></li>
+            <li><a href="/pricing">Pricing</a></li>
+            <li><a href="/request">Submit a task</a></li>
+            <li><a href="/for-agents">For agents</a></li>
+            <li><a href="/developers">Developers</a></li>
+            <li><a href="/use-cases">Use cases</a></li>
+            <li><a href="/tasks">Task status</a></li>
+            <li><a href="/admin">Admin</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>machine/</h3>
+          <ul>
+            <li><a class="mono-link" href="/.well-known/agent.json">/.well-known/agent.json</a></li>
+            <li><a class="mono-link" href="/.well-known/human.json">/.well-known/human.json</a></li>
+            <li><a class="mono-link" href="/.well-known/capabilities.json">/.well-known/capabilities.json</a></li>
+            <li><a class="mono-link" href="/.well-known/services.json">/.well-known/services.json</a></li>
+            <li><a class="mono-link" href="/openapi.json">/openapi.json</a></li>
+            <li><a class="mono-link" href="/api#mcp">/mcp — MCP server</a></li>
+            <li><a class="mono-link" href="/llms.txt">/llms.txt</a></li>
+            <li><a class="mono-link" href="/api">/api — docs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>operator/</h3>
+          <ul>
+            <li><a href="/profile">Operator profile</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/trust">Trust &amp; verification</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span>© <span data-year>2026</span> Human For AI. Early infrastructure, honestly labeled: free pilot — every service is free during the proof of concept.</span>
+        <span class="machine">api_version 1.8.0 · en</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/store.js" defer></script>
+  <script src="/js/app.js" defer></script>
+</body>
+</html>

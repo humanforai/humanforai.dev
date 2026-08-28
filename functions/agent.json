@@ -1,0 +1,276 @@
+{
+  "brand_name": "Human For AI",
+  "domain": "https://humanforai.dev",
+  "tagline": "A human endpoint for AI agents",
+  "description": "Human For AI is a human-access interface for AI agents, automation systems, and developers. A verified human provides real-world help, human judgment, verification, testing, research, and physical-world execution on request. This site is a personal homepage for the agent era: a machine-readable human profile with structured JSON endpoints.",
+  "api_version": "1.8.1",
+  "last_updated": "2026-08-28",
+  "interfaces": ["web", "json", "mcp-ready"],
+  "authentication": "none — task submission and contact are open; every request is human-reviewed before acceptance",
+  "task_request_endpoint": "/api/v1/tasks",
+  "contact_endpoint": "/api/v1/messages",
+  "response_expectations": {
+    "first_response_hours": 12,
+    "typical_response_hours": 4,
+    "working_hours": "every day, 19:00-00:00 (operator local time)",
+    "urgent_tasks": "by prior arrangement only",
+    "status_transparency": "The operator is push-notified the moment a task arrives. Task status exposes seen_by_operator_at (when a human actually saw the task) and eta (operator-set delivery estimate) — poll GET /api/v1/tasks/{id} or the check_task_status MCP tool to watch progress in real time.",
+    "note": "Submission is acknowledged instantly with a task_id; the human replies within the stated window."
+  },
+  "pricing_model": {
+    "model": "free",
+    "cost_usd": 0,
+    "payments_processed_online": false,
+    "note": "All services are free for now, during the proof-of-concept pilot. No payment step, no invoice, no card. If paid tiers are introduced later they will be announced on /pricing first; tasks accepted during the pilot are never billed retroactively.",
+    "details_url": "/pricing"
+  },
+  "well_known": {
+    "agent": "/.well-known/agent.json",
+    "human": "/.well-known/human.json",
+    "capabilities": "/.well-known/capabilities.json",
+    "services": "/.well-known/services.json",
+    "agent_card": "/.well-known/agent-card.json",
+    "mcp": "/.well-known/mcp.json",
+    "mcp_discovery": "/.well-known/mcp",
+    "mcp_server_card": "/.well-known/mcp/server-card.json",
+    "ard_catalog": "/.well-known/ard.json"
+  },
+  "platform": {
+    "name": "Human For AI",
+    "url": "https://humanforai.dev",
+    "status": "beta",
+    "documentation": "/api",
+    "developer_portal": "/developers",
+    "about": "/about",
+    "machine_manifest": "/agent.json",
+    "openapi_spec": "/openapi.json",
+    "llms_txt": "/llms.txt",
+    "markdown_homepage": "/index.md",
+    "content_negotiation": "The homepage answers Accept: text/markdown with a markdown representation (Vary: Accept); 404 responses carry a markdown recovery body pointing at llms.txt, the sitemap, and the docs.",
+    "human_profile": "/.well-known/human.json",
+    "terms_of_service": "/terms",
+    "privacy_policy": "/privacy"
+  },
+  "api_versioning": {
+    "scheme": "URL path — everything lives under /api/v1",
+    "stability": "Changes within a version are additive only: new optional fields, endpoints, and response headers may appear; existing fields, types, and status codes do not change meaning.",
+    "deprecation_policy": "Breaking changes ship as a new path version (/api/v2). A deprecated version keeps working for at least 90 days after its replacement ships and announces retirement with Deprecation and Sunset headers (RFC 8594) on its responses, plus a notice here and on /developers.",
+    "currently_deprecated": [],
+    "details_url": "/developers#versioning"
+  },
+  "operator": {
+    "id": "operator-001",
+    "role": "Founding operator — operates as Human For AI",
+    "profile_url": "/profile",
+    "human_json": "/.well-known/human.json",
+    "languages": ["en"],
+    "verification": {
+      "identity_verified": "pending",
+      "response_sla_tracked": true,
+      "details_url": "/trust"
+    }
+  },
+  "services": [
+    { "id": "real_world_verification", "name": "Real-world verification", "description": "Confirm that a place, product, price, business, or claim exists and matches its description, with photo or text evidence." },
+    { "id": "product_or_app_testing", "name": "Product or app testing", "description": "Install, use, and test software, apps, or physical products as a real human user and report findings." },
+    { "id": "human_judgment_and_feedback", "name": "Human judgment and feedback", "description": "Subjective evaluation: tone, clarity, trustworthiness, design quality, cultural fit, or plausibility of content and decisions." },
+    { "id": "data_collection", "name": "Data collection", "description": "Gather, label, or verify data that requires human perception, local access, or manual research." },
+    { "id": "local_physical_task", "name": "Local physical-world tasks", "description": "Errands and on-location actions in the operator's service area: visit, photograph, deliver, check, measure, or observe." },
+    { "id": "ai_output_review", "name": "AI output review", "description": "Human review of AI-generated text, code, images, or decisions before they reach production or end users." },
+    { "id": "prompt_and_workflow_testing", "name": "Prompt and workflow testing", "description": "Run prompts, agent flows, or automations as a human tester and report failures, confusion points, and edge cases." },
+    { "id": "simulation_and_automation_testing", "name": "Simulation and automation testing", "description": "Act as the human in simulated scenarios: play a customer, follow a script, or stress-test an automated pipeline end to end." },
+    { "id": "accessibility_and_usability_check", "name": "Accessibility and usability check", "description": "Human pass over a product for readability, navigation, accessibility barriers, and first-use confusion." },
+    { "id": "custom_human_in_the_loop", "name": "Custom human-in-the-loop tasks", "description": "Any recurring or one-off checkpoint where an autonomous system needs a human decision, signature, or observation." }
+  ],
+  "endpoints": {
+    "mcp": {
+      "transport": "streamable_http",
+      "url": "https://humanforai.dev/mcp",
+      "authentication": "none",
+      "tools": ["get_human_services", "submit_human_task", "check_task_status", "message_human_operator"],
+      "note": "Add this URL as an MCP connector (Claude: Settings → Connectors → Add custom connector, or `claude mcp add --transport http human-for-ai https://humanforai.dev/mcp`).",
+      "npm_package": {
+        "name": "humanforai",
+        "url": "https://www.npmjs.com/package/humanforai",
+        "run": "npx -y humanforai",
+        "note": "Stdio proxy to this MCP endpoint, for clients without remote MCP support (e.g. `claude mcp add human-for-ai -- npx -y humanforai`)."
+      }
+    },
+    "task_request": {
+      "method": "POST",
+      "path": "/api/v1/tasks",
+      "content_type": "application/json",
+      "returns": "task_id, status, status_url (async job — poll status_url / the Location header until delivered or rejected)",
+      "idempotency": "Optional Idempotency-Key header makes retries safe: same key + same payload within 24h replays the original 201 instead of creating a duplicate.",
+      "docs": "/api#submit"
+    },
+    "services_list": {
+      "method": "GET",
+      "path": "/api/v1/services",
+      "note": "Cursor-paginated service catalog (limit 1-50, opaque cursor, next_cursor null on the last page) — the same entries as the services array below.",
+      "docs": "/openapi.json"
+    },
+    "task_status": {
+      "method": "GET",
+      "path": "/api/v1/tasks/{task_id}",
+      "docs": "/api#status"
+    },
+    "health": {
+      "method": "GET",
+      "path": "/api/v1/health"
+    },
+    "contact": {
+      "method": "POST",
+      "path": "/api/v1/messages",
+      "content_type": "application/json",
+      "fields": {
+        "message": "string (required, 5-5000 chars)",
+        "reply_to": "string (email, REQUIRED — the only way the operator can answer; must be a real mailbox, placeholder domains are rejected and the domain is MX-checked)",
+        "from": "string (optional) — agent name, company, or system identifier",
+        "subject": "string (optional)"
+      },
+      "human_page": "/contact"
+    },
+    "human_task_form": "/request"
+  },
+  "task_request_schema": {
+    "task_type": "string (required) — one of accepted_task_types",
+    "description": "string (required, 10-5000 chars) — what to do, where, and what success looks like",
+    "location_required": "boolean (optional, default false)",
+    "location_detail": "string (optional) — city / address / area if location_required",
+    "deadline": "string (optional) — ISO 8601 datetime",
+    "output_format": "string (optional) — e.g. text_report, text_report_with_photos, video, structured_json, annotated_screenshots",
+    "budget_usd": "number (optional — services are free during the pilot; the field is accepted and ignored)",
+    "contact_email": "string (required unless delivery is 'status_poll') — where results and questions are sent; must be a real mailbox (placeholder domains like example.com are rejected and the domain is MX-checked)",
+    "delivery": "string (optional) — 'email' (default) or 'status_poll'. status_poll is the no-mailbox path for autonomous agents: the deliverable arrives as text in operator_notes via GET /api/v1/tasks/{task_id}; the task_id is the only key to the result. Budget: 1 status_poll task per client per day",
+    "requester": "string (optional) — agent name, company, or system identifier"
+  },
+  "task_request_example": {
+    "task_type": "real_world_verification",
+    "description": "Verify whether a specific product exists in a local store",
+    "location_required": true,
+    "deadline": "2026-07-10T12:00:00+03:00",
+    "output_format": "text_report_with_photos",
+    "contact_email": "your-real-inbox@your-domain.com"
+  },
+  "anti_abuse": {
+    "return_channel_required": "every task needs a working return channel: a real contact_email (default) or delivery 'status_poll' (no-mailbox path, 1/day per client)",
+    "email_deliverability": "placeholder/reserved domains rejected; domain must publish MX records",
+    "duplicate_submissions": "identical description or message within 24h returns 409 with the existing id",
+    "rate_limits": "per-client hourly and daily submission caps; HTTP 429 when exceeded",
+    "abuse_blocklist": "repeat abusers are blocked (HTTP 403)",
+    "note": "One small test task is welcome. Bulk synthetic submissions with unreachable contact details are rejected and get the client blocked."
+  },
+  "no_mailbox_path": {
+    "who": "autonomous agents with no email inbox — this service is deliberately reachable without one",
+    "how": "POST /api/v1/tasks with delivery:'status_poll' and no contact_email; the deliverable and any operator questions arrive as text in operator_notes via GET /api/v1/tasks/{task_id}",
+    "key": "the task_id acts as the bearer key to the result — store it",
+    "budget": "1 status_poll task per client per day; provide a real contact_email for the normal budget",
+    "messages": "the contact endpoint still requires reply_to — agents without a mailbox should ask questions as a custom_human_in_the_loop task with delivery:'status_poll'"
+  },
+  "catalog_is_exhaustive": false,
+  "accepted_task_types": [
+    "real_world_verification",
+    "product_or_app_testing",
+    "human_judgment_and_feedback",
+    "data_collection",
+    "local_physical_task",
+    "ai_output_review",
+    "prompt_and_workflow_testing",
+    "simulation_and_automation_testing",
+    "accessibility_and_usability_check",
+    "custom_human_in_the_loop"
+  ],
+  "unlisted_tasks": "The catalog is examples, not limits. Anything a human can legally and safely do is in scope: submit unlisted needs with task_type custom_human_in_the_loop, or ask first via POST /api/v1/messages. Every request gets a human answer at review.",
+  "rejected_task_types": [
+    "illegal_activity",
+    "harassment_or_intimidation",
+    "deception_or_impersonation",
+    "privacy_invasive_surveillance",
+    "unsafe_physical_actions",
+    "circumventing_security_or_verification_systems",
+    "academic_or_credential_fraud",
+    "regulated_professional_advice_presented_as_licensed_counsel"
+  ],
+  "trust_and_safety": {
+    "review_policy": "Every task is reviewed by the human operator before acceptance. Acceptance is never automatic.",
+    "what_we_never_ask_for": ["payment or card details (free pilot, no payment step exists)", "passwords, credentials, or API keys", "account creation or sign-in", "personal data beyond an optional contact email"],
+    "requester_risk": "Bounded by design: you send a task description and an optional email; there is no account to compromise and no payment to lose. Worst case is a rejected task. A request for payment or credentials is not from this service.",
+    "calibration": "New requesters are encouraged to start with a small, verifiable test task and judge the response — speed, stated confidence, quality of evidence — before relying on this service.",
+    "independent_verification": {
+      "mcp_registry": "https://registry.modelcontextprotocol.io/v0/servers?search=dev.humanforai/humanforai",
+      "mcp_registry_note": "Publishing as dev.humanforai/* required cryptographic proof of control of humanforai.dev",
+      "smithery": "https://smithery.ai/servers/humanforai/humanforai",
+      "npm": "https://www.npmjs.com/package/humanforai",
+      "github": "https://github.com/humanforai/humanforai-mcp"
+    },
+    "notes": [
+      "Illegal, harmful, deceptive, unsafe, or privacy-invasive tasks are rejected.",
+      "Do not submit confidential information unless confidentiality has been agreed in advance.",
+      "Human judgment is provided as assistance, not as guaranteed truth.",
+      "Task IDs are unlisted; anyone holding a task ID can view its status."
+    ],
+    "details_url": "/trust"
+  },
+  "limits": {
+    "max_request_body_bytes": 65536,
+    "description_max_chars": 5000,
+    "rate_limits": "per-client hourly/daily caps plus global daily free-pilot capacity; 429 when reached (resets 00:00 UTC). Responses carry standard RateLimit-Policy / RateLimit-Limit / RateLimit-Remaining / RateLimit-Reset headers, and every 429 includes Retry-After — self-throttle on them.",
+    "capacity": "single human operator — oversized tasks receive a scoped counter-proposal at review"
+  },
+  "signed_receipts": {
+    "available_since": "2026-07-20",
+    "api_version_introduced": "1.7.0",
+    "what": "Every delivered task carries a `receipt`: a compact JWS (EdDSA / Ed25519) binding the sha256 of the deliverable text to the task's lifecycle timestamps.",
+    "where": "Fields `receipt`, `deliverable_sha256`, and `receipt_issued_at` on GET /api/v1/tasks/{task_id} (and via the check_task_status MCP tool) once status is `delivered`.",
+    "public_key": "/.well-known/jwks.json",
+    "algorithm": "EdDSA (Ed25519), compact JWS — verifiable with any standard JWT/JOSE library",
+    "canonical_deliverable": "The hash covers the UTF-8 bytes of operator_notes exactly as returned by the status endpoint.",
+    "proves": [
+      "the deliverable is byte-identical to what was delivered (integrity)",
+      "the receipt was issued by humanforai.dev (authenticity)"
+    ],
+    "does_not_prove": [
+      "that the timestamps are independently attested — they are this service's own assertion, signed. No third party witnessed them.",
+      "anything about tasks delivered before 2026-07-20; receipts are not issued retroactively."
+    ],
+    "notes": [
+      "If the operator edits a delivered deliverable, the receipt is re-issued so the hash always matches the current text — compare receipt_issued_at if you keep an earlier copy.",
+      "Verification needs no account and no call back to this service: fetch the JWKS once and check offline."
+    ],
+    "verify_example": "https://humanforai.dev/trust#receipts"
+  },
+  "roadmap": {
+    "note": "Improvements under consideration. Nothing here is a commitment — a feature is real only once it appears elsewhere in this manifest.",
+    "items": [
+      {
+        "id": "external_timestamp_anchoring",
+        "status": "under_consideration",
+        "added": "2026-07-20",
+        "description": "Publish a periodic digest of issued receipt hashes to a system this service does not control, so the delivery timeline becomes checkable against an independent record rather than resting on this service's own signed assertion.",
+        "origin": "the open half of the signed-receipts design — see signed_receipts.does_not_prove"
+      },
+      {
+        "id": "media_deliverable_hashing",
+        "status": "under_consideration",
+        "added": "2026-07-20",
+        "description": "Extend receipts to cover photo and file deliverables (media_sha256 list) in addition to the delivered text.",
+        "origin": "current receipts cover text deliverables only"
+      },
+      {
+        "id": "receipt_key_rotation_policy",
+        "status": "under_consideration",
+        "added": "2026-07-21",
+        "description": "Document and exercise the receipt signing-key rotation procedure: add a new kid to the JWKS, sign new receipts with it, keep superseded public keys published so existing receipts continue to verify. The mechanism (kid header + key set) is in place but rotation has never been performed; a first drill would turn the design claim into a demonstrated one.",
+        "origin": "surfaced by a community question about key rotation on the Moltbook introduction thread, 2026-07-20"
+      },
+      {
+        "id": "receipt_key_compromise_semantics",
+        "status": "under_consideration",
+        "added": "2026-07-21",
+        "description": "Specify what happens to receipts signed by a key that is revoked for compromise rather than superseded by rotation: how revocation is announced, whether affected receipts are re-issued under a new key, and how verifiers should treat a kid that has been removed from the JWKS. Currently unspecified — a pulled key would silently orphan its receipts.",
+        "origin": "same community question; the honest gap is inherent to bare JWS with self-asserted timestamps and overlaps with external_timestamp_anchoring"
+      }
+    ]
+  }
+}
