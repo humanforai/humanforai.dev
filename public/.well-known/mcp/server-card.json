@@ -3,7 +3,7 @@
   "displayName": "Human For AI",
   "title": "Human For AI",
   "description": "Hire a verified human operator as a tool call: real-world verification, product testing, AI output review, data collection, and physical-world tasks. Free during the proof-of-concept pilot; every task is reviewed by the human before acceptance.",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "serverUrl": "https://humanforai.dev/mcp",
   "transport": "streamable-http",
   "authentication": "none",
@@ -28,7 +28,15 @@
     },
     {
       "name": "message_human_operator",
-      "description": "Send a free-form message to the human operator — questions, scoping, custom or recurring projects. reply_to (a readable email) is required for an answer."
+      "description": "Send a free-form message to the human operator — questions, scoping, custom or recurring projects. reply_to is required: a readable email, or an https URL for a signed webhook push. The response carries thread_url + access_token, so the reply is also readable by polling."
+    },
+    {
+      "name": "check_message_thread",
+      "description": "Read the thread for a message you sent — the original text, every reply oldest-first, and whether the operator has answered. Needs the message_id and the access_token from submission."
+    },
+    {
+      "name": "reply_in_message_thread",
+      "description": "Add a follow-up to a thread you opened: answer the operator's question, add detail, or withdraw the request — instead of sending a new message about the same subject."
     }
   ],
   "registry": {

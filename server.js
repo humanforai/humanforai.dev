@@ -489,6 +489,82 @@ function publicTask(task) {
 /* Messages — structured contact channel for agents (and humans)       */
 /* ------------------------------------------------------------------ */
 
+/* ---- Message threads & signed webhooks (v1.9.0) — mirrors functions/index.js */
+const WEBHOOK_TIMEOUT_MS = 10000;
+const THREAD_MAX_REPLIES = 40;
+
+function isHttpsWebhook(value) {
+  return typeof value === 'string' && /^https:\/\//i.test(value);
+}
+
+function webhookUrlError(raw) {
+  if (String(raw).length > 500) return 'reply_to webhook URL must be under 500 characters.';
+  let u;
+  try {
+    u = new URL(raw);
+  } catch {
+    return 'reply_to webhook must be a valid https URL.';
+  }
+  if (u.protocol !== 'https:') return 'reply_to webhook must use https.';
+  if (u.username || u.password) return 'reply_to webhook must not embed credentials.';
+  if (u.port && u.port !== '443') return 'reply_to webhook must use the default https port.';
+  const host = u.hostname.toLowerCase();
+  if (host.startsWith('[') || /^\d+\.\d+\.\d+\.\d+$/.test(host)) return 'reply_to webhook must use a DNS hostname, not an IP address.';
+  if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') || host.endsWith('.internal') || host.endsWith('.home.arpa') || !host.includes('.')) {
+    return 'reply_to webhook hostname must be a public host.';
+  }
+  return null;
+}
+
+function tokensMatch(supplied, stored) {
+  if (typeof supplied !== 'string' || typeof stored !== 'string' || !supplied || !stored) return false;
+  const a = crypto.createHash('sha256').update(supplied).digest();
+  const b = crypto.createHash('sha256').update(stored).digest();
+  return crypto.timingSafeEqual(a, b);
+}
+
+function publicThread(m) {
+  return {
+    message_id: m.message_id,
+    status: m.answered_at ? 'answered' : 'received',
+    created_at: m.created_at,
+    from: m.from,
+    subject: m.subject,
+    message: m.message,
+    replies: (m.replies || []).map((r) => ({ author: r.author, message: r.message, created_at: r.created_at })),
+    reply_count: (m.replies || []).length,
+    last_reply_at: m.replies && m.replies.length ? m.replies[m.replies.length - 1].created_at : null,
+    reply_channel: m.webhook ? 'webhook' : (m.reply_to ? 'email' : 'thread_only'),
+    ...(m.webhook && m.webhook.last_delivery && { webhook_last_delivery: m.webhook.last_delivery }),
+    note: 'An empty replies list means the operator has not answered yet — poll occasionally, not in a loop. Operator replies land here' +
+      (m.webhook ? ' and are pushed to your webhook, signed.' : (m.reply_to ? ' and go to your reply_to mailbox.' : '.')),
+  };
+}
+
+async function deliverWebhook(m, event, data) {
+  if (!m.webhook || !m.webhook.url) return null;
+  const payload = JSON.stringify({ event, message_id: m.message_id, sent_at: new Date().toISOString(), data });
+  const ts = String(Math.floor(Date.now() / 1000));
+  const sig = crypto.createHmac('sha256', m.access_token).update(`${ts}.${payload}`).digest('hex');
+  try {
+    const r = await fetch(m.webhook.url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-HumanForAI-Timestamp': ts,
+        'X-HumanForAI-Signature': `sha256=${sig}`,
+        'User-Agent': 'humanforai-webhook/1.0 (+https://humanforai.dev/api)',
+      },
+      body: payload,
+      redirect: 'error',
+      signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
+    });
+    return { at: new Date().toISOString(), event, status: r.status, ok: r.ok };
+  } catch (err) {
+    return { at: new Date().toISOString(), event, status: 0, ok: false, error: String(err.message || err).slice(0, 200) };
+  }
+}
+
 function validateMessagePayload(body) {
   const errors = [];
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
@@ -500,13 +576,16 @@ function validateMessagePayload(body) {
   if (body.message && body.message.length > 5000) {
     errors.push('message must be under 5000 characters.');
   }
-  // Required since v1.5.0 (anti-abuse): without a reply address the
-  // operator has no way to answer, so the message serves no purpose.
+  // Required since v1.5.0 (anti-abuse); since v1.9.0 the reply channel may
+  // be an email OR an https webhook URL, and every message is a thread.
   if (body.reply_to === undefined || body.reply_to === null || body.reply_to === '') {
-    errors.push('reply_to is required — it is the only way the operator can answer you. ' +
-      "Agents without a mailbox: submit your question as a custom_human_in_the_loop task with delivery:'status_poll' instead, and read the answer via GET /api/v1/tasks/{task_id}.");
+    errors.push('reply_to is required — an email address, or an https URL to receive signed webhook pushes. ' +
+      'Either way the reply is also readable in the message thread (thread_url + access_token in the response).');
+  } else if (isHttpsWebhook(body.reply_to)) {
+    const webhookErr = webhookUrlError(body.reply_to);
+    if (webhookErr) errors.push(webhookErr);
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(body.reply_to))) {
-    errors.push('reply_to must be a valid email address.');
+    errors.push('reply_to must be a valid email address or an https webhook URL.');
   } else {
     const placeholder = placeholderEmailError(body.reply_to, 'reply_to');
     if (placeholder) errors.push(placeholder);
@@ -516,6 +595,7 @@ function validateMessagePayload(body) {
 
 function buildMessage(body, ipHash) {
   const now = new Date().toISOString();
+  const webhook = isHttpsWebhook(body.reply_to);
   return {
     client_ip_hash: ipHash || null,
     message_id: `MSG-${new Date().getFullYear()}-${crypto.randomBytes(8).toString('hex').toUpperCase()}`,
@@ -523,9 +603,13 @@ function buildMessage(body, ipHash) {
     subject: body.subject ? String(body.subject).slice(0, 200) : null,
     message: String(body.message).trim(),
     message_hash: textHash(body.message),
-    reply_to: body.reply_to || null,
+    reply_to: webhook ? null : (body.reply_to || null),
     source: body.source === 'web_form' ? 'web_form' : 'api',
     created_at: now,
+    access_token: crypto.randomBytes(24).toString('base64url'),
+    replies: [],
+    answered_at: null,
+    webhook: webhook ? { url: String(body.reply_to), last_delivery: null } : null,
   };
 }
 
@@ -654,7 +738,7 @@ async function handleAPI(req, res, url) {
   }
 
   if (resource === 'health' && req.method === 'GET') {
-    sendJSON(res, 200, { status: 'ok', service: 'human-for-ai', api_version: '1.8.2', time: new Date().toISOString() });
+    sendJSON(res, 200, { status: 'ok', service: 'human-for-ai', api_version: '1.9.0', time: new Date().toISOString() });
     return;
   }
 
@@ -793,8 +877,8 @@ async function handleAPI(req, res, url) {
   // GET  /api/v1/messages — admin inbox
   if (resource === 'messages') {
     const urlSubmission =
-      req.method === 'GET' && typeof url.searchParams.get('message') === 'string' && url.searchParams.get('message').trim();
-    if (req.method === 'POST' || urlSubmission) {
+      req.method === 'GET' && !id && typeof url.searchParams.get('message') === 'string' && url.searchParams.get('message').trim();
+    if ((req.method === 'POST' && !id) || urlSubmission) {
       let body;
       if (urlSubmission) {
         // Mirrors functions/index.js: query params become the payload so
@@ -831,10 +915,10 @@ async function handleAPI(req, res, url) {
         sendJSON(res, 422, { error: 'validation_failed', details: errors });
         return;
       }
-      if (!(await emailDomainAcceptsMail(body.reply_to))) {
+      if (!isHttpsWebhook(body.reply_to) && !(await emailDomainAcceptsMail(body.reply_to))) {
         sendJSON(res, 422, {
           error: 'validation_failed',
-          details: [`reply_to domain (${String(body.reply_to).split('@').pop()}) has no mail service (MX records) — the operator could never answer you. Provide a real mailbox.`],
+          details: [`reply_to domain (${String(body.reply_to).split('@').pop()}) has no mail service (MX records) — the operator could never answer you. Provide a real mailbox, or an https webhook URL.`],
         });
         return;
       }
@@ -882,11 +966,79 @@ async function handleAPI(req, res, url) {
       const msgResponse = {
         message_id: msg.message_id,
         created_at: msg.created_at,
-        message: 'Message received. The operator replies within 12 hours, any day of the week. Include reply_to to get an answer.',
+        thread_url: `/api/v1/messages/${msg.message_id}`,
+        access_token: msg.access_token,
+        message: 'Message received. The operator replies within 12 hours, any day of the week. ' +
+          'This message is also a thread: GET thread_url with the access_token (Bearer header or ?token=) to read the reply without a mailbox, ' +
+          'and POST {"message","token"} to the same URL to follow up. Keep the token — it is shown only once and is the only key to the thread.' +
+          (msg.webhook ? ' Operator replies are also pushed to your webhook URL, signed (see /api#webhooks).' : ''),
       };
       sendJSON(res, 201, msgResponse,
         rateHeaders(IP_MESSAGES_DAILY_LIMIT, IP_MESSAGES_DAILY_LIMIT - msgDaily.count, secondsToUtcMidnight()));
       storeIdempotent(idem, 201, msgResponse);
+      return;
+    }
+    // Thread read/write — mirrors functions/index.js.
+    if (req.method === 'GET' && id) {
+      const messages = await readMessages();
+      const wanted = String(id).toUpperCase();
+      const m = messages.find((x) => x.message_id.toUpperCase() === wanted);
+      const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim() || url.searchParams.get('token') || '';
+      if (!m || !m.access_token || !tokensMatch(token, m.access_token)) {
+        sendJSON(res, 404, {
+          error: 'thread_not_found',
+          message: 'No readable thread for that id and token. The access_token comes from the original submission response; threads exist for messages sent after API v1.9.0.',
+        });
+        return;
+      }
+      sendJSON(res, 200, publicThread(m));
+      return;
+    }
+    if (req.method === 'POST' && id) {
+      let body;
+      try {
+        body = JSON.parse((await readBody(req)) || '{}');
+      } catch {
+        sendJSON(res, 400, { error: 'invalid_json', message: 'Request body must be valid JSON.' });
+        return;
+      }
+      const messages = await readMessages();
+      const wanted = String(id).toUpperCase();
+      const m = messages.find((x) => x.message_id.toUpperCase() === wanted);
+      const asAdmin = isAdmin(req);
+      const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim() || url.searchParams.get('token') || (body && body.token) || '';
+      if (!m || (!asAdmin && (!m.access_token || !tokensMatch(String(token), m.access_token)))) {
+        sendJSON(res, 404, {
+          error: 'thread_not_found',
+          message: 'No writable thread for that id and token. The access_token comes from the original submission response.',
+        });
+        return;
+      }
+      const text = typeof body.message === 'string' ? body.message.trim() : '';
+      if (text.length < 2 || text.length > 5000) {
+        sendJSON(res, 422, { error: 'validation_failed', details: ['message is required (2-5000 characters).'] });
+        return;
+      }
+      m.replies = m.replies || [];
+      if (!asAdmin && m.replies.length >= THREAD_MAX_REPLIES) {
+        sendJSON(res, 422, { error: 'thread_full', message: `This thread has reached ${THREAD_MAX_REPLIES} replies. Send a new message and quote the message_id.` });
+        return;
+      }
+      const reply = { author: asAdmin ? 'operator' : 'requester', message: text, created_at: new Date().toISOString() };
+      m.replies.push(reply);
+      if (asAdmin) m.answered_at = reply.created_at;
+      if (asAdmin && m.webhook) {
+        m.webhook.last_delivery = await deliverWebhook(m, 'operator_reply', { reply, thread_url: `/api/v1/messages/${m.message_id}` });
+      }
+      await writeMessages(messages);
+      sendJSON(res, 201, {
+        message_id: m.message_id,
+        reply_count: m.replies.length,
+        ...(asAdmin && m.webhook && { webhook_delivery: m.webhook.last_delivery }),
+        message: asAdmin
+          ? 'Reply recorded in the thread.'
+          : 'Added to the thread. The operator is notified and replies at human speed — poll the thread occasionally, not in a loop.',
+      });
       return;
     }
     if (req.method === 'GET') {

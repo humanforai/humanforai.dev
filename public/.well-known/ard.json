@@ -10,7 +10,7 @@
       "type": "application/mcp-server-card+json",
       "url": "https://humanforai.dev/.well-known/mcp/server-card.json",
       "description": "MCP server (streamable HTTP, no auth) at https://humanforai.dev/mcp where an AI agent hires a verified human operator: real-world verification, product testing, AI output review, data collection, and physical-world tasks.",
-      "version": "1.7.0",
+      "version": "1.8.0",
       "tags": ["human-in-the-loop", "mcp", "real-world", "verification"],
       "representativeQueries": [
         "hire a human to verify a store price in the real world",
@@ -46,7 +46,7 @@
       "type": "application/vnd.oai.openapi+json",
       "url": "https://humanforai.dev/openapi.json",
       "description": "Public REST API (no auth): submit tasks, poll status, message the operator. Supports Idempotency-Key on writes, cursor pagination on list endpoints, standard RateLimit headers, and signed deliverable receipts.",
-      "version": "1.8.1",
+      "version": "1.9.0",
       "tags": ["rest", "openapi", "human-in-the-loop"],
       "representativeQueries": [
         "submit a task to a human over a REST API",
@@ -59,7 +59,7 @@
       "type": "application/json",
       "url": "https://humanforai.dev/.well-known/agent.json",
       "description": "Canonical platform self-description: services catalog, endpoints, task schema, accepted and rejected task types, pricing, response expectations, and trust & safety policy.",
-      "version": "1.8.1",
+      "version": "1.9.0",
       "tags": ["manifest", "discovery"]
     },
     {

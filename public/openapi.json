@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Human For AI API",
-    "version": "1.8.2",
+    "version": "1.9.0",
     "description": "A human endpoint for AI agents. Submit tasks that need physical presence, human perception, or human judgment — real-world verification, product testing, AI output review, data collection, local physical-world errands — and a verified human operator performs them. All services are FREE during the proof-of-concept pilot. No authentication is required; every task is reviewed by the human before acceptance, and illegal, harmful, deceptive, unsafe, or privacy-invasive tasks are rejected. First response within 12 hours, any day of the week. An MCP server is also available at https://humanforai.dev/mcp (streamable HTTP, no auth; discovery at /.well-known/mcp).\n\nAsynchronous jobs: task submission is a long-running human job. POST /api/v1/tasks returns 202 Accepted immediately with a task_id (the job identifier), a status_url, and a Location header pointing at the poll endpoint; poll GET /api/v1/tasks/{task_id} until status reaches delivered or rejected. Work never completes within the submission request.\n\nIdempotency: POST /api/v1/tasks and POST /api/v1/messages accept an optional Idempotency-Key header (up to 200 chars). Retrying with the same key and identical payload within 24h replays the original response (marked Idempotency-Replayed: true) instead of creating a duplicate or burning rate-limit budget; the same key with a different payload returns 422. Keys are scoped per client.\n\nPagination: list endpoints use cursor pagination — pass limit (1–50) and the opaque next_cursor from the previous page; next_cursor is null on the last page. See GET /api/v1/services.\n\nVersioning & deprecation: the API is versioned in the URL path (/api/v1). Changes within a version are additive only; breaking changes ship as a new path version, and a deprecated version keeps working for at least 90 days while announcing retirement with Deprecation and Sunset headers (RFC 8594) plus a notice in /agent.json. Nothing is currently deprecated. Policy: https://humanforai.dev/developers#versioning.\n\nRate limits: responses carry standard RateLimit-Policy / RateLimit-Limit / RateLimit-Remaining / RateLimit-Reset headers (draft-ietf-httpapi-ratelimit-headers), and every 429 includes Retry-After. Details: https://humanforai.dev/developers#rate-limits.",
     "contact": {
       "name": "Human For AI operator",
@@ -175,8 +175,8 @@
       },
       "post": {
         "operationId": "sendMessage",
-        "summary": "Send a message to the human operator",
-        "description": "Structured contact channel for questions, scoping, or anything that is not yet a task. Include reply_to (email) to receive an answer — it is the operator's only way to reply. Send an Idempotency-Key header to make retries safe. GET-only callers: the same channel works as a URL — see the GET operation on this path.",
+        "summary": "Send a message to the human operator (opens a thread)",
+        "description": "Structured contact channel for questions, scoping, or anything that is not yet a task. reply_to is required: an email (MX-checked) or an https webhook URL for signed pushes. Every message is also a pollable thread — the response carries thread_url and a one-time access_token, so the reply is readable via GET /api/v1/messages/{id} even without a mailbox. Send an Idempotency-Key header to make retries safe. GET-only callers: the same channel works as a URL — see the GET operation on this path.",
         "parameters": [
           { "$ref": "#/components/parameters/IdempotencyKey" }
         ],
@@ -245,6 +245,69 @@
           "409": {
             "description": "Duplicate: an identical submission exists within the last 24h; the response includes the existing id."
           }
+        }
+      }
+    },
+    "/api/v1/messages/{message_id}": {
+      "get": {
+        "operationId": "getMessageThread",
+        "summary": "Read a message thread",
+        "description": "The thread for a message you sent: the original text, every reply oldest-first, and whether the operator has answered. Authenticate with the access_token from the submission response — as 'Authorization: Bearer <token>' or '?token=<token>' for GET-only callers. A wrong id and a wrong token answer identically (404), so neither leaks the other. Reading is cheap, but the operator answers at human speed: poll occasionally, and read an empty replies list as no answer yet.",
+        "parameters": [
+          { "name": "message_id", "in": "path", "required": true, "schema": { "type": "string" }, "example": "MSG-2026-1A2B3C4D" },
+          { "name": "token", "in": "query", "required": false, "description": "The thread access_token — alternative to the Authorization header for GET-only callers.", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "The thread.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MessageThread" } } }
+          },
+          "404": {
+            "description": "No readable thread for that id and token."
+          }
+        }
+      },
+      "post": {
+        "operationId": "replyInMessageThread",
+        "summary": "Follow up in a message thread",
+        "description": "Add to a thread you opened — answer a question the operator asked, add detail, correct yourself, or withdraw the request. Prefer this over sending a fresh message about a subject already opened. Authenticate with the access_token ('Authorization: Bearer', '?token=', or a 'token' body field). The operator is notified of every follow-up.",
+        "parameters": [
+          { "name": "message_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["message"],
+                "properties": {
+                  "message": { "type": "string", "minLength": 2, "maxLength": 5000 },
+                  "token": { "type": "string", "description": "The thread access_token (alternative to the Authorization header)." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Added to the thread.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message_id": { "type": "string" },
+                    "reply_count": { "type": "integer" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "No writable thread for that id and token." },
+          "422": { "description": "Missing/too-long message, or the thread reached its reply cap." },
+          "429": { "description": "Hourly message limit reached — honor Retry-After." }
         }
       }
     },
@@ -662,8 +725,7 @@
           },
           "reply_to": {
             "type": "string",
-            "format": "email",
-            "description": "REQUIRED. The only way the operator can answer you. Must be a real, reachable mailbox: placeholder/reserved domains are rejected and the domain must publish MX records."
+            "description": "REQUIRED. An email address (real, reachable mailbox — placeholder domains rejected, MX-checked), OR an https URL: operator replies are then pushed there as a signed webhook (HMAC-SHA256 over '<X-HumanForAI-Timestamp>.<raw body>', keyed on the thread's access_token, in X-HumanForAI-Signature as 'sha256=<hex>'). Webhook URLs must be https on the default port with a public DNS hostname; redirects are not followed. Either way the reply is also readable in the message thread."
           },
           "from": {
             "type": "string",
@@ -687,9 +749,50 @@
             "type": "string",
             "format": "date-time"
           },
+          "thread_url": {
+            "type": "string",
+            "example": "/api/v1/messages/MSG-2026-1A2B3C4D",
+            "description": "Every message is a thread: GET this URL with the access_token to read the operator's reply without a mailbox; POST to it to follow up."
+          },
+          "access_token": {
+            "type": "string",
+            "description": "The only key to the thread. Shown once, never derivable from the message_id — persist it, and hand it (with the thread_url) to whatever process continues your task."
+          },
           "message": {
             "type": "string"
           }
+        }
+      },
+      "MessageThread": {
+        "type": "object",
+        "description": "A message thread as its owner sees it. status is 'received' until the operator replies, then 'answered'. An empty replies list means not yet — poll occasionally, not in a loop.",
+        "properties": {
+          "message_id": { "type": "string" },
+          "status": { "type": "string", "enum": ["received", "answered"] },
+          "created_at": { "type": "string", "format": "date-time" },
+          "from": { "type": "string" },
+          "subject": { "type": ["string", "null"] },
+          "message": { "type": "string", "description": "The original message text." },
+          "replies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "author": { "type": "string", "enum": ["operator", "requester"] },
+                "message": { "type": "string" },
+                "created_at": { "type": "string", "format": "date-time" }
+              }
+            }
+          },
+          "reply_count": { "type": "integer" },
+          "last_reply_at": { "type": ["string", "null"], "format": "date-time" },
+          "reply_channel": { "type": "string", "enum": ["email", "webhook", "thread_only"] },
+          "webhook_last_delivery": {
+            "type": "object",
+            "description": "Present for webhook threads after the first push attempt: at, event, HTTP status, ok, and an error string on failure.",
+            "additionalProperties": true
+          },
+          "note": { "type": "string" }
         }
       },
       "ValidationError": {

@@ -3,7 +3,7 @@
   "domain": "https://humanforai.dev",
   "tagline": "A human endpoint for AI agents",
   "description": "Human For AI is a human-access interface for AI agents, automation systems, and developers. A verified human provides real-world help, human judgment, verification, testing, research, and physical-world execution on request. This site is a personal homepage for the agent era: a machine-readable human profile with structured JSON endpoints.",
-  "api_version": "1.8.1",
+  "api_version": "1.9.0",
   "last_updated": "2026-08-28",
   "interfaces": ["web", "json", "mcp-ready"],
   "authentication": "none — task submission and contact are open; every request is human-reviewed before acceptance",
@@ -167,7 +167,7 @@
     "how": "POST /api/v1/tasks with delivery:'status_poll' and no contact_email; the deliverable and any operator questions arrive as text in operator_notes via GET /api/v1/tasks/{task_id}",
     "key": "the task_id acts as the bearer key to the result — store it",
     "budget": "1 status_poll task per client per day; provide a real contact_email for the normal budget",
-    "messages": "the contact endpoint still requires reply_to — agents without a mailbox should ask questions as a custom_human_in_the_loop task with delivery:'status_poll'"
+    "messages": "since v1.9.0 every message is a pollable thread: the POST response carries thread_url + a one-time access_token, and GET /api/v1/messages/{id} with the token reads the operator's reply without any mailbox. reply_to may also be an https URL to receive replies as HMAC-signed webhook pushes"
   },
   "catalog_is_exhaustive": false,
   "accepted_task_types": [

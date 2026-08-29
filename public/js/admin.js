@@ -442,7 +442,10 @@
         '<td>' + (m.reply_to
           ? '<a class="mono-link machine small" href="mailto:' + esc(m.reply_to) + '">' + esc(m.reply_to) + '</a>'
           : '<span class="muted small">none</span>') + '</td>' +
-        '<td><button type="button" class="btn btn-ghost btn-xs msg-delete" data-message="' + esc(m.message_id) + '" ' +
+        '<td><button type="button" class="btn btn-ghost btn-xs msg-reply" data-message="' + esc(m.message_id) + '" ' +
+        'title="Reply in the thread (and push the webhook, if any)">reply' +
+        (m.replies && m.replies.length ? ' (' + m.replies.length + ')' : '') + '</button>' +
+        '<br><button type="button" class="btn btn-ghost btn-xs msg-delete" data-message="' + esc(m.message_id) + '" ' +
         'title="Delete this message" aria-label="Delete message ' + esc(m.message_id) + '">delete</button>' +
         (m.client_ip_hash
           ? '<br><button type="button" class="btn btn-ghost btn-xs ip-block" data-hash="' + esc(m.client_ip_hash) +
@@ -451,6 +454,27 @@
         '</tr>'
       );
     }).join('');
+
+    mbody.querySelectorAll('.msg-reply').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var mid = btn.getAttribute('data-message');
+        var text = prompt('Reply in thread ' + mid + ' (the requester reads it via the thread API; webhook reply_to gets a signed push):');
+        if (!text || text.trim().length < 2) return;
+        btn.disabled = true;
+        fetch('/api/v1/messages/' + encodeURIComponent(mid), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
+          body: JSON.stringify({ message: text.trim() }),
+        }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); }).then(function (r) {
+          btn.disabled = false;
+          if (!r.ok) { alert('Reply failed: ' + (r.j.error || 'unknown')); return; }
+          if (r.j.webhook_delivery && !r.j.webhook_delivery.ok) {
+            alert('Reply saved, but the webhook push failed (' + (r.j.webhook_delivery.error || r.j.webhook_delivery.status) + '). The requester can still read it in the thread.');
+          }
+          load();
+        }).catch(function (e) { btn.disabled = false; alert('Reply failed: ' + e); });
+      });
+    });
 
     mbody.querySelectorAll('.msg-delete').forEach(function (btn) {
       btn.addEventListener('click', function () {

@@ -124,7 +124,7 @@ function buildServer(clientIp) {
     {
       name: 'human-for-ai',
       title: 'Human For AI',
-      version: '1.7.0',
+      version: '1.8.0',
       websiteUrl: BASE_URL,
       icons: [{ src: BASE_URL + '/icon.png', mimeType: 'image/png' }],
     },
@@ -214,11 +214,14 @@ function buildServer(clientIp) {
       title: 'Message the human operator',
       description:
         'Send a free-form message to the human operator — questions, scoping, custom or recurring ' +
-        'projects, anything that is not yet a ready-made task. reply_to is REQUIRED (an email you or ' +
-        'your principal can read); it is the only way the operator can answer.',
+        'projects, anything that is not yet a ready-made task. reply_to is REQUIRED: an email a human ' +
+        'can read (MX-checked), or an https URL to receive the reply as a signed webhook push. The ' +
+        'response also carries thread_url + access_token — every message is a pollable thread, so you ' +
+        'can read the reply with check_message_thread even without a mailbox. Keep the token: it is ' +
+        'shown only once.',
       inputSchema: {
         message: z.string().min(5).max(5000).describe('The message. Plain language, English.'),
-        reply_to: z.string().describe('REQUIRED. Email address for the reply — must be a real, reachable mailbox (MX-checked).'),
+        reply_to: z.string().describe('REQUIRED. Email address for the reply (real, reachable, MX-checked) — or an https webhook URL for a signed push.'),
         subject: z.string().max(200).optional().describe('Short subject line'),
         from: z.string().max(200).optional().describe('Your agent or system identifier'),
       },
@@ -229,6 +232,55 @@ function buildServer(clientIp) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...args, from: args.from || 'mcp-client', source: 'api' }),
+      }, clientIp);
+      return r.status === 201 ? ok(r.data) : fail(r.data);
+    },
+  );
+
+  server.registerTool(
+    'check_message_thread',
+    {
+      title: 'Read a message thread',
+      description:
+        'Read the thread for a message you sent: the original text, every reply oldest-first, and ' +
+        'whether the operator has answered. Needs the message_id and the access_token from the ' +
+        'submission response. An empty replies list means no answer yet — the operator works at ' +
+        'human speed, so poll occasionally rather than in a loop.',
+      inputSchema: {
+        message_id: z.string().describe('The message id from message_human_operator, e.g. MSG-2026-1A2B3C4D'),
+        access_token: z.string().describe('The access_token returned once at submission — the only key to the thread.'),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    async ({ message_id, access_token }) => {
+      const r = await api(`/api/v1/messages/${encodeURIComponent(message_id)}`, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${access_token}` },
+      }, clientIp);
+      return r.status === 200 ? ok(r.data) : fail(r.data);
+    },
+  );
+
+  server.registerTool(
+    'reply_in_message_thread',
+    {
+      title: 'Follow up in a message thread',
+      description:
+        'Add a follow-up to a thread you opened — answer a question the operator asked, add detail, ' +
+        'correct yourself, or withdraw the request. Prefer this over sending a brand-new message ' +
+        'about the same subject. Needs the message_id and access_token from the submission response.',
+      inputSchema: {
+        message_id: z.string().describe('The message id from message_human_operator'),
+        access_token: z.string().describe('The access_token returned once at submission'),
+        message: z.string().min(2).max(5000).describe('The follow-up text'),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+    },
+    async ({ message_id, access_token, message }) => {
+      const r = await api(`/api/v1/messages/${encodeURIComponent(message_id)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${access_token}` },
+        body: JSON.stringify({ message }),
       }, clientIp);
       return r.status === 201 ? ok(r.data) : fail(r.data);
     },
@@ -265,13 +317,13 @@ exports.mcp = onRequest(
         description:
           'MCP server where an AI agent hires a verified human operator for real-world verification, ' +
           'product testing, AI output review, data collection, and physical-world tasks.',
-        version: '1.7.0',
+        version: '1.8.0',
         serverUrl: BASE_URL + '/mcp',
         transport: 'streamable-http',
         authentication: 'none',
         protocol_note: 'The /mcp endpoint is stateless streamable HTTP and accepts POST only.',
         server_card: BASE_URL + '/.well-known/mcp/server-card.json',
-        tools: ['get_human_services', 'submit_human_task', 'check_task_status', 'message_human_operator'],
+        tools: ['get_human_services', 'submit_human_task', 'check_task_status', 'message_human_operator', 'check_message_thread', 'reply_in_message_thread'],
         registry: 'dev.humanforai/humanforai',
         documentation: BASE_URL + '/api',
         website: BASE_URL,

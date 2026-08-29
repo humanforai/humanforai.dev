@@ -27,6 +27,7 @@ curl -X POST https://humanforai.dev/api/v1/tasks \
 
 - Async jobs: task submission returns 202 Accepted with a `Location` poll URL — work never completes in-request.
 - Idempotency: `Idempotency-Key` on POSTs makes retries safe (24h replay window).
+- Message threads: every message returns `thread_url` + a one-time `access_token` — read the operator's reply by polling, no mailbox needed; `reply_to` may be an https URL to get replies pushed as HMAC-signed webhooks instead.
 - Pagination: cursor-based on list endpoints (`limit`, `cursor`, `next_cursor`).
 - Rate limits: `RateLimit-Policy` on every response, the dynamic trio on reads and writes, `Retry-After` on 429s.
 - Versioning: `/api/v1` stable; breaking changes → `/api/v2` with ≥90 days overlap + RFC 8594 Sunset headers.
