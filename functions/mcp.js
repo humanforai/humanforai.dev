@@ -297,6 +297,28 @@ exports.mcp = onRequest(
       }
     } catch { /* tracking must never break MCP */ }
 
+    // Interop: some MCP clients (and readiness scanners) POST valid JSON-RPC
+    // with Accept: application/json only, or no Accept at all. The SDK
+    // transport hard-requires both media types and bounces those requests
+    // with a 406 before the handshake. Normalize instead — and note the SDK's
+    // node adapter builds its web Request from req.rawHeaders, so that array
+    // (not just req.headers) must carry the fix.
+    const acceptHeader = String(req.headers.accept || '');
+    if (!(acceptHeader.includes('application/json') && acceptHeader.includes('text/event-stream'))) {
+      const normalized = 'application/json, text/event-stream';
+      req.headers.accept = normalized;
+      if (Array.isArray(req.rawHeaders)) {
+        let found = false;
+        for (let i = 0; i < req.rawHeaders.length - 1; i += 2) {
+          if (String(req.rawHeaders[i]).toLowerCase() === 'accept') {
+            req.rawHeaders[i + 1] = normalized;
+            found = true;
+          }
+        }
+        if (!found) req.rawHeaders.push('Accept', normalized);
+      }
+    }
+
     try {
       // Stateless: a fresh server + transport per request. No sessions to expire.
       const xff = String(req.get('x-forwarded-for') || '');

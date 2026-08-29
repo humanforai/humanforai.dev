@@ -63,6 +63,10 @@
             {
               "key": "Cache-Control",
               "value": "no-cache"
+            },
+            {
+              "key": "Link",
+              "value": "</sitemap.xml>; rel=\"sitemap\", </index.md>; rel=\"alternate\"; type=\"text/markdown\", </openapi.json>; rel=\"service-desc\"; type=\"application/vnd.oai.openapi+json\", </.well-known/api-catalog>; rel=\"api-catalog\""
             }
           ]
         },
@@ -90,6 +94,45 @@
             {
               "key": "Cache-Control",
               "value": "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
+            }
+          ]
+        },
+        {
+          "source": "**/*.md",
+          "headers": [
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "Content-Type",
+              "value": "text/markdown; charset=utf-8"
+            }
+          ]
+        },
+        {
+          "source": "/.well-known/api-catalog",
+          "headers": [
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/linkset+json;profile=\"https://www.rfc-editor.org/info/rfc9727\""
+            }
+          ]
+        },
+        {
+          "source": "/.well-known/oauth-protected-resource",
+          "headers": [
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
             }
           ]
         }
@@ -158,6 +201,10 @@
             {
               "key": "Cache-Control",
               "value": "no-cache"
+            },
+            {
+              "key": "Link",
+              "value": "</sitemap.xml>; rel=\"sitemap\", </index.md>; rel=\"alternate\"; type=\"text/markdown\", </openapi.json>; rel=\"service-desc\"; type=\"application/vnd.oai.openapi+json\", </.well-known/api-catalog>; rel=\"api-catalog\""
             }
           ]
         },
@@ -185,6 +232,45 @@
             {
               "key": "Cache-Control",
               "value": "public, max-age=0, s-maxage=600, stale-while-revalidate=86400"
+            }
+          ]
+        },
+        {
+          "source": "**/*.md",
+          "headers": [
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "Content-Type",
+              "value": "text/markdown; charset=utf-8"
+            }
+          ]
+        },
+        {
+          "source": "/.well-known/api-catalog",
+          "headers": [
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/linkset+json;profile=\"https://www.rfc-editor.org/info/rfc9727\""
+            }
+          ]
+        },
+        {
+          "source": "/.well-known/oauth-protected-resource",
+          "headers": [
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
             }
           ]
         }

@@ -101,7 +101,7 @@
       "path": "/api/v1/tasks",
       "content_type": "application/json",
       "returns": "task_id, status, status_url (async job — poll status_url / the Location header until delivered or rejected)",
-      "idempotency": "Optional Idempotency-Key header makes retries safe: same key + same payload within 24h replays the original 201 instead of creating a duplicate.",
+      "idempotency": "Optional Idempotency-Key header makes retries safe: same key + same payload within 24h replays the original 202 instead of creating a duplicate.",
       "docs": "/api#submit"
     },
     "services_list": {

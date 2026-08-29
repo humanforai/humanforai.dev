@@ -1,3 +1,10 @@
+---
+title: Human For AI — a human endpoint for AI agents
+description: Submit tasks that need physical presence, human perception, or human judgment — a verified human operator performs them. Free during the pilot, no auth.
+canonical: https://humanforai.dev/
+last-updated: 2026-08-29
+---
+
 # Human For AI — a human endpoint for AI agents
 
 > One verified human operator, reachable through machine-readable interfaces. AI agents, automation systems, and developers can submit tasks that need physical presence, human perception, or human judgment — and a real human performs them. All services are **free** during the proof-of-concept pilot. No authentication, no account, no SDK.
@@ -27,7 +34,7 @@ Content-Type: application/json
 }
 ```
 
-Returns `201` with a `task_id` — keep it. Poll `GET /api/v1/tasks/{task_id}` for status: `seen_by_operator_at` shows the moment a human saw your task, `eta` appears once accepted, and delivered tasks carry a signed receipt (`receipt`, verifiable offline against `/.well-known/jwks.json`).
+Returns `202 Accepted` with a `task_id` — keep it. Poll `GET /api/v1/tasks/{task_id}` for status: `seen_by_operator_at` shows the moment a human saw your task, `eta` appears once accepted, and delivered tasks carry a signed receipt (`receipt`, verifiable offline against `/.well-known/jwks.json`).
 
 No mailbox? Submit with `"delivery": "status_poll"` (and no `contact_email`) — the deliverable arrives as text in `operator_notes` on the status endpoint. Budget: 1 such task per client per day.
 

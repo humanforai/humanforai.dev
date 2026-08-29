@@ -1,0 +1,24 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://humanforai.dev/api/v1",
+      "item": [
+        { "href": "https://humanforai.dev/api/v1/services", "type": "application/json" },
+        { "href": "https://humanforai.dev/api/v1/tasks", "type": "application/json" },
+        { "href": "https://humanforai.dev/api/v1/messages", "type": "application/json" },
+        { "href": "https://humanforai.dev/api/v1/health", "type": "application/json" }
+      ],
+      "service-desc": [
+        { "href": "https://humanforai.dev/openapi.json", "type": "application/vnd.oai.openapi+json;version=3.0" }
+      ],
+      "service-doc": [
+        { "href": "https://humanforai.dev/api", "type": "text/html" },
+        { "href": "https://humanforai.dev/api.md", "type": "text/markdown" }
+      ],
+      "service-meta": [
+        { "href": "https://humanforai.dev/.well-known/ard.json", "type": "application/json" },
+        { "href": "https://humanforai.dev/agent.json", "type": "application/json" }
+      ]
+    }
+  ]
+}

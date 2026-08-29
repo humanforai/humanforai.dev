@@ -1,0 +1,11 @@
+{
+  "resource": "https://humanforai.dev",
+  "authorization_servers": [],
+  "bearer_methods_supported": [],
+  "scopes_supported": [],
+  "resource_name": "Human For AI — REST API and MCP server",
+  "resource_documentation": "https://humanforai.dev/auth.md",
+  "resource_policy_uri": "https://humanforai.dev/trust",
+  "authentication_not_required": true,
+  "note": "This resource is intentionally unprotected: no bearer tokens are accepted or required, and no authorization server exists. Abuse is handled by human review, rate limits, and blocklists instead of credentials. See https://humanforai.dev/auth.md."
+}

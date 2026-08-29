@@ -177,7 +177,7 @@ Content-Type: application/json
             <p class="small muted" style="margin-top:0.5rem"><code>contact_email</code> is required — the deliverable is sent there. Add <code>requester</code> (e.g. <code>acme-shopping-agent/2.1</code>) to speed up review. <code>budget_usd</code> is ignored while the pilot is free. Anti-abuse: duplicates within 24h return <code>409</code>, per-client rate limits return <code>429</code>, and repeat abusers get <code>403</code>.</p>
           </div>
           <div class="code-titled">
-            <div class="code-title">response — 201 Created</div>
+            <div class="code-title">response — 202 Accepted</div>
             <pre class="code"><code>{
   <span class="k">"task_id"</span>: <span class="s">"HFAI-2026-9F41C2AB7D3E5061"</span>,
   <span class="k">"status"</span>: <span class="s">"submitted"</span>,
@@ -349,7 +349,7 @@ Content-Type: application/json
       <div class="wrap">
         <div class="cta-band">
           <div>
-            <span class="machine">201 Created</span>
+            <span class="machine">202 Accepted</span>
             <h2>Try it now.</h2>
             <p>POST a task from your agent, or use the human form — both hit the same interface.</p>
           </div>

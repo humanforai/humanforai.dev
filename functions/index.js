@@ -391,12 +391,33 @@ const IP_POLL_TASKS_DAILY_LIMIT = Number(process.env.IP_POLL_TASKS_DAILY_LIMIT) 
  * submissions carry the per-client daily trio, and every 429 carries
  * Retry-After. Documented at /developers#rate-limits.
  */
+const READS_HOURLY_LIMIT = 1000; // per instance — soft backstop for read GETs
+
 const RATELIMIT_POLICY = [
   `"tasks-per-client-hourly";q=${IP_TASKS_HOURLY_LIMIT};w=3600`,
   `"tasks-per-client-daily";q=${IP_TASKS_DAILY_LIMIT};w=86400`,
   `"messages-per-client-hourly";q=${IP_MESSAGES_HOURLY_LIMIT};w=3600`,
   `"messages-per-client-daily";q=${IP_MESSAGES_DAILY_LIMIT};w=86400`,
+  `"reads-per-instance-hourly";q=${READS_HOURLY_LIMIT};w=3600`,
 ].join(', ');
+
+// Soft per-instance read budget: public GET endpoints answer with the
+// dynamic RateLimit trio (draft-ietf-httpapi-ratelimit-headers) so agents
+// see live budget state on reads too, not only on submissions. Honest:
+// the counter is enforced (429 past the limit), scoped per instance.
+let readWindow = { hour: '', count: 0 };
+function readBudget() {
+  const now = new Date();
+  const hour = now.toISOString().slice(0, 13);
+  if (readWindow.hour !== hour) readWindow = { hour, count: 0 };
+  readWindow.count += 1;
+  const resetSeconds = 3600 - (now.getUTCMinutes() * 60 + now.getUTCSeconds());
+  return {
+    ok: readWindow.count <= READS_HOURLY_LIMIT,
+    headers: rateHeaders(READS_HOURLY_LIMIT, READS_HOURLY_LIMIT - readWindow.count, resetSeconds),
+    resetSeconds,
+  };
+}
 
 function secondsToUtcMidnight() {
   const next = new Date();
@@ -874,6 +895,18 @@ async function handler(req, res) {
     if (!req.path.startsWith('/api/v1/')) {
       if (req.path === '/' || req.path === '/index.html') {
         if (req.method === 'GET' || req.method === 'HEAD') {
+          // ?mode=agent: the machine view of the homepage, regardless of
+          // the Accept header.
+          if (req.query.mode === 'agent') {
+            res.set({
+              'Content-Type': 'text/markdown; charset=utf-8',
+              'Cache-Control': 'public, max-age=0, s-maxage=600, stale-while-revalidate=86400',
+              'X-Content-Type-Options': 'nosniff',
+            });
+            res.status(200).send(fs.readFileSync(path.join(__dirname, 'pages', 'index.md'), 'utf8'));
+            await track('markdown_fetch', req, { path: '/?mode=agent' });
+            return;
+          }
           const variant = serveNegotiated(req, res, 'index', 200);
           // Browsers are counted by the page-view beacon; the markdown
           // variant is agent traffic worth seeing in the dashboard.
@@ -939,7 +972,8 @@ async function handler(req, res) {
     }
 
     if (resource === 'health' && req.method === 'GET') {
-      sendJSON(res, 200, { status: 'ok', service: 'human-for-ai', api_version: '1.8.1', time: new Date().toISOString() });
+      const budget = readBudget();
+      sendJSON(res, 200, { status: 'ok', service: 'human-for-ai', api_version: '1.8.2', time: new Date().toISOString() }, budget.headers);
       return;
     }
 
@@ -949,7 +983,44 @@ async function handler(req, res) {
     // next_cursor is null on the last page. The catalog is small today —
     // the point is a documented, stable pagination shape agents can
     // rely on (see openapi.json).
+    // GET /api/v1/services.md — markdown twin of the service catalog, so
+    // agents fetching *.md URLs get a readable rendering of the same data.
+    if (resource === 'services.md' && req.method === 'GET') {
+      const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, 'agent.json'), 'utf8'));
+      const services = Array.isArray(manifest.services) ? manifest.services : [];
+      const lines = [
+        '# Human For AI — service catalog',
+        '',
+        'Markdown twin of `GET /api/v1/services` (JSON, cursor-paginated). All services are free during the pilot; every task is human-reviewed before acceptance. The catalog is examples, not limits — unlisted needs are welcome as `custom_human_in_the_loop`.',
+        '',
+      ];
+      for (const s of services) {
+        lines.push(`## ${s.name || s.id}`, '');
+        if (s.description) lines.push(s.description, '');
+        lines.push(`- task_type: \`${s.id || s.task_type || 'custom_human_in_the_loop'}\``);
+        if (s.pricing) lines.push(`- pricing: ${s.pricing}`);
+        if (s.typical_turnaround) lines.push(`- typical turnaround: ${s.typical_turnaround}`);
+        lines.push('');
+      }
+      lines.push('Submit: `POST /api/v1/tasks` (202 Accepted + poll URL) — docs: https://humanforai.dev/api.md');
+      res.set({
+        'Content-Type': 'text/markdown; charset=utf-8',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, max-age=3600',
+      });
+      res.status(200).send(lines.join('\n') + '\n');
+      return;
+    }
+
     if (resource === 'services' && req.method === 'GET') {
+      const budget = readBudget();
+      if (!budget.ok) {
+        sendJSON(res, 429, {
+          error: 'rate_limited',
+          message: 'Per-instance read budget exceeded. Honor Retry-After.',
+        }, { ...budget.headers, 'Retry-After': String(budget.resetSeconds) });
+        return;
+      }
       const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, 'agent.json'), 'utf8'));
       const services = Array.isArray(manifest.services) ? manifest.services : [];
       const limitRaw = Number(req.query.limit);
@@ -975,7 +1046,7 @@ async function handler(req, res) {
         next_cursor: next < services.length
           ? Buffer.from(JSON.stringify({ offset: next })).toString('base64url')
           : null,
-      });
+      }, budget.headers);
       return;
     }
 
@@ -1338,9 +1409,9 @@ async function handler(req, res) {
         `https://humanforai.dev/admin`;
       await notifyTelegram(taskAlert);
       await notifyWhatsApp(taskAlert);
-      // Async-job contract: the 201 is an accepted job, not a finished
-      // one — Location points at the poll endpoint (same as status_url),
-      // and the client polls it until status is delivered or rejected.
+      // Async-job contract: 202 Accepted — the job is queued for human
+      // review, not finished. Location points at the poll endpoint (same
+      // as status_url); the client polls until delivered or rejected.
       const taskResponse = {
         task_id: task.task_id,
         status: task.status,
@@ -1355,8 +1426,8 @@ async function handler(req, res) {
         Location: `/api/v1/tasks/${task.task_id}`,
         ...rateHeaders(IP_TASKS_DAILY_LIMIT, IP_TASKS_DAILY_LIMIT - taskDaily.count, secondsToUtcMidnight()),
       };
-      sendJSON(res, 201, taskResponse, taskHeaders);
-      await storeIdempotent(idem, 201, taskResponse, { Location: taskHeaders.Location });
+      sendJSON(res, 202, taskResponse, taskHeaders);
+      await storeIdempotent(idem, 202, taskResponse, { Location: taskHeaders.Location });
       return;
     }
 

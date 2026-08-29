@@ -317,12 +317,30 @@ const IP_POLL_TASKS_DAILY_LIMIT = Number(process.env.IP_POLL_TASKS_DAILY_LIMIT) 
 const ipDailyCounters = new Map();
 
 /* ---- RateLimit response headers (v1.8.0) — mirrors functions/index.js */
+const READS_HOURLY_LIMIT = 1000; // per instance — soft backstop for read GETs
+
 const RATELIMIT_POLICY = [
   `"tasks-per-client-hourly";q=${IP_TASKS_HOURLY_LIMIT};w=3600`,
   `"tasks-per-client-daily";q=${IP_TASKS_DAILY_LIMIT};w=86400`,
   `"messages-per-client-hourly";q=${IP_MESSAGES_HOURLY_LIMIT};w=3600`,
   `"messages-per-client-daily";q=${IP_MESSAGES_DAILY_LIMIT};w=86400`,
+  `"reads-per-instance-hourly";q=${READS_HOURLY_LIMIT};w=3600`,
 ].join(', ');
+
+// Soft per-instance read budget — mirrors functions/index.js readBudget().
+let readWindow = { hour: '', count: 0 };
+function readBudget() {
+  const now = new Date();
+  const hour = now.toISOString().slice(0, 13);
+  if (readWindow.hour !== hour) readWindow = { hour, count: 0 };
+  readWindow.count += 1;
+  const resetSeconds = 3600 - (now.getUTCMinutes() * 60 + now.getUTCSeconds());
+  return {
+    ok: readWindow.count <= READS_HOURLY_LIMIT,
+    headers: rateHeaders(READS_HOURLY_LIMIT, READS_HOURLY_LIMIT - readWindow.count, resetSeconds),
+    resetSeconds,
+  };
+}
 
 function secondsToUtcMidnight() {
   const next = new Date();
@@ -635,13 +653,45 @@ async function handleAPI(req, res, url) {
   }
 
   if (resource === 'health' && req.method === 'GET') {
-    sendJSON(res, 200, { status: 'ok', service: 'human-for-ai', api_version: '1.8.1', time: new Date().toISOString() });
+    sendJSON(res, 200, { status: 'ok', service: 'human-for-ai', api_version: '1.8.2', time: new Date().toISOString() });
     return;
   }
 
   // GET /api/v1/services — public, cursor-paginated service catalog.
   // (Mirrors functions/index.js; see openapi.json for the contract.)
+  // GET /api/v1/services.md — markdown twin (mirrors functions/index.js).
+  if (resource === 'services.md' && req.method === 'GET') {
+    const manifest = JSON.parse(fs.readFileSync(path.join(PUBLIC_DIR, 'agent.json'), 'utf8'));
+    const services = Array.isArray(manifest.services) ? manifest.services : [];
+    const lines = [
+      '# Human For AI — service catalog',
+      '',
+      'Markdown twin of `GET /api/v1/services` (JSON, cursor-paginated). All services are free during the pilot; every task is human-reviewed before acceptance. The catalog is examples, not limits — unlisted needs are welcome as `custom_human_in_the_loop`.',
+      '',
+    ];
+    for (const s of services) {
+      lines.push(`## ${s.name || s.id}`, '');
+      if (s.description) lines.push(s.description, '');
+      lines.push(`- task_type: \`${s.id || s.task_type || 'custom_human_in_the_loop'}\``);
+      if (s.pricing) lines.push(`- pricing: ${s.pricing}`);
+      if (s.typical_turnaround) lines.push(`- typical turnaround: ${s.typical_turnaround}`);
+      lines.push('');
+    }
+    lines.push('Submit: `POST /api/v1/tasks` (202 Accepted + poll URL) — docs: https://humanforai.dev/api.md');
+    res.writeHead(200, { 'Content-Type': 'text/markdown; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+    res.end(lines.join('\n') + '\n');
+    return;
+  }
+
   if (resource === 'services' && req.method === 'GET') {
+    const budget = readBudget();
+    if (!budget.ok) {
+      sendJSON(res, 429, {
+        error: 'rate_limited',
+        message: 'Per-instance read budget exceeded. Honor Retry-After.',
+      }, { ...budget.headers, 'Retry-After': String(budget.resetSeconds) });
+      return;
+    }
     const manifest = JSON.parse(fs.readFileSync(path.join(PUBLIC_DIR, 'agent.json'), 'utf8'));
     const services = Array.isArray(manifest.services) ? manifest.services : [];
     const limitRaw = Number(url.searchParams.get('limit'));
@@ -667,7 +717,7 @@ async function handleAPI(req, res, url) {
       next_cursor: next < services.length
         ? Buffer.from(JSON.stringify({ offset: next })).toString('base64url')
         : null,
-    });
+    }, budget.headers);
     return;
   }
 
@@ -958,8 +1008,8 @@ async function handleAPI(req, res, url) {
     tasks.push(task);
     await writeTasks(tasks);
     await sendNotification(task);
-    // Async-job contract (mirrors functions/index.js): the 201 is an
-    // accepted job — Location points at the poll endpoint.
+    // Async-job contract (mirrors functions/index.js): 202 Accepted — a
+    // queued job, not a finished one; Location points at the poll endpoint.
     const taskResponse = {
       task_id: task.task_id,
       status: task.status,
@@ -974,8 +1024,8 @@ async function handleAPI(req, res, url) {
       Location: `/api/v1/tasks/${task.task_id}`,
       ...rateHeaders(IP_TASKS_DAILY_LIMIT, IP_TASKS_DAILY_LIMIT - taskDaily.count, secondsToUtcMidnight()),
     };
-    sendJSON(res, 201, taskResponse, taskHeaders);
-    storeIdempotent(idem, 201, taskResponse, { Location: taskHeaders.Location });
+    sendJSON(res, 202, taskResponse, taskHeaders);
+    storeIdempotent(idem, 202, taskResponse, { Location: taskHeaders.Location });
     return;
   }
 
@@ -1167,6 +1217,13 @@ function serveNegotiated(req, res, name, status) {
 function serveStatic(req, res, url) {
   const pathname = decodeURIComponent(url.pathname).replace(/\/+$/, '') || '/';
   if (pathname === '/' || pathname === '/index.html') {
+    // ?mode=agent — mirrors functions/index.js: the machine view of the
+    // homepage regardless of the Accept header.
+    if (url.searchParams.get('mode') === 'agent') {
+      res.writeHead(200, { 'Content-Type': 'text/markdown; charset=utf-8', 'Cache-Control': 'no-cache' });
+      res.end(fs.readFileSync(path.join(PUBLIC_DIR, 'index.md'), 'utf8'));
+      return;
+    }
     serveNegotiated(req, res, 'index', 200);
     return;
   }

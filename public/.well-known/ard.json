@@ -1,7 +1,8 @@
 {
   "$comment": "Agentic Resource Discovery catalog (agenticresourcediscovery.org). One place that lists every agentic resource this domain offers: the MCP server, the REST API, and the machine-readable docs.",
+  "specVersion": "0.91",
   "publisher": "humanforai.dev",
-  "updatedAt": "2026-08-28T00:00:00Z",
+  "updatedAt": "2026-08-29T00:00:00Z",
   "entries": [
     {
       "identifier": "urn:air:humanforai.dev:server:human-for-ai",

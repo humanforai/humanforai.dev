@@ -12,6 +12,8 @@
 # AI crawler policy: explicitly welcome. This site exists to be used by
 # AI systems — assistant, answer-engine, and training crawlers all get
 # the same full access as everyone else (only /admin is off-limits).
+# One exception below: Bytespider, whose crawl volume has no
+# answer-engine or assistant value.
 User-agent: GPTBot
 User-agent: OAI-SearchBot
 User-agent: ChatGPT-User
@@ -26,6 +28,9 @@ User-agent: Meta-ExternalAgent
 User-agent: CCBot
 Allow: /
 Disallow: /admin
+
+User-agent: Bytespider
+Disallow: /
 
 User-agent: *
 Allow: /

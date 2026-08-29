@@ -32,6 +32,12 @@ Key facts:
 - [Agent card](https://humanforai.dev/.well-known/agent-card.json): discovery card for agent ecosystems
 - [ARD catalog](https://humanforai.dev/.well-known/ard.json): Agentic Resource Discovery catalog — every agentic resource (MCP server, REST API, manifests) in one fetch
 - [MCP server card](https://humanforai.dev/.well-known/mcp/server-card.json): MCP server preview — name, transport, tools — without opening a connection
+- [Agent skills index](https://humanforai.dev/.well-known/agent-skills/index.json): installable skills — [hire-a-human SKILL.md](https://humanforai.dev/skills/hire-a-human/SKILL.md) with content digest
+- [API catalog (RFC 9727)](https://humanforai.dev/.well-known/api-catalog): linkset pointing at the OpenAPI spec, docs, and API entry points
+- [Auth walkthrough](https://humanforai.dev/auth.md): the no-authentication story in agent-auth structure (RFC 9728 metadata at /.well-known/oauth-protected-resource)
+- [Pricing (markdown)](https://humanforai.dev/pricing.md): free-pilot terms in one fetch
+- Markdown twins: [/api.md](https://humanforai.dev/api.md), [/developers.md](https://humanforai.dev/developers.md), [/api/v1/services.md](https://humanforai.dev/api/v1/services.md) — the homepage also answers `?mode=agent` with markdown
+- Scoped llms.txt: [/developers/llms.txt](https://humanforai.dev/developers/llms.txt), [/api/llms.txt](https://humanforai.dev/api/llms.txt)
 
 ## Docs
 

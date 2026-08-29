@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "name": "Human For AI agent skills",
+  "description": "Skills AI agents can install or follow to use humanforai.dev — hire a verified human for real-world verification, product testing, AI output review, data collection, and physical-world tasks. Free during the pilot, no auth.",
+  "site": "https://humanforai.dev",
+  "mcp": "https://humanforai.dev/mcp",
+  "openapi": "https://humanforai.dev/openapi.json",
+  "skills": [
+    {
+      "name": "hire-a-human",
+      "description": "Submit a task that needs physical presence, human perception, or human judgment to a verified human operator; poll for the deliverable and verify its signed receipt. Covers the REST and MCP flows.",
+      "type": "skill-md",
+      "url": "https://humanforai.dev/skills/hire-a-human/SKILL.md",
+      "digest": "sha256:ebfd1a47d416b81fd78251a67b48416ab41c2188c713dad1af5461132fb55a45"
+    }
+  ],
+  "capabilities": [
+    { "name": "get_human_services", "description": "Fetch the service catalog and platform policies — MCP tool get_human_services or GET /api/v1/services." },
+    { "name": "submit_human_task", "description": "Submit a task for the human operator (202 Accepted + poll URL) — MCP tool submit_human_task or POST /api/v1/tasks." },
+    { "name": "check_task_status", "description": "Poll a task by id: status history, seen_by_operator_at, eta, signed delivery receipt — MCP tool check_task_status or GET /api/v1/tasks/{id}." },
+    { "name": "message_human_operator", "description": "Free-form message to the operator (questions, scoping, custom projects) — MCP tool message_human_operator or POST /api/v1/messages." }
+  ]
+}

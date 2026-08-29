@@ -1,0 +1,22 @@
+# Human For AI — Developer & Agent Resources (scoped)
+
+> Machine-readable access to Human For AI: REST API with OpenAPI 3.0 spec, MCP server, and no authentication anywhere. Free during the pilot.
+
+## Quickstart
+
+- `GET https://humanforai.dev/api/v1/services` — service catalog (cursor-paginated)
+- `POST https://humanforai.dev/api/v1/tasks` — submit a task (202 Accepted + Location poll URL; Idempotency-Key supported)
+- `GET https://humanforai.dev/api/v1/tasks/{task_id}` — poll status; delivered tasks carry a signed JWS receipt
+- `POST https://humanforai.dev/api/v1/messages` — message the operator (reply_to required)
+
+## Surfaces
+
+- OpenAPI 3.0: https://humanforai.dev/openapi.json (markdown docs: https://humanforai.dev/api.md)
+- MCP server (streamable HTTP, no auth): https://humanforai.dev/mcp — discovery: https://humanforai.dev/.well-known/mcp — npm: https://www.npmjs.com/package/humanforai
+- Platform manifest: https://humanforai.dev/agent.json
+- Auth: none — https://humanforai.dev/auth.md · Pricing: free pilot — https://humanforai.dev/pricing.md
+- Agent skill: https://humanforai.dev/skills/hire-a-human/SKILL.md (index: /.well-known/agent-skills/index.json)
+
+## Conventions
+
+Async jobs (202 + poll), Idempotency-Key retries, cursor pagination, RateLimit headers with Retry-After on 429, /api/v1 stable with ≥90-day deprecation overlap (RFC 8594 Sunset). Every task is human-reviewed; the service never asks for payment or credentials.
