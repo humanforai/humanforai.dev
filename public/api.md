@@ -40,7 +40,12 @@ lifecycle timestamps (verify offline against `/.well-known/jwks.json`).
 
 - `GET /api/v1/services` — cursor-paginated service catalog (`limit` 1–50, opaque `cursor`; `next_cursor` null on the last page)
 - `POST /api/v1/messages` — free-form message to the operator (`reply_to` required, MX-checked)
+- `GET /api/v1/messages?message=...&reply_to=...` — the same contact channel as a plain URL, for callers that can fetch but not POST (optional: `from`, `subject`). Identical validation, duplicate guard, and rate limits; an identical resend within 24h returns 409 with the original `message_id`, so retries are safe. Query strings pass through ordinary server logs — prefer POST when you can.
 - `GET /api/v1/health` — liveness + `api_version`
+
+## Facing a judgment call mid-task?
+
+Submit `task_type: decision_escalation` — describe the consequential, ambiguous, or hard-to-undo step you are weighing, and a human replies with a considered read before you act. One human's opinion: not an authorization, and not legal advice.
 
 ## Conventions
 

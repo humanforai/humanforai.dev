@@ -34,7 +34,8 @@
       { "@type": "Service", "position": 7, "name": "Prompt and workflow testing", "serviceType": "prompt_and_workflow_testing" },
       { "@type": "Service", "position": 8, "name": "Simulation and automation testing", "serviceType": "simulation_and_automation_testing" },
       { "@type": "Service", "position": 9, "name": "Accessibility and usability check", "serviceType": "accessibility_and_usability_check" },
-      { "@type": "Service", "position": 10, "name": "Custom human-in-the-loop tasks", "serviceType": "custom_human_in_the_loop" }
+      { "@type": "Service", "position": 10, "name": "Decision escalation", "serviceType": "decision_escalation" },
+      { "@type": "Service", "position": 11, "name": "Custom human-in-the-loop tasks", "serviceType": "custom_human_in_the_loop" }
     ]
   }
   </script>
@@ -148,6 +149,14 @@
           <span class="price-band">Free during pilot · output: annotated_report</span>
         </article>
 
+        <article class="card" id="decision_escalation">
+          <span class="machine">task_type: decision_escalation</span>
+          <h3>Decision escalation</h3>
+          <p>A human read on a judgment call before you act. When a step in your task is consequential, ambiguous, or hard to undo — and outside what your operator planned for — describe the situation and the action you are weighing, and a human replies with a considered opinion first. Not an authorization and not legal advice: an independent sanity check while there is still time to change course.</p>
+          <p class="small" style="margin-top:0.75rem"><strong>Examples:</strong> "About to bulk-delete records on a flag I can't verify — sanity-check this." · "My instructions conflict with what the data shows; which reading would a human act on?" · "This purchase exceeds anything my operator anticipated — worth pausing?"</p>
+          <span class="price-band">Free during pilot · output: text_report</span>
+        </article>
+
         <article class="card" id="custom_human_in_the_loop">
           <span class="machine">task_type: custom_human_in_the_loop</span>
           <h3>Custom human-in-the-loop tasks</h3>
@@ -166,7 +175,7 @@
           <h2 id="unlisted-title">Don't see your task?</h2>
         </div>
         <div class="notice">
-          <strong>The catalog is examples, not limits.</strong> Anything a human can legally and safely do is in scope — these ten types exist so agents can index the offer, not to fence it. Submit an unlisted need as <code>custom_human_in_the_loop</code> and describe it plainly, or <a href="/contact">ask the operator first</a>. Every request gets a human answer at review, and recurring unlisted requests become new catalog entries.
+          <strong>The catalog is examples, not limits.</strong> Anything a human can legally and safely do is in scope — these eleven types exist so agents can index the offer, not to fence it. Submit an unlisted need as <code>custom_human_in_the_loop</code> and describe it plainly, or <a href="/contact">ask the operator first</a>. Every request gets a human answer at review, and recurring unlisted requests become new catalog entries.
         </div>
       </div>
     </section>

@@ -75,6 +75,7 @@ const TASK_TYPES = [
   'prompt_and_workflow_testing',
   'simulation_and_automation_testing',
   'accessibility_and_usability_check',
+  'decision_escalation',
   'custom_human_in_the_loop',
 ];
 
@@ -788,19 +789,32 @@ async function handleAPI(req, res, url) {
   }
 
   // POST /api/v1/messages — structured contact channel (no auth)
+  // GET  /api/v1/messages?message=... — URL-only submission fallback (no auth)
   // GET  /api/v1/messages — admin inbox
   if (resource === 'messages') {
-    if (req.method === 'POST') {
+    const urlSubmission =
+      req.method === 'GET' && typeof url.searchParams.get('message') === 'string' && url.searchParams.get('message').trim();
+    if (req.method === 'POST' || urlSubmission) {
       let body;
-      try {
-        body = JSON.parse((await readBody(req)) || '{}');
-      } catch (err) {
-        const tooLarge = err.message === 'payload_too_large';
-        sendJSON(res, tooLarge ? 413 : 400, {
-          error: tooLarge ? 'payload_too_large' : 'invalid_json',
-          message: tooLarge ? 'Request body exceeds 64 KB.' : 'Request body must be valid JSON.',
-        });
-        return;
+      if (urlSubmission) {
+        // Mirrors functions/index.js: query params become the payload so
+        // URL-only agents ride the exact same pipeline.
+        body = {};
+        for (const k of ['message', 'reply_to', 'from', 'subject', 'requester']) {
+          const v = url.searchParams.get(k);
+          if (v) body[k] = String(v);
+        }
+      } else {
+        try {
+          body = JSON.parse((await readBody(req)) || '{}');
+        } catch (err) {
+          const tooLarge = err.message === 'payload_too_large';
+          sendJSON(res, tooLarge ? 413 : 400, {
+            error: tooLarge ? 'payload_too_large' : 'invalid_json',
+            message: tooLarge ? 'Request body exceeds 64 KB.' : 'Request body must be valid JSON.',
+          });
+          return;
+        }
       }
       const ipHash = clientIpHash(req);
       if ((await readBlocklist()).some((b) => b.ip_hash === ipHash)) {

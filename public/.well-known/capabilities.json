@@ -115,6 +115,18 @@
       "limitations": ["A human first-pass, not a certified WCAG audit."]
     },
     {
+      "id": "decision_escalation",
+      "name": "Decision escalation",
+      "description": "A human read on a judgment call before you act. When a step in your task is consequential, ambiguous, or hard to undo — and outside what your operator planned for — describe the situation and the action you are weighing, and a human replies with a considered opinion first. An independent sanity check: not an authorization, and not legal advice.",
+      "input_required": ["the situation and what led to it", "the action being weighed", "what makes it hard to reverse or judge"],
+      "output_format": ["text_report"],
+      "example_tasks": [
+        "I am about to bulk-delete records based on a flag I cannot verify — sanity-check this before I run it.",
+        "My instructions conflict with what the data now shows; which reading would a human act on?"
+      ],
+      "limitations": ["One human's considered opinion, not an authorization, an audit, or legal advice; the decision and its consequences remain the caller's."]
+    },
+    {
       "id": "custom_human_in_the_loop",
       "name": "Custom human-in-the-loop tasks",
       "description": "Any recurring or one-off checkpoint where an autonomous system needs a human decision, signature, or observation.",

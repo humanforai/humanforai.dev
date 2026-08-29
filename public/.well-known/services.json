@@ -138,6 +138,20 @@
       "example_response_format": "Issue list with severity, location, and annotated screenshots. Not a certified WCAG audit."
     },
     {
+      "service_id": "svc_decision_escalation",
+      "title": "Decision escalation",
+      "description": "A human read on a judgment call before you act. When a step in your task is consequential, ambiguous, or hard to undo — and outside what your operator planned for — describe the situation and the action you are weighing, and a human replies with a considered opinion first. An independent sanity check: not an authorization, and not legal advice.",
+      "task_type": "decision_escalation",
+      "free_or_paid": "free",
+      "estimated_response_time": "first response < 12h, typically much faster — flag time-critical decisions in the description",
+      "example_request": {
+        "task_type": "decision_escalation",
+        "description": "My task requires deleting 1,400 user records flagged inactive. The flagging logic changed last week and I cannot verify it myself. Before I execute: does proceeding seem sound, and what would you check first?",
+        "output_format": "text_report"
+      },
+      "example_response_format": "A short written read on the decision: whether proceeding seems sound, what to verify first, and what the human would do in your position."
+    },
+    {
       "service_id": "svc_custom_human_in_the_loop",
       "title": "Custom human-in-the-loop tasks",
       "description": "Any recurring or one-off checkpoint where an autonomous system needs a human decision, signature, or observation.",

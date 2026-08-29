@@ -64,6 +64,7 @@ const TASK_TYPES = [
   'prompt_and_workflow_testing',
   'simulation_and_automation_testing',
   'accessibility_and_usability_check',
+  'decision_escalation',
   'custom_human_in_the_loop',
 ];
 
@@ -1149,7 +1150,26 @@ async function handler(req, res) {
 
     /* ---- messages ---- */
     if (resource === 'messages') {
-      if (req.method === 'POST') {
+      // URL-only submission fallback: some agents can fetch URLs but cannot
+      // issue a POST or set headers. A GET carrying a `message` query
+      // parameter is accepted as a submission through the exact same
+      // pipeline (validation, MX check, duplicate guard, rate limits).
+      // Plain GET without `message` stays what it always was: the
+      // admin-keyed inbox listing. Note for callers: query strings traverse
+      // ordinary server logs — prefer POST when you can.
+      let msgBody = body;
+      let isSubmission = req.method === 'POST';
+      if (req.method === 'GET' && typeof req.query.message === 'string' && req.query.message.trim()) {
+        isSubmission = true;
+        msgBody = {
+          message: String(req.query.message),
+          ...(req.query.reply_to && { reply_to: String(req.query.reply_to) }),
+          ...(req.query.from && { from: String(req.query.from) }),
+          ...(req.query.subject && { subject: String(req.query.subject) }),
+          ...(req.query.requester && { requester: String(req.query.requester) }),
+        };
+      }
+      if (isSubmission) {
         const ipHash = clientIpHash(req);
         if (await isBlocked(ipHash)) {
           sendJSON(res, 403, {
@@ -1158,17 +1178,17 @@ async function handler(req, res) {
           });
           return;
         }
-        const idem = await idempotencyPhase(req, res, ipHash, body);
+        const idem = await idempotencyPhase(req, res, ipHash, msgBody);
         if (idem.replayed) return;
-        const errors = validateMessagePayload(body);
+        const errors = validateMessagePayload(msgBody);
         if (errors.length) {
           sendJSON(res, 422, { error: 'validation_failed', details: errors });
           return;
         }
-        if (!(await emailDomainAcceptsMail(body.reply_to))) {
+        if (!(await emailDomainAcceptsMail(msgBody.reply_to))) {
           sendJSON(res, 422, {
             error: 'validation_failed',
-            details: [`reply_to domain (${String(body.reply_to).split('@').pop()}) has no mail service (MX records) — the operator could never answer you. Provide a real mailbox.`],
+            details: [`reply_to domain (${String(msgBody.reply_to).split('@').pop()}) has no mail service (MX records) — the operator could never answer you. Provide a real mailbox.`],
           });
           return;
         }
@@ -1177,7 +1197,7 @@ async function handler(req, res) {
         // to 5000 chars, past Firestore's indexed-value limit. Pre-hash
         // docs have no message_hash and simply never match (fine for a
         // 24h-window guard).
-        const msgHash = textHash(body.message);
+        const msgHash = textHash(msgBody.message);
         const dupSnap = await db.collection('messages').where('message_hash', '==', msgHash).limit(5).get();
         const dupSince = Date.now() - 24 * 3600 * 1000;
         const dup = dupSnap.docs.map((d) => d.data()).find((m) => Date.parse(m.created_at) >= dupSince);
@@ -1221,7 +1241,7 @@ async function handler(req, res) {
           });
           return;
         }
-        const msg = buildMessage(body, ipHash);
+        const msg = buildMessage(msgBody, ipHash);
         await db.collection('messages').doc(msg.message_id).set(msg);
         await notify('NEW MESSAGE', msg.message_id, `from=${msg.from} reply_to=${msg.reply_to || 'none'}`);
         const msgAlert =

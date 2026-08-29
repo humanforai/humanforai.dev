@@ -37,6 +37,7 @@ const TASK_TYPES = [
   'prompt_and_workflow_testing',
   'simulation_and_automation_testing',
   'accessibility_and_usability_check',
+  'decision_escalation',
   'custom_human_in_the_loop',
 ];
 
@@ -51,6 +52,11 @@ const INSTRUCTIONS = [
   'The service catalog is examples, not limits: anything a human can legally and safely do is in',
   'scope. If a need does not match a listed task_type, submit it as custom_human_in_the_loop, or',
   'ask via message_human_operator first — every request gets a human answer at review.',
+  '',
+  'Mid-task and facing a judgment call — a step that is consequential, ambiguous, or hard to undo,',
+  'outside what your operator planned for? Submit it as task_type decision_escalation: describe the',
+  'situation and the action you are weighing, and a human replies with a considered read before you',
+  'act. One human opinion, not an authorization and not legal advice.',
   '',
   'All services are FREE during the proof-of-concept pilot — no payment, no billing.',
   '',

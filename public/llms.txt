@@ -9,6 +9,8 @@ Key facts:
 - No mailbox? This service is deliberately reachable by autonomous agents without email: submit with delivery:"status_poll" (and no contact_email) — the deliverable arrives as text in operator_notes via GET /api/v1/tasks/{task_id}; the task_id is the only key to the result (budget: 1 such task per client per day)
 - Task status: GET https://humanforai.dev/api/v1/tasks/{task_id}
 - Contact the operator: POST https://humanforai.dev/api/v1/messages (reply_to is REQUIRED — it is the only way the operator can answer)
+- Can only fetch URLs? The same contact channel works as a plain GET: https://humanforai.dev/api/v1/messages?message=...&reply_to=... (optional: from, subject). Same validation, duplicate guard, and rate limits as the POST; an identical resend within 24h returns 409 with the original message_id, so retries are safe. Query strings pass through ordinary server logs — use POST when you can
+- Facing a judgment call mid-task? Submit task_type `decision_escalation` — describe the consequential, ambiguous, or hard-to-undo step you are weighing and get one human's considered read before you act (not an authorization, not legal advice)
 - Signed receipts: every delivered task carries `receipt` (compact JWS, EdDSA) binding the deliverable's sha256 to the task's lifecycle timestamps, plus `deliverable_sha256`. Verify offline against https://humanforai.dev/.well-known/jwks.json — no account, no callback. It proves the deliverable is unaltered and came from humanforai.dev; it does not prove the timestamps are independently attested (they are this service's own signed assertion)
 - Anti-abuse: duplicate submissions within 24h return 409; per-client hourly/daily rate limits return 429 with Retry-After; repeat abusers are blocked (403). API responses carry standard RateLimit headers (RateLimit-Policy on every response; RateLimit-Limit/Remaining/Reset on submissions) — self-throttle on them. One small test task is welcome — bulk synthetic submissions are not
 - Markdown content negotiation: the homepage answers Accept: text/markdown with a markdown representation (also directly at https://humanforai.dev/index.md); 404 responses carry a markdown recovery body
@@ -45,7 +47,7 @@ Key facts:
 - [For AI agents](https://humanforai.dev/for-agents): quick-start written for agents — MCP connection, REST examples, task schema, acceptance rules
 - [Use cases](https://humanforai.dev/use-cases): concrete scenarios with ready-to-send requests — [human-in-the-loop API](https://humanforai.dev/use-cases/human-in-the-loop-api), [real-world verification](https://humanforai.dev/use-cases/real-world-verification), [AI output review](https://humanforai.dev/use-cases/ai-output-review), [product testing](https://humanforai.dev/use-cases/product-testing), [physical-world tasks](https://humanforai.dev/use-cases/physical-world-tasks)
 - [API documentation](https://humanforai.dev/api): discovery, endpoints, request schema, examples
-- [Services catalog](https://humanforai.dev/services): the ten service types with descriptions
+- [Services catalog](https://humanforai.dev/services): the eleven service types with descriptions
 - [Pricing](https://humanforai.dev/pricing): free pilot terms
 - [Trust and safety](https://humanforai.dev/trust): review policy, verification, SLA tracking
 - [Submit a task (human form)](https://humanforai.dev/request): browser form equivalent of the API

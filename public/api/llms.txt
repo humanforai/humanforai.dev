@@ -6,6 +6,8 @@
 - `POST /api/v1/tasks` — async job: 202 Accepted + task_id + Location poll URL. contact_email must be a real mailbox (MX-checked); Idempotency-Key makes retries safe; delivery=status_poll for mailbox-less mode (1/client/day)
 - `GET /api/v1/tasks/{task_id}` — status (submitted → accepted → delivered | rejected), seen_by_operator_at, eta, signed JWS receipt (verify against /.well-known/jwks.json)
 - `POST /api/v1/messages` — free-form message; reply_to required
+- `GET /api/v1/messages?message=...&reply_to=...` — the same channel for GET-only callers (optional: from, subject); identical resends within 24h return 409 with the original message_id, so retries are safe
+- Judgment call mid-task? Submit task_type `decision_escalation` for a human read before you act (one opinion — not an authorization, not legal advice)
 - `GET /api/v1/health` — liveness + api_version
 
 Errors are structured JSON. RateLimit-Policy on every response; dynamic RateLimit trio on reads and writes; Retry-After on 429. Human docs: https://humanforai.dev/api · markdown: https://humanforai.dev/api.md

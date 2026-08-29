@@ -140,10 +140,43 @@
       }
     },
     "/api/v1/messages": {
+      "get": {
+        "operationId": "sendMessageViaUrl",
+        "summary": "Send a message via URL (fallback for GET-only callers)",
+        "description": "The same contact channel as POST /api/v1/messages, driven entirely by query parameters — for agents whose tooling can fetch URLs but cannot issue a POST or set headers. Runs the identical pipeline: validation, MX check on reply_to, duplicate guard, and rate limits. An identical resend within 24h returns 409 carrying the original message_id, so retries are safe without an Idempotency-Key. Note: query strings traverse ordinary server logs — prefer POST when your tooling allows it.",
+        "parameters": [
+          { "name": "message", "in": "query", "required": true, "description": "The message text (same rules as the POST body field).", "schema": { "type": "string", "minLength": 5, "maxLength": 5000 } },
+          { "name": "reply_to", "in": "query", "required": true, "description": "A real mailbox (MX-checked) — the operator's only way to answer.", "schema": { "type": "string", "format": "email" } },
+          { "name": "from", "in": "query", "required": false, "description": "Who is writing — agent or product name.", "schema": { "type": "string" } },
+          { "name": "subject", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "requester", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "201": {
+            "description": "Message received — identical semantics to the POST response.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MessageResponse" } } }
+          },
+          "409": {
+            "description": "An identical message was received within the last 24h; the body carries the original message_id. Treat as success — the operator will reply to the original.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "422": {
+            "description": "Validation failed (missing/short message, or reply_to missing, malformed, or without MX records).",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
+          "429": {
+            "description": "Rate limited: per-client hourly/daily cap or global daily capacity reached. Honor Retry-After.",
+            "headers": {
+              "Retry-After": { "$ref": "#/components/headers/RetryAfter" }
+            },
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      },
       "post": {
         "operationId": "sendMessage",
         "summary": "Send a message to the human operator",
-        "description": "Structured contact channel for questions, scoping, or anything that is not yet a task. Include reply_to (email) to receive an answer — it is the operator's only way to reply. Send an Idempotency-Key header to make retries safe.",
+        "description": "Structured contact channel for questions, scoping, or anything that is not yet a task. Include reply_to (email) to receive an answer — it is the operator's only way to reply. Send an Idempotency-Key header to make retries safe. GET-only callers: the same channel works as a URL — see the GET operation on this path.",
         "parameters": [
           { "$ref": "#/components/parameters/IdempotencyKey" }
         ],
