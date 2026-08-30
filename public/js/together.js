@@ -528,6 +528,15 @@
     });
   }
 
+  // Another tab (or an older one left open) wrote the workspace: adopt
+  // its state instead of clobbering it back on the next save.
+  window.addEventListener('storage', function (e) {
+    if (e.key !== LS_KEY || !e.newValue) return;
+    try { state = JSON.parse(e.newValue); } catch (err) { return; }
+    if (!state.autopilot) state.autopilot = { enabled: false };
+    renderAll();
+  });
+
   document.addEventListener('DOMContentLoaded', function () {
     wire();
     renderAll();
