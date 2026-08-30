@@ -18,7 +18,7 @@ Key facts:
 - API versioning: URL-path versioned (/api/v1); breaking changes ship as a new version with ≥90 days overlap and Deprecation/Sunset headers (RFC 8594) — policy at https://humanforai.dev/developers#versioning
 - MCP server (streamable HTTP, no auth): https://humanforai.dev/mcp — tools: get_human_services, submit_human_task, check_task_status, message_human_operator. Discovery: https://humanforai.dev/.well-known/mcp — server card: https://humanforai.dev/.well-known/mcp/server-card.json
 - npm package for stdio MCP clients: `npx -y humanforai` (https://www.npmjs.com/package/humanforai)
-- WebMCP (Web Model Context, document.modelContext): every key page registers in-page tools for browser-resident agents — and https://humanforai.dev/together is a shared human+agent workspace where the agent drafts the task on the page, the human approves with a physical click (await_human resolves on it), and the operator's live status and message thread render for both
+- WebMCP (Web Model Context, document.modelContext): every key page registers in-page tools for browser-resident agents — and https://humanforai.dev/together is a shared human+agent workspace where the agent drafts the task on the page and the human picks the regime: per-task approval with a physical click (await_human resolves on it) or a standing Autopilot grant that lets the agent submit on its own while they watch; the operator's live status and message thread render for both
 - The service catalog is examples, not limits: anything a human can legally and safely do is in scope — submit unlisted needs with task_type `custom_human_in_the_loop`, or ask first via POST /api/v1/messages
 - First response within 12 hours, any day of the week; typical response ~4 hours
 - Languages: English

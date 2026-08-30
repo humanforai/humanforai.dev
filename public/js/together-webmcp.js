@@ -73,7 +73,8 @@
       title: 'Ask the human for approval',
       description:
         'Show the approval bar to the human at the keyboard, asking them to approve or reject the current draft. ' +
-        'Nothing can be submitted without their physical click. Follow with await_human to wait for the decision.',
+        'Follow with await_human to wait for the decision. Not needed while the human has Autopilot on — ' +
+        'read_workspace shows which regime you are in.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -87,9 +88,9 @@
       name: 'await_human',
       title: 'Wait for the human to act',
       description:
-        'Block until the human at the keyboard acts — approves, rejects, edits the draft, updates the goal, or posts ' +
-        'a note to you — or the timeout passes. Returns the event and a fresh workspace snapshot. This is a tool ' +
-        'call resolved by a physical human click.',
+        'Block until the human at the keyboard acts — approves, rejects, edits the draft, updates the goal, posts ' +
+        'a note to you, or grants/revokes Autopilot — or the timeout passes. Returns the event and a fresh ' +
+        'workspace snapshot. This is a tool call resolved by a physical human click.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -103,9 +104,9 @@
       name: 'submit_approved_task',
       title: 'Submit the approved task',
       description:
-        'Submit the draft as a real task to the real human operator. Refuses unless the human has approved the ' +
-        'current draft revision — approval is consumed by submission and reset by any edit. On success the task ' +
-        'is tracked live on the page for both of you.',
+        'Submit the draft as a real task to the real human operator. Works under either regime the human chose: ' +
+        'a per-task approval of the current draft revision, or standing Autopilot authority (see read_workspace). ' +
+        'Without either it refuses. On success the task is tracked live on the page for both of you.',
       inputSchema: { type: 'object', properties: {} },
       annotations: { title: 'Submit the approved task', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
       execute: function () { return run(function () { return ws().submitApproved(); }); },

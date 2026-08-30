@@ -44,6 +44,11 @@
     .feed li.f-agent { border-left-color: var(--code-key); }
     .feed li.f-operator { border-left-color: var(--ok); }
     .feed li .ts { color: var(--dim); font-size: 0.68rem; font-family: var(--mono); margin-left: 0.35rem; }
+    .autopilot-box { border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 0.8rem 0.9rem; margin-top: 0.9rem; }
+    .autopilot-box.on { border-color: var(--ok); box-shadow: 0 0 10px rgba(52, 224, 140, 0.15); }
+    .autopilot-box .field-inline label { font-weight: 600; }
+    .autopilot-state { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); display: block; margin-top: 0.3rem; }
+    .autopilot-box.on .autopilot-state { color: var(--ok); }
     .approval-bar { border: 1px solid var(--warn); border-radius: var(--radius); padding: 0.9rem; margin-top: 0.9rem; background: var(--accent-soft); }
     .approval-bar h3 { margin: 0 0 0.4rem; font-size: 0.95rem; color: var(--warn); }
     .thread-msg { border: 1px solid var(--line); border-radius: var(--radius); padding: 0.55rem 0.7rem; margin-bottom: 0.5rem; font-size: 0.83rem; }
@@ -88,7 +93,7 @@
       <div class="wrap">
         <span class="eyebrow">WebMCP · document.modelContext <span class="dim">· one page, three minds</span></span>
         <h1>Together</h1>
-        <p class="lede">A shared workspace for you and your AI agent to hire a real human — together. Your agent drafts the task on this page through WebMCP tools, nothing is sent until <em>you</em> click approve, and then a verified human operator picks it up while you both watch. Human-in-the-loop on both ends of the wire.</p>
+        <p class="lede">A shared workspace for you and your AI agent to hire a real human — together. Your agent drafts the task on this page through WebMCP tools, and you decide how much rope it gets: approve each task with a click, or flip <strong>Autopilot</strong> and hand it standing authority to submit on its own while you watch. Either way, a verified human operator picks the work up live. Humans in the loop exactly where <em>you</em> put them.</p>
       </div>
     </div>
 
@@ -123,6 +128,18 @@
               <label for="you-note">Note to your agent <span class="muted">(optional)</span></label>
               <input type="text" id="you-note" maxlength="500" placeholder="e.g. keep it under one day turnaround">
               <button class="btn btn-ghost btn-sm" id="you-note-send" type="button" style="margin-top:0.4rem">Post note</button>
+            </div>
+
+            <div class="autopilot-box" id="autopilot-box">
+              <div class="field field-inline" style="margin-bottom:0.3rem">
+                <input type="checkbox" id="autopilot-toggle">
+                <label for="autopilot-toggle">Autopilot — standing approval for my agent</label>
+              </div>
+              <span class="autopilot-state" id="autopilot-state">off — every submit needs your click</span>
+              <div class="field" style="margin:0.6rem 0 0">
+                <input type="text" id="autopilot-scope" maxlength="300" placeholder="optional scope, e.g. UX feedback tasks only, nothing physical">
+                <span class="hint">Flip it on and your agent submits without asking. The feed still shows every move, and you can revoke any time.</span>
+              </div>
             </div>
 
             <div class="approval-bar" id="approval-bar" hidden>
@@ -192,7 +209,7 @@
               <li>Type your goal in the <em>You</em> lane, in plain words.</li>
               <li>Ask your agent something like: <em>"Work with me on this page — read my goal and draft the task for my approval."</em></li>
               <li>Watch it draft in the middle lane. Edit any field yourself — it's a shared document.</li>
-              <li>When it requests approval, <strong>you click</strong>. Only then can it submit.</li>
+              <li>When it requests approval, <strong>you click</strong> — or grant <strong>Autopilot</strong> once and let it submit on its own from then on. Your agent, your call.</li>
               <li>A verified human operator gets pinged, and you both watch the task go <span class="machine">submitted → seen → accepted → delivered</span>, live.</li>
             </ol>
             <div class="notice" style="margin-top:1rem">
@@ -207,9 +224,9 @@
                 <tbody>
                   <tr><td>read_workspace</td><td>Read the shared state: your goal, notes, draft, approval status, tracked tasks, operator thread.</td></tr>
                   <tr><td>draft_task</td><td>Write or revise the task draft on the page, field by field. Every field shows who wrote it last.</td></tr>
-                  <tr><td>request_human_approval</td><td>Ask the human for the click. Locks nothing — the human can still edit.</td></tr>
-                  <tr><td>await_human</td><td>Block until the human acts — approve, reject, edit, or note — or a timeout passes. A tool call resolved by a physical click.</td></tr>
-                  <tr><td>submit_approved_task</td><td>Refuses without a standing human approval. Submits the real task to the real operator.</td></tr>
+                  <tr><td>request_human_approval</td><td>Ask the human for the click. Skipped entirely when the human has granted Autopilot.</td></tr>
+                  <tr><td>await_human</td><td>Block until the human acts — approve, reject, edit, note, grant or revoke Autopilot — or a timeout passes. A tool call resolved by a physical click.</td></tr>
+                  <tr><td>submit_approved_task</td><td>Submits the real task to the real operator. Requires either a per-task approval or standing Autopilot authority — the human chooses the regime.</td></tr>
                   <tr><td>track_task_status</td><td>Live status of workspace tasks: seen-by-operator, ETA, status history, delivery, signed receipt.</td></tr>
                   <tr><td>message_operator</td><td>Open or continue a message thread with the human operator, rendered on the page for both of you.</td></tr>
                 </tbody>

@@ -35,12 +35,15 @@
     notes: [],                   // [{text, ts}] — human → agent
     draft: null,                 // {fields: {k: v}, provenance: {k: 'agent'|'human'}, rev: n}
     approval: { state: 'none' }, // none|requested|approved|rejected {note, rev, ts}
+    autopilot: { enabled: false }, // standing approval: {enabled, scope, granted_at}
     feed: [],                    // [{actor, text, ts}]
     tasks: {},                   // task_id → last API payload
     taskOrder: [],
     thread: null,                // {message_id, url, token, data}
     agentSeen: false,
   };
+
+  if (!state.autopilot) state.autopilot = { enabled: false }; // pre-autopilot saved states
 
   var waiters = []; // await_human: [{resolve, timer}]
 
@@ -110,7 +113,8 @@
     }
     if (stateChip) {
       stateChip.textContent = 'rev ' + state.draft.rev +
-        (state.approval.state === 'approved' ? ' · approved' :
+        (state.autopilot.enabled ? ' · autopilot' :
+         state.approval.state === 'approved' ? ' · approved' :
          state.approval.state === 'requested' ? ' · awaiting your approval' :
          state.approval.state === 'rejected' ? ' · rejected' : '');
     }
@@ -148,7 +152,11 @@
   function renderApproval() {
     var bar = $('approval-bar');
     if (!bar) return;
-    bar.hidden = state.approval.state !== 'requested';
+    bar.hidden = state.autopilot.enabled || state.approval.state !== 'requested';
+    var box = $('autopilot-box');
+    if (box) box.classList.toggle('on', state.autopilot.enabled);
+    var chip = $('autopilot-state');
+    if (chip) chip.textContent = state.autopilot.enabled ? 'ON — your agent submits on its own' : 'off — every submit needs your click';
   }
 
   function renderTasks() {
@@ -199,6 +207,8 @@
     renderFeed(); renderDraft(); renderApproval(); renderTasks(); renderThread();
     var g = $('goal'); if (g && g.value !== state.goal) g.value = state.goal;
     var e = $('you-email'); if (e && e.value !== state.email) e.value = state.email;
+    var a = $('autopilot-toggle'); if (a) a.checked = !!state.autopilot.enabled;
+    var s = $('autopilot-scope'); if (s && state.autopilot.scope && !s.value) s.value = state.autopilot.scope;
   }
 
   /* ── operator-side polling ─────────────────────────────────────── */
@@ -250,6 +260,7 @@
       notes_from_human: state.notes.slice(0, 10),
       draft: state.draft ? { fields: state.draft.fields, provenance: state.draft.provenance, rev: state.draft.rev } : null,
       approval: state.approval,
+      autopilot: state.autopilot,
       tracked_tasks: state.taskOrder.map(function (id) {
         var t = state.tasks[id] || {};
         return { task_id: id, status: t.status || 'submitted', seen_by_operator_at: t.seen_by_operator_at || null, eta: t.eta || null };
@@ -261,8 +272,13 @@
         replies: ((state.thread.data || {}).replies || []),
       } : null,
       valid_task_types: TASK_TYPES,
-      rules: 'submit_approved_task only works while approval.state is "approved" for the current draft rev. ' +
-        'Any draft change resets approval. The human sees everything you write here, live.',
+      rules: state.autopilot.enabled
+        ? 'AUTOPILOT is ON: the human granted you standing approval' +
+          (state.autopilot.scope ? ' — scope: "' + state.autopilot.scope + '"' : '') +
+          '. submit_approved_task works without a per-task click. Stay inside the scope and the goal; the human sees everything live and can revoke at any moment.'
+        : 'submit_approved_task only works while approval.state is "approved" for the current draft rev. ' +
+          'Any draft change resets approval. The human sees everything you write here, live — and can grant ' +
+          'autopilot (standing approval) with the toggle in their lane.',
     };
   }
 
@@ -294,6 +310,13 @@
       if (!state.draft || !state.draft.fields.description) {
         return { error: 'nothing_to_approve', message: 'Draft a task first with draft_task (description is required).' };
       }
+      if (state.autopilot.enabled) {
+        return {
+          status: 'not_needed',
+          autopilot: state.autopilot,
+          message: 'Autopilot is on — the human already granted standing approval. Call submit_approved_task directly.',
+        };
+      }
       state.approval = { state: 'requested', rev: state.draft.rev, ts: now(), agent_message: String(messageToHuman || '').slice(0, 500) };
       feed('agent', 'requested your approval' + (messageToHuman ? ': "' + String(messageToHuman).slice(0, 120) + '"' : ''));
       save(); renderApproval(); renderDraft();
@@ -318,18 +341,20 @@
 
     submitApproved: function () {
       if (!state.draft) return Promise.resolve({ error: 'no_draft', message: 'Nothing drafted yet.' });
-      if (state.approval.state !== 'approved' || state.approval.rev !== state.draft.rev) {
+      var viaAutopilot = state.autopilot.enabled;
+      if (!viaAutopilot && (state.approval.state !== 'approved' || state.approval.rev !== state.draft.rev)) {
         return Promise.resolve({
           error: 'not_approved',
           approval: state.approval,
-          message: 'The human has not approved this draft revision. Call request_human_approval and wait for their click — that is the point of this page.',
+          autopilot: state.autopilot,
+          message: 'The human has not approved this draft revision. Call request_human_approval and wait for their click — or the human can flip the Autopilot toggle to grant you standing approval.',
         });
       }
       var payload = {};
       DRAFT_FIELDS.forEach(function (k) { if (state.draft.fields[k] !== undefined && state.draft.fields[k] !== '') payload[k] = state.draft.fields[k]; });
       if (!payload.contact_email && state.email) payload.contact_email = state.email;
       if (!payload.contact_email) payload.delivery = 'status_poll';
-      payload.requester = payload.requester || 'together-workspace (human-approved)';
+      payload.requester = payload.requester || (viaAutopilot ? 'together-workspace (autopilot)' : 'together-workspace (human-approved)');
       payload.source = 'api';
       return fetch('/api/v1/tasks', {
         method: 'POST',
@@ -341,7 +366,9 @@
             state.approval = { state: 'none' };
             state.taskOrder.unshift(out.data.task_id);
             state.tasks[out.data.task_id] = out.data;
-            feed('agent', 'submitted approved task ' + out.data.task_id + ' to the operator');
+            feed('agent', viaAutopilot
+              ? 'submitted task ' + out.data.task_id + ' on autopilot (standing approval)'
+              : 'submitted approved task ' + out.data.task_id + ' to the operator');
             save(); renderTasks(); renderApproval(); renderDraft();
             pollSoon(3000);
           }
@@ -440,6 +467,21 @@
       save();
       feed('human', 'note to agent: "' + text.slice(0, 120) + '"');
       humanActed({ type: 'note_to_agent', note: text });
+    });
+    var auto = $('autopilot-toggle');
+    if (auto) auto.addEventListener('change', function () {
+      if (auto.checked) {
+        var scope = ($('autopilot-scope').value || '').trim();
+        state.autopilot = { enabled: true, scope: scope, granted_at: now() };
+        feed('human', 'granted AUTOPILOT — standing approval for the agent to submit' + (scope ? ' (scope: "' + scope.slice(0, 120) + '")' : ''));
+        humanActed({ type: 'autopilot_granted', scope: scope });
+      } else {
+        state.autopilot = { enabled: false };
+        feed('human', 'revoked autopilot — submissions need a per-task approval again');
+        humanActed({ type: 'autopilot_revoked' });
+      }
+      save();
+      renderApproval(); renderDraft();
     });
     var ap = $('btn-approve');
     if (ap) ap.addEventListener('click', function () {

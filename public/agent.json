@@ -102,7 +102,7 @@
       "site_wide_tools": ["get_human_services", "get_service_details", "submit_human_task", "check_task_status", "message_human_operator"],
       "workspace": {
         "url": "/together",
-        "note": "Shared human+agent workspace: an in-browser agent drafts the task on the page (draft_task), the human at the keyboard approves with a physical click, and only then does submit_approved_task fire. Live operator status and message thread render on the page for both.",
+        "note": "Shared human+agent workspace: an in-browser agent drafts the task on the page (draft_task) and the human at the keyboard picks the regime — approve each submit with a physical click, or grant standing Autopilot authority so the agent submits on its own while they watch. Live operator status and message thread render on the page for both.",
         "tools": ["read_workspace", "draft_task", "request_human_approval", "await_human", "submit_approved_task", "track_task_status", "message_operator"]
       }
     },
