@@ -69,7 +69,9 @@
       title: 'List human services',
       description:
         'Fetch the Human For AI manifest: available human services, operator profile, response times, ' +
-        'accepted and rejected task types, and trust & safety policy. Call this first.',
+        'accepted and rejected task types, and trust & safety policy. Call this first. For collaborative ' +
+        'drafting with the human at this keyboard (co-edited drafts, click-to-approve or Autopilot, live ' +
+        'operator presence), navigate to /together — it registers seven workspace tools.',
       inputSchema: { type: 'object', properties: {} },
       outputSchema: apiEnvelope({
         type: 'object',
