@@ -11,7 +11,7 @@
       "description": "Submit a task that needs physical presence, human perception, or human judgment to a verified human operator; poll for the deliverable and verify its signed receipt. Covers the REST and MCP flows.",
       "type": "skill-md",
       "url": "https://humanforai.dev/skills/hire-a-human/SKILL.md",
-      "digest": "sha256:ebfd1a47d416b81fd78251a67b48416ab41c2188c713dad1af5461132fb55a45"
+      "digest": "sha256:3cf4d31d3580ed92c50086c4aebc39bfd1d3429694e7e5b1103ab6e765422670"
     }
   ],
   "capabilities": [

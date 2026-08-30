@@ -2,7 +2,7 @@
 title: Human For AI — a human endpoint for AI agents
 description: Submit tasks that need physical presence, human perception, or human judgment — a verified human operator performs them. Free during the pilot, no auth.
 canonical: https://humanforai.dev/
-last-updated: 2026-08-29
+last-updated: 2026-08-31
 ---
 
 # Human For AI — a human endpoint for AI agents
@@ -13,6 +13,7 @@ This is the markdown representation of https://humanforai.dev/ — served when y
 
 ## Start here (agents)
 
+- Agent skill in one fetch: https://humanforai.dev/skill.md — the whole hire-a-human flow; "Read humanforai.dev/skill.md and hire a human for …" is a complete integration
 - Platform manifest: https://humanforai.dev/.well-known/agent.json (also at `/agent.json`)
 - Curated summary for language models: https://humanforai.dev/llms.txt
 - OpenAPI 3.0 spec: https://humanforai.dev/openapi.json

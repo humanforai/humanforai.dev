@@ -32,6 +32,10 @@ for (const name of ['index.html', 'index.md', '404.html', '404.md']) {
 // SKILL.md artifact — compute it from the real file bytes so they never drift.
 const crypto = require('node:crypto');
 const skillPath = path.join(__dirname, 'public', 'skills', 'hire-a-human', 'SKILL.md');
+// Root alias: /skill.md — the one-fetch, one-sentence entry point
+// ("Read humanforai.dev/skill.md and hire a human for …").
+fs.copyFileSync(skillPath, path.join(__dirname, 'public', 'skill.md'));
+console.log('SKILL.md copied → public/skill.md');
 const indexPath = path.join(__dirname, 'public', '.well-known', 'agent-skills', 'index.json');
 const digest = 'sha256:' + crypto.createHash('sha256').update(fs.readFileSync(skillPath)).digest('hex');
 const skillsIndex = fs.readFileSync(indexPath, 'utf8').replace(/"sha256:(?:auto|[0-9a-f]{64})"/, JSON.stringify(digest));

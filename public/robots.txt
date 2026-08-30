@@ -7,6 +7,7 @@
 # Service catalog: /.well-known/services.json (paginated API: GET /api/v1/services)
 # OpenAPI spec for the REST API: /openapi.json
 # MCP server (streamable HTTP, no auth): /mcp — discovery: /.well-known/mcp
+# Agent skill, one fetch: /skill.md (canonical: /skills/hire-a-human/SKILL.md)
 # Task submission endpoint: POST /api/v1/tasks (see /api for docs)
 
 # AI crawler policy: explicitly welcome. This site exists to be used by
