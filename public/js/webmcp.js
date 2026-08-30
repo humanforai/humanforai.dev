@@ -25,7 +25,10 @@
   if (!mc) return;
 
   function asResult(payload) {
-    return { content: [{ type: 'text', text: JSON.stringify(payload, null, 2) }] };
+    return {
+      content: [{ type: 'text', text: JSON.stringify(payload, null, 2) }],
+      structuredContent: payload,
+    };
   }
 
   function api(path, options) {
@@ -37,6 +40,20 @@
           return asResult({ http_status: res.status, ok: res.ok, response: data });
         });
     });
+  }
+
+  // Every API-backed tool returns the same envelope; `response` is the
+  // REST body documented per tool (and in full at /openapi.json).
+  function apiEnvelope(responseSchema) {
+    return {
+      type: 'object',
+      required: ['http_status', 'ok', 'response'],
+      properties: {
+        http_status: { type: 'integer', description: 'HTTP status from the underlying REST endpoint.' },
+        ok: { type: 'boolean', description: 'true when http_status is 2xx.' },
+        response: responseSchema,
+      },
+    };
   }
 
   var TASK_TYPES = [
@@ -54,6 +71,20 @@
         'Fetch the Human For AI manifest: available human services, operator profile, response times, ' +
         'accepted and rejected task types, and trust & safety policy. Call this first.',
       inputSchema: { type: 'object', properties: {} },
+      outputSchema: apiEnvelope({
+        type: 'object',
+        description: 'The agent manifest (also served at /.well-known/agent.json).',
+        properties: {
+          name: { type: 'string' },
+          interfaces: { type: 'array', items: { type: 'string' } },
+          accepted_task_types: { type: 'array', items: { type: 'string' } },
+          services: { type: 'array', description: 'Service catalog entries: {id, name, description}.', items: { type: 'object' } },
+          response_expectations: { type: 'object', description: 'First-response and typical turnaround times.' },
+          pricing: { type: 'object' },
+          trust_and_safety: { type: 'object' },
+          endpoints: { type: 'object', description: 'REST, MCP, and WebMCP entry points.' },
+        },
+      }),
       annotations: {
         title: 'List human services',
         readOnlyHint: true,
@@ -76,6 +107,29 @@
         required: ['task_type'],
         properties: {
           task_type: { type: 'string', enum: TASK_TYPES, description: 'The service identifier, e.g. real_world_verification.' },
+        },
+      },
+      outputSchema: {
+        type: 'object',
+        description: 'On success: the service entry plus how to submit. On an unknown task_type: error + the valid list.',
+        properties: {
+          service: {
+            type: 'object',
+            properties: {
+              task_type: { type: 'string', enum: TASK_TYPES },
+              name: { type: 'string' },
+              description: { type: 'string' },
+              example_request: { type: 'string' },
+              response_format: { type: 'string' },
+              typical_turnaround: { type: 'string' },
+            },
+          },
+          submit_with: {
+            type: 'object',
+            properties: { tool: { type: 'string', const: 'submit_human_task' }, task_type: { type: 'string' } },
+          },
+          error: { type: 'string', const: 'unknown_task_type' },
+          valid_task_types: { type: 'array', items: { type: 'string', enum: TASK_TYPES } },
         },
       },
       annotations: {
@@ -131,7 +185,24 @@
           delivery: { type: 'string', enum: ['email', 'status_poll'], description: 'status_poll = no-mailbox path; result arrives via check_task_status.' },
           requester: { type: 'string', maxLength: 200, description: 'Your agent or system identifier.' },
         },
+        anyOf: [
+          { required: ['contact_email'] },
+          { properties: { delivery: { const: 'status_poll' } }, required: ['delivery'] },
+        ],
+        description: 'Either contact_email (email delivery) or delivery:"status_poll" (no-mailbox path) is required.',
       },
+      outputSchema: apiEnvelope({
+        type: 'object',
+        description: '202 on acceptance into review; 4xx carries {error, message|details}.',
+        properties: {
+          task_id: { type: 'string', description: 'e.g. HFAI-2026-A1B2C3D4E5F60718 — the key to status polling.' },
+          status: { type: 'string', description: 'Initial status: submitted.' },
+          status_url: { type: 'string', description: 'GET here (or use check_task_status) until delivered or rejected.' },
+          message: { type: 'string' },
+          error: { type: 'string', description: 'Present on failure, e.g. validation_failed, duplicate_task, rate_limited.' },
+          details: { type: 'array', items: { type: 'string' }, description: 'Field-level validation messages on 422.' },
+        },
+      }),
       execute: function (args) {
         return api('/api/v1/tasks', {
           method: 'POST',
@@ -160,6 +231,21 @@
           task_id: { type: 'string', description: 'Task ID from submit_human_task, e.g. HFAI-2026-A1B2C3D4E5F60718.' },
         },
       },
+      outputSchema: apiEnvelope({
+        type: 'object',
+        description: '200 with the task record; 404 carries {error:"task_not_found"}.',
+        properties: {
+          task_id: { type: 'string' },
+          status: { type: 'string', description: 'submitted | accepted | in_progress | delivered | rejected.' },
+          status_history: { type: 'array', items: { type: 'object' }, description: 'Timestamped status transitions.' },
+          seen_by_operator_at: { type: ['string', 'null'], description: 'ISO 8601 — the moment a human first saw the task.' },
+          eta: { type: ['string', 'null'], description: 'ISO 8601 — set once accepted.' },
+          operator_notes: { type: ['string', 'null'], description: 'Carries the deliverable text on status_poll delivery.' },
+          receipt: { type: ['string', 'null'], description: 'Compact JWS (EdDSA), present once delivered — verify against /.well-known/jwks.json.' },
+          deliverable_sha256: { type: ['string', 'null'] },
+          error: { type: 'string' },
+        },
+      }),
       execute: function (args) {
         return api('/api/v1/tasks/' + encodeURIComponent(String((args && args.task_id) || '').trim()));
       },
@@ -188,6 +274,18 @@
           from: { type: 'string', maxLength: 200, description: 'Your agent or system identifier.' },
         },
       },
+      outputSchema: apiEnvelope({
+        type: 'object',
+        description: '201 on receipt. Keep access_token — it is shown once and is the only key to the thread.',
+        properties: {
+          message_id: { type: 'string' },
+          created_at: { type: 'string', description: 'ISO 8601.' },
+          thread_url: { type: 'string', description: 'GET with the access_token (Bearer or ?token=) to read replies; POST {message, token} to follow up.' },
+          access_token: { type: 'string', description: 'One-time-shown thread key.' },
+          message: { type: 'string' },
+          error: { type: 'string', description: 'Present on failure, e.g. validation_failed, rate_limited.' },
+        },
+      }),
       execute: function (args) {
         return api('/api/v1/messages', {
           method: 'POST',
