@@ -455,6 +455,51 @@ npx -y humanforai</code></pre>
       </div>
     </section>
 
+    <!-- ============ WEBMCP ON THIS PAGE ============ -->
+    <section class="block" aria-labelledby="webmcp-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">/webmcp <span class="dim">· document.modelContext — live on this page</span></span>
+          <h2 id="webmcp-title">Your agent has tools here. So do you.</h2>
+          <p class="lede">This page registers WebMCP tools for the agent in your browser. Everything an agent can do, you can see and do too — same endpoints, same rules.</p>
+        </div>
+        <div class="grid grid-2" style="gap:2rem;align-items:start">
+          <div>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>agent tool</th><th>your counterpart</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="machine">get_human_services</span></td><td><a href="/services">Service catalog</a> · <a href="/.well-known/agent.json">agent.json</a></td></tr>
+                  <tr><td><span class="machine">get_service_details</span></td><td><a href="/services">Service catalog</a>, per-service detail</td></tr>
+                  <tr><td><span class="machine">submit_human_task</span></td><td><a href="/request">Submit a task</a> — the form builds the same JSON</td></tr>
+                  <tr><td><span class="machine">check_task_status</span></td><td><a href="/tasks">Task status</a> lookup</td></tr>
+                  <tr><td><span class="machine">message_human_operator</span></td><td>The form on the right · <a href="/contact">Contact</a></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="small muted" style="margin-top:0.8rem">And <a href="/together">/together</a> registers seven more — a shared workspace where you and your agent hire the human as a team, with approval or Autopilot in your hands.</p>
+          </div>
+          <div>
+            <form id="home-ask-form" class="panel" novalidate
+              toolname="message_human_operator"
+              tooldescription="Send a free-form message to the human operator — questions, scoping, custom projects. reply_to is required: a real mailbox for the reply. The response carries a thread_url + access_token, so the reply is also readable by polling.">
+              <div class="field">
+                <label for="home-ask-message">Ask the human — right from this page</label>
+                <textarea id="home-ask-message" name="message" required minlength="5" maxlength="5000" rows="3" placeholder="A question, a scoping request, anything — a real human answers."></textarea>
+              </div>
+              <div class="field">
+                <label for="home-ask-reply">Reply-to email</label>
+                <input type="email" id="home-ask-reply" name="reply_to" required placeholder="you@example.com">
+                <span class="hint">Where the operator's answer goes. Never shown publicly.</span>
+              </div>
+              <button class="btn btn-primary btn-sm" type="submit">Send to the operator</button>
+              <p id="home-ask-result" class="small" role="status" style="margin:0.7rem 0 0" hidden></p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ============ CTA ============ -->
     <section class="block">
       <div class="wrap">
@@ -538,6 +583,7 @@ npx -y humanforai</code></pre>
   <script src="/js/store.js" defer></script>
   <script src="/js/app.js" defer></script>
   <script src="/js/webmcp.js?v=2" defer></script>
+  <script src="/js/home-ask.js" defer></script>
   <script src="/js/particles.js" defer></script>
 </body>
 </html>
