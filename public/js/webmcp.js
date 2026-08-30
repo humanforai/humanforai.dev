@@ -91,6 +91,7 @@
         destructiveHint: false,
         idempotentHint: true,
         openWorldHint: false,
+        untrustedContentHint: false,
       },
       execute: function () {
         return api('/agent.json');
@@ -138,6 +139,7 @@
         destructiveHint: false,
         idempotentHint: true,
         openWorldHint: false,
+        untrustedContentHint: false,
       },
       execute: function (args) {
         var wanted = String((args && args.task_type) || '').trim();
@@ -170,6 +172,7 @@
         destructiveHint: false,
         idempotentHint: false,
         openWorldHint: true,
+        untrustedContentHint: false,
       },
       inputSchema: {
         type: 'object',
@@ -223,6 +226,8 @@
         destructiveHint: false,
         idempotentHint: true,
         openWorldHint: false,
+        // operator_notes carries human-written deliverable text.
+        untrustedContentHint: true,
       },
       inputSchema: {
         type: 'object',
@@ -263,6 +268,8 @@
         destructiveHint: false,
         idempotentHint: false,
         openWorldHint: true,
+        // Thread replies are human-written free text.
+        untrustedContentHint: true,
       },
       inputSchema: {
         type: 'object',
@@ -296,11 +303,18 @@
     },
   ];
 
+  // A form carrying toolname="X" IS tool X, declaratively — registering
+  // the imperative twin as well would present the same tool twice.
+  function noDeclarativeTwin(t) {
+    try { return !document.querySelector('form[toolname="' + t.name + '"]'); } catch (e) { return true; }
+  }
+
   try {
+    var active = tools.filter(noDeclarativeTwin);
     if (typeof mc.registerTool === 'function') {
-      tools.forEach(function (t) { mc.registerTool(t); });
+      active.forEach(function (t) { mc.registerTool(t); });
     } else if (typeof mc.provideContext === 'function') {
-      mc.provideContext({ tools: tools });
+      mc.provideContext({ tools: active });
     }
   } catch (err) {
     // A draft API on a moving spec must never break the page.

@@ -112,7 +112,7 @@
         'the human acts. The human sees the same state rendered on the page.',
       inputSchema: { type: 'object', properties: {} },
       outputSchema: WORKSPACE_SCHEMA,
-      annotations: { title: 'Read the shared workspace', readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      annotations: { title: 'Read the shared workspace', readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false, untrustedContentHint: true },
       execute: function () { return run(function () { return ws().getState(); }); },
     },
     {
@@ -146,7 +146,7 @@
         },
         required: ['applied', 'rejected', 'draft_rev'],
       },
-      annotations: { title: 'Draft the task on the page', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+      annotations: { title: 'Draft the task on the page', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false, untrustedContentHint: false },
       execute: function (args) { return run(function () { return ws().applyDraft(args || {}); }); },
     },
     {
@@ -173,7 +173,7 @@
           error: { type: 'string', const: 'nothing_to_approve' },
         },
       },
-      annotations: { title: 'Ask the human for approval', readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      annotations: { title: 'Ask the human for approval', readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false, untrustedContentHint: false },
       execute: function (args) { return run(function () { return ws().requestApproval(args && args.message_to_human); }); },
     },
     {
@@ -210,7 +210,7 @@
           workspace: WORKSPACE_SCHEMA,
         },
       },
-      annotations: { title: 'Wait for the human to act', readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+      annotations: { title: 'Wait for the human to act', readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: false, untrustedContentHint: true },
       execute: function (args) { return run(function () { return ws().awaitHuman(args && args.timeout_seconds); }); },
     },
     {
@@ -245,7 +245,7 @@
           message: { type: 'string' },
         },
       },
-      annotations: { title: 'Submit the approved task', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+      annotations: { title: 'Submit the approved task', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true, untrustedContentHint: false },
       execute: function () { return run(function () { return ws().submitApproved(); }); },
     },
     {
@@ -285,7 +285,7 @@
           },
         },
       },
-      annotations: { title: 'Live status of workspace tasks', readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      annotations: { title: 'Live status of workspace tasks', readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false, untrustedContentHint: true },
       execute: function (args) { return run(function () { return ws().trackTask(args && args.task_id); }); },
     },
     {
@@ -323,7 +323,7 @@
           message: { type: 'string' },
         },
       },
-      annotations: { title: 'Message the human operator', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+      annotations: { title: 'Message the human operator', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true, untrustedContentHint: true },
       execute: function (args) { return run(function () { return ws().messageOperator(args && args.message, args && args.subject); }); },
     },
   ];
