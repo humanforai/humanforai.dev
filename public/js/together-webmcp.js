@@ -45,10 +45,14 @@
   };
   var AUTOPILOT_SCHEMA = {
     type: 'object',
+    description: 'Bounded standing approval: a task budget and an expiry, both set by the human. Delivery always goes to the human\'s own email (or status polling) — agent-set contact_email is ignored under autopilot.',
     properties: {
       enabled: { type: 'boolean' },
       scope: { type: 'string', description: 'The human\'s scope note for the standing approval.' },
       granted_at: { type: 'string', description: 'ISO 8601.' },
+      expires_at: { type: 'string', description: 'ISO 8601 — the grant retires itself at this moment.' },
+      max_tasks: { type: 'integer', description: 'How many submissions the grant covers (each draft revision only once).' },
+      used: { type: 'integer', description: 'Submissions already spent from the budget.' },
     },
     required: ['enabled'],
   };
@@ -122,7 +126,9 @@
         'Write or revise the shared task draft, field by field. Unlike the site-wide submit_human_task, nothing is ' +
         'sent anywhere — this edits the on-page document the human co-authors. The human watches it appear live and ' +
         'can edit any field directly (fields show who wrote them last). Partial updates are fine — send only the ' +
-        'fields you are changing. Revising the draft resets any per-task approval (Autopilot is unaffected).',
+        'fields you are changing. Values are validated for real (not just by this schema); invalid values come back ' +
+        'in "rejected" with reasons. Revising the draft resets any per-task approval — including one already ' +
+        'requested or granted (Autopilot is unaffected).',
       inputSchema: {
         type: 'object',
         properties: {
@@ -164,16 +170,17 @@
       },
       outputSchema: {
         type: 'object',
-        description: 'approval_requested when the bar is shown; not_needed when Autopilot already stands; nothing_to_approve without a draft.',
+        description: 'approval_requested when the bar is shown; not_needed when Autopilot already stands; nothing_to_approve without a draft; invalid_draft (with problems) when the draft fails validation.',
         properties: {
           status: { type: 'string', enum: ['approval_requested', 'not_needed'] },
-          draft_rev: { type: 'integer' },
+          draft_rev: { type: 'integer', description: 'The exact revision the approval will bind to. Any draft change voids the request.' },
           autopilot: AUTOPILOT_SCHEMA,
           message: { type: 'string' },
-          error: { type: 'string', const: 'nothing_to_approve' },
+          error: { type: 'string', enum: ['nothing_to_approve', 'invalid_draft'] },
+          problems: { type: 'array', items: { type: 'string' }, description: 'On invalid_draft: field-by-field reasons.' },
         },
       },
-      annotations: { title: 'Ask the human for approval', readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false, untrustedContentHint: false },
+      annotations: { title: 'Ask the human for approval', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false, untrustedContentHint: false },
       execute: function (args) { return run(function () { return ws().requestApproval(args && args.message_to_human); }); },
     },
     {
@@ -227,7 +234,7 @@
       },
       outputSchema: {
         type: 'object',
-        description: 'On success: the REST envelope with the created task. Without authority: {error:"not_approved"} plus the current approval and autopilot state.',
+        description: 'On success: the REST envelope with the created task. Refusals are structured: not_approved (no authority for this exact revision), invalid_draft (with problems), already_submitted (this revision was sent once already), submission_in_flight (a submit is mid-flight), network_error. A failed HTTP call never consumes the approval.',
         properties: {
           http_status: { type: 'integer' },
           response: {
@@ -239,7 +246,8 @@
               message: { type: 'string' },
             },
           },
-          error: { type: 'string', enum: ['no_draft', 'not_approved'] },
+          error: { type: 'string', enum: ['no_draft', 'not_approved', 'invalid_draft', 'already_submitted', 'submission_in_flight', 'network_error'] },
+          problems: { type: 'array', items: { type: 'string' } },
           approval: APPROVAL_SCHEMA,
           autopilot: AUTOPILOT_SCHEMA,
           message: { type: 'string' },
@@ -255,7 +263,8 @@
         'Workspace-scoped variant of the site-wide check_task_status: same live task records (status history, ' +
         'seen_by_operator_at — the moment a real human saw it, eta, operator notes, signed receipt), but it reads ' +
         'the whole shared board at once and keeps the page\'s live-status cards in sync for the human. Pass task_id ' +
-        'to add an existing task to the board; omit it to read everything tracked.',
+        'to add an existing task to the board — the ID is verified against the live API first, and an unknown ID ' +
+        'returns {error:"task_not_found"} without touching the board. Omit it to read everything tracked.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -266,6 +275,10 @@
         type: 'object',
         required: ['tracked_tasks'],
         properties: {
+          error: { type: 'string', enum: ['task_not_found', 'lookup_failed', 'network_error'], description: 'Present when a passed task_id could not be verified — it was NOT added to the board.' },
+          http_status: { type: 'integer' },
+          message: { type: 'string' },
+          task_id: { type: 'string', description: 'On error: the ID that failed verification.' },
           tracked_tasks: {
             type: 'array',
             description: 'Latest known record per tracked task (full REST task shape once fetched).',
@@ -285,7 +298,7 @@
           },
         },
       },
-      annotations: { title: 'Live status of workspace tasks', readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false, untrustedContentHint: true },
+      annotations: { title: 'Live status of workspace tasks', readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false, untrustedContentHint: true },
       execute: function (args) { return run(function () { return ws().trackTask(args && args.task_id); }); },
     },
     {
@@ -337,13 +350,71 @@
     null;
   if (!mc) return;
 
-  try {
-    if (typeof mc.registerTool === 'function') {
-      tools.forEach(function (t) { mc.registerTool(t); });
-    } else if (typeof mc.provideContext === 'function') {
-      mc.provideContext({ tools: tools });
-    }
-  } catch (err) {
-    if (typeof console !== 'undefined') console.warn('together webmcp registration failed:', err);
+  // "WebMCP detected" only proves the API object exists. Await every
+  // registration, cross-check with getTools() where available, and tell the
+  // human exactly how many of the 7 tools actually stand.
+  function reportRegistration(ok, total, failed) {
+    window.__hfaiToolReport = { ok: ok, total: total, failed: failed };
+    var apply = function () {
+      var bt = document.getElementById('mcp-banner-text');
+      var banner = document.getElementById('mcp-banner');
+      if (!bt) return;
+      if (ok === total) {
+        bt.textContent = 'WebMCP live — ' + ok + '/' + total + ' tools registered. Ask your agent to work with you on this page.';
+        if (banner) banner.classList.add('on');
+      } else {
+        bt.textContent = 'WebMCP degraded — ' + ok + '/' + total + ' tools registered' +
+          (failed.length ? ' (failed: ' + failed.join(', ') + ')' : '') + '. Reload the page.';
+        if (banner) banner.classList.remove('on');
+      }
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
+    else apply();
   }
+
+  var registrations;
+  if (typeof mc.registerTool === 'function') {
+    registrations = tools.map(function (t) {
+      try {
+        return Promise.resolve(mc.registerTool(t)).then(
+          function () { return { name: t.name, ok: true }; },
+          function (err) {
+            if (typeof console !== 'undefined') console.warn('together webmcp: registerTool(' + t.name + ') rejected:', err);
+            return { name: t.name, ok: false };
+          }
+        );
+      } catch (err) {
+        if (typeof console !== 'undefined') console.warn('together webmcp: registerTool(' + t.name + ') threw:', err);
+        return Promise.resolve({ name: t.name, ok: false });
+      }
+    });
+  } else if (typeof mc.provideContext === 'function') {
+    var all;
+    try { all = Promise.resolve(mc.provideContext({ tools: tools })).then(function () { return true; }, function () { return false; }); }
+    catch (err) { all = Promise.resolve(false); }
+    registrations = [all.then(function (ok) { return tools.map(function (t) { return { name: t.name, ok: ok }; }); })];
+  } else {
+    reportRegistration(0, tools.length, tools.map(function (t) { return t.name; }));
+    return;
+  }
+
+  Promise.all(registrations)
+    .then(function (results) {
+      var flat = [].concat.apply([], results.map(function (r) { return Array.isArray(r) ? r : [r]; }));
+      // Cross-check against what the browser says it actually holds.
+      if (typeof mc.getTools === 'function') {
+        return Promise.resolve(mc.getTools()).then(function (registered) {
+          var names = (registered || []).map(function (t) { return t && t.name; });
+          if (names.length) {
+            flat.forEach(function (r) { if (r.ok && names.indexOf(r.name) === -1) r.ok = false; });
+          }
+          return flat;
+        }, function () { return flat; });
+      }
+      return flat;
+    })
+    .then(function (flat) {
+      var failed = flat.filter(function (r) { return !r.ok; }).map(function (r) { return r.name; });
+      reportRegistration(flat.length - failed.length, flat.length, failed);
+    });
 })();

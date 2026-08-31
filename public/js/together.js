@@ -28,6 +28,54 @@
     'prompt_and_workflow_testing', 'simulation_and_automation_testing',
     'accessibility_and_usability_check', 'decision_escalation', 'custom_human_in_the_loop',
   ];
+  var OUTPUT_FORMATS = [
+    'text_report', 'text_report_with_photos', 'structured_json',
+    'annotated_screenshots', 'video',
+  ];
+
+  // The schemas the agent sees are advisory; this is the boundary. Used for
+  // agent drafts, human edits, approval requests, and final submission alike.
+  function validateField(k, v) {
+    var s = String(v == null ? '' : v);
+    switch (k) {
+      case 'task_type':
+        return TASK_TYPES.indexOf(s) === -1 ? 'must be one of the valid task types' : null;
+      case 'description':
+        if (s.trim().length < 10) return 'must be at least 10 characters';
+        if (s.length > 5000) return 'must be at most 5000 characters';
+        return null;
+      case 'location_required':
+        return (v === true || v === false || s === 'true' || s === 'false') ? null : 'must be true or false';
+      case 'location_detail':
+        return s.length > 500 ? 'must be at most 500 characters' : null;
+      case 'deadline':
+        return isNaN(Date.parse(s)) ? 'must be an ISO 8601 datetime' : null;
+      case 'output_format':
+        return OUTPUT_FORMATS.indexOf(s) === -1 ? 'must be one of: ' + OUTPUT_FORMATS.join(', ') : null;
+      case 'contact_email':
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) ? null : 'must be a valid email address';
+      case 'requester':
+        return s.length > 200 ? 'must be at most 200 characters' : null;
+    }
+    return null;
+  }
+
+  function validateDraft(draft) {
+    if (!draft || !draft.fields) return ['no draft'];
+    var problems = [];
+    if (!draft.fields.description) problems.push('description: required');
+    Object.keys(draft.fields).forEach(function (k) {
+      var v = draft.fields[k];
+      if (v === undefined || v === '') return;
+      var why = validateField(k, v);
+      if (why) problems.push(k + ': ' + why);
+    });
+    var locReq = draft.fields.location_required;
+    if ((locReq === true || locReq === 'true') && !draft.fields.location_detail) {
+      problems.push('location_detail: required when location_required is true');
+    }
+    return problems;
+  }
 
   var state = load() || {
     goal: '',
@@ -44,8 +92,13 @@
   };
 
   if (!state.autopilot) state.autopilot = { enabled: false }; // pre-autopilot saved states
+  // Legacy autopilot grants had no expiry or budget — a standing authority
+  // with no bounds. Retire them; the human can re-grant with limits.
+  if (state.autopilot.enabled && !state.autopilot.expires_at) state.autopilot = { enabled: false };
 
-  var waiters = []; // await_human: [{resolve, timer}]
+  var waiters = [];       // await_human: [{resolve, timer}]
+  var pendingEvents = []; // human acts that happened while no await_human was listening
+  var submitInFlight = false;
 
   function load() {
     try { return JSON.parse(localStorage.getItem(LS_KEY)); } catch (e) { return null; }
@@ -68,8 +121,15 @@
     renderFeed();
   }
 
-  // Resolve every pending await_human with what just happened.
+  // Resolve every pending await_human with what just happened. If no one is
+  // waiting yet, queue the event so an await_human that starts a moment later
+  // doesn't miss it (the approve-before-await race).
   function humanActed(event) {
+    if (!waiters.length) {
+      pendingEvents.push(event);
+      if (pendingEvents.length > 5) pendingEvents.shift();
+      return;
+    }
     var snapshot = publicState();
     waiters.splice(0).forEach(function (w) {
       clearTimeout(w.timer);
@@ -77,11 +137,9 @@
     });
   }
 
+  // DOM-only on purpose: read_workspace is annotated read-only, so the
+  // presence signal must not mutate persisted workspace state.
   function agentPresent() {
-    if (!state.agentSeen) {
-      state.agentSeen = true;
-      save();
-    }
     var el = $('agent-presence');
     if (el) el.textContent = 'connected via WebMCP';
     var banner = $('mcp-banner');
@@ -130,6 +188,14 @@
         var k = el.getAttribute('data-field');
         var v = el.textContent.trim();
         if (String(state.draft.fields[k]) === v) return;
+        if (v !== '') {
+          var why = validateField(k, v);
+          if (why) {
+            feed('system', 'your edit to "' + k + '" was not applied — ' + why + '.');
+            renderDraft();
+            return;
+          }
+        }
         state.draft.fields[k] = k === 'location_required' ? v === 'true' : v;
         state.draft.provenance[k] = 'human';
         state.draft.rev += 1;
@@ -142,21 +208,66 @@
     });
   }
 
+  // Any draft mutation kills BOTH standing approvals and open requests: the
+  // human must never be able to click Approve on a revision other than the
+  // one the bar was raised for.
   function invalidateApproval(why) {
-    if (state.approval.state === 'approved') {
+    if (state.approval.state === 'approved' || state.approval.state === 'requested') {
+      var was = state.approval.state;
       state.approval = { state: 'none' };
-      feed('system', 'approval reset — ' + why + '. The draft changed, so the agent must ask again.');
+      feed('system', was === 'approved'
+        ? 'approval reset — ' + why + '. The draft changed, so the agent must ask again.'
+        : 'approval request withdrawn — ' + why + '. The draft changed under the open request; the agent must ask again for the new revision.');
+      renderApproval();
     }
   }
 
+  // The single authority check for autopilot. Expired or exhausted grants
+  // are retired on the spot — never silently honored.
+  function autopilotActive() {
+    var a = state.autopilot;
+    if (!a.enabled) return false;
+    if (a.expires_at && Date.parse(a.expires_at) <= Date.now()) {
+      state.autopilot = { enabled: false };
+      feed('system', 'autopilot expired — submissions need your click again.');
+      save(); renderApproval();
+      return false;
+    }
+    if ((a.used || 0) >= (a.max_tasks || 1)) {
+      state.autopilot = { enabled: false };
+      feed('system', 'autopilot used its full budget of ' + (a.max_tasks || 1) + ' task(s) — submissions need your click again.');
+      save(); renderApproval();
+      return false;
+    }
+    return true;
+  }
+
   function renderApproval() {
+    var onAutopilot = state.autopilot.enabled;
     var bar = $('approval-bar');
     if (!bar) return;
-    bar.hidden = state.autopilot.enabled || state.approval.state !== 'requested';
+    var stale = state.approval.state === 'requested' &&
+      (!state.draft || state.approval.rev !== state.draft.rev);
+    bar.hidden = onAutopilot || state.approval.state !== 'requested' || stale;
+    var revLine = $('approval-rev');
+    if (revLine && !bar.hidden) {
+      revLine.textContent = 'approving draft rev ' + state.approval.rev +
+        ' — exactly the fields shown in the middle lane right now';
+    }
     var box = $('autopilot-box');
-    if (box) box.classList.toggle('on', state.autopilot.enabled);
+    if (box) box.classList.toggle('on', onAutopilot);
     var chip = $('autopilot-state');
-    if (chip) chip.textContent = state.autopilot.enabled ? 'ON — your agent submits on its own' : 'off — every submit needs your click';
+    if (chip) {
+      if (onAutopilot) {
+        var a = state.autopilot;
+        var left = Math.max(0, (a.max_tasks || 1) - (a.used || 0));
+        chip.textContent = 'ON — ' + left + ' of ' + (a.max_tasks || 1) + ' submission' + ((a.max_tasks || 1) === 1 ? '' : 's') + ' left · expires ' +
+          (a.expires_at ? String(a.expires_at).slice(11, 16) + ' utc' : 'never') +
+          (state.email ? ' · delivers to your email' : ' · no email — status-poll delivery');
+      } else {
+        chip.textContent = 'off — every submit needs your click';
+      }
+    }
   }
 
   function renderTasks() {
@@ -248,7 +359,7 @@
           }
         }).catch(function () {}));
     }
-    Promise.all(jobs).then(function () { save(); renderTasks(); renderThread(); pollSoon(); });
+    Promise.all(jobs).then(function () { autopilotActive(); save(); renderTasks(); renderThread(); pollSoon(); });
   }
 
   /* ── the facade the WebMCP layer calls ─────────────────────────── */
@@ -272,27 +383,31 @@
         replies: ((state.thread.data || {}).replies || []),
       } : null,
       valid_task_types: TASK_TYPES,
+      valid_output_formats: OUTPUT_FORMATS,
       rules: state.autopilot.enabled
-        ? 'AUTOPILOT is ON: the human granted you standing approval' +
+        ? 'AUTOPILOT is ON: the human granted you bounded standing approval' +
           (state.autopilot.scope ? ' — scope: "' + state.autopilot.scope + '"' : '') +
-          '. submit_approved_task works without a per-task click. Stay inside the scope and the goal; the human sees everything live and can revoke at any moment.'
+          '. Budget: ' + Math.max(0, (state.autopilot.max_tasks || 1) - (state.autopilot.used || 0)) + ' submission(s) left, expires ' + state.autopilot.expires_at +
+          '. Delivery goes to the human\'s own email (or status polling) — an agent-set contact_email is ignored under autopilot. ' +
+          'Each draft revision can be submitted once. Stay inside the scope and the goal; the human sees everything live and can revoke at any moment.'
         : 'submit_approved_task only works while approval.state is "approved" for the current draft rev. ' +
-          'Any draft change resets approval. The human sees everything you write here, live — and can grant ' +
-          'autopilot (standing approval) with the toggle in their lane.',
+          'Any draft change resets approval — including an open approval request. The human sees everything you write here, live — and can grant ' +
+          'bounded autopilot (standing approval with a task budget and expiry) with the toggle in their lane.',
     };
   }
 
   window.HFAI_TOGETHER = {
     agentPresent: agentPresent,
 
-    getState: publicState,
+    getState: function () { autopilotActive(); return publicState(); },
 
     applyDraft: function (fields) {
       var applied = [], rejected = [];
       if (!state.draft) state.draft = { fields: {}, provenance: {}, rev: 0 };
       Object.keys(fields || {}).forEach(function (k) {
-        if (DRAFT_FIELDS.indexOf(k) === -1) { rejected.push(k); return; }
-        if (k === 'task_type' && TASK_TYPES.indexOf(String(fields[k])) === -1) { rejected.push(k + ' (invalid value)'); return; }
+        if (DRAFT_FIELDS.indexOf(k) === -1) { rejected.push(k + ' (unknown field)'); return; }
+        var why = validateField(k, fields[k]);
+        if (why) { rejected.push(k + ' (' + why + ')'); return; }
         state.draft.fields[k] = fields[k];
         state.draft.provenance[k] = 'agent';
         applied.push(k);
@@ -310,7 +425,11 @@
       if (!state.draft || !state.draft.fields.description) {
         return { error: 'nothing_to_approve', message: 'Draft a task first with draft_task (description is required).' };
       }
-      if (state.autopilot.enabled) {
+      var problems = validateDraft(state.draft);
+      if (problems.length) {
+        return { error: 'invalid_draft', problems: problems, message: 'The draft is not valid yet — fix these fields with draft_task before asking for approval.' };
+      }
+      if (autopilotActive()) {
         return {
           status: 'not_needed',
           autopilot: state.autopilot,
@@ -328,6 +447,12 @@
     },
 
     awaitHuman: function (timeoutSeconds) {
+      // The human may have acted between the agent's last read and this call —
+      // deliver the queued event instead of blocking past it.
+      if (pendingEvents.length) {
+        var missed = pendingEvents.shift();
+        return Promise.resolve({ event: missed, workspace: publicState() });
+      }
       var t = Math.max(5, Math.min(240, Number(timeoutSeconds) || 60));
       return new Promise(function (resolve) {
         var timer = setTimeout(function () {
@@ -341,54 +466,104 @@
 
     submitApproved: function () {
       if (!state.draft) return Promise.resolve({ error: 'no_draft', message: 'Nothing drafted yet.' });
-      var viaAutopilot = state.autopilot.enabled;
+      if (submitInFlight) {
+        return Promise.resolve({ error: 'submission_in_flight', message: 'A submission is already in progress — wait for it to return before submitting again.' });
+      }
+      var viaAutopilot = autopilotActive();
       if (!viaAutopilot && (state.approval.state !== 'approved' || state.approval.rev !== state.draft.rev)) {
         return Promise.resolve({
           error: 'not_approved',
           approval: state.approval,
           autopilot: state.autopilot,
-          message: 'The human has not approved this draft revision. Call request_human_approval and wait for their click — or the human can flip the Autopilot toggle to grant you standing approval.',
+          message: 'The human has not approved this draft revision. Call request_human_approval and wait for their click — or the human can grant bounded Autopilot in their lane.',
         });
+      }
+      var problems = validateDraft(state.draft);
+      if (problems.length) {
+        return Promise.resolve({ error: 'invalid_draft', problems: problems, message: 'The draft is not valid — fix these fields with draft_task, then get approval again.' });
+      }
+      if (viaAutopilot && state.lastSubmittedRev === state.draft.rev) {
+        return Promise.resolve({ error: 'already_submitted', message: 'This exact draft revision was already submitted. Revise the draft (a new revision) before submitting another task.' });
       }
       var payload = {};
       DRAFT_FIELDS.forEach(function (k) { if (state.draft.fields[k] !== undefined && state.draft.fields[k] !== '') payload[k] = state.draft.fields[k]; });
-      if (!payload.contact_email && state.email) payload.contact_email = state.email;
-      if (!payload.contact_email) payload.delivery = 'status_poll';
+      // Delivery destination is human-controlled: the email in the You lane
+      // always wins. Under autopilot an agent-set contact_email is never
+      // honored — without a human email, delivery falls back to status polling.
+      if (state.email) payload.contact_email = state.email;
+      else if (viaAutopilot) { delete payload.contact_email; payload.delivery = 'status_poll'; }
+      else if (!payload.contact_email) payload.delivery = 'status_poll';
       payload.requester = payload.requester || (viaAutopilot ? 'together-workspace (autopilot)' : 'together-workspace (human-approved)');
       payload.source = 'api';
+      submitInFlight = true;
       return fetch('/api/v1/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      }).then(function (r) { return r.json().then(function (data) { return { http: r.status, data: data }; }); })
+      }).then(function (r) { return r.json().then(function (data) { return { http: r.status, ok: r.ok, data: data }; }); })
         .then(function (out) {
-          if (out.data && out.data.task_id) {
+          submitInFlight = false;
+          if (out.ok && out.data && out.data.task_id) {
             state.approval = { state: 'none' };
+            state.lastSubmittedRev = state.draft.rev;
+            if (viaAutopilot) state.autopilot.used = (state.autopilot.used || 0) + 1;
             state.taskOrder.unshift(out.data.task_id);
             state.tasks[out.data.task_id] = out.data;
             feed('agent', viaAutopilot
-              ? 'submitted task ' + out.data.task_id + ' on autopilot (standing approval)'
+              ? 'submitted task ' + out.data.task_id + ' on autopilot (' + Math.max(0, (state.autopilot.max_tasks || 1) - state.autopilot.used) + ' left in the budget)'
               : 'submitted approved task ' + out.data.task_id + ' to the operator');
             save(); renderTasks(); renderApproval(); renderDraft();
             pollSoon(3000);
+          } else {
+            feed('system', 'submission failed (http ' + out.http + ') — no task was created. Approval was NOT consumed.');
           }
           return { http_status: out.http, response: out.data };
+        })
+        .catch(function (err) {
+          submitInFlight = false;
+          feed('system', 'submission failed (network error) — no task was created. Approval was NOT consumed.');
+          return { error: 'network_error', message: String(err && err.message || err) };
         });
     },
 
     trackTask: function (taskId) {
       var id = String(taskId || '').trim();
-      var chain = Promise.resolve();
+      // Verify the task exists BEFORE it touches the board — an unknown ID
+      // must come back as an error, never as a card that says "submitted".
+      var chain = Promise.resolve(null);
       if (id) {
-        if (state.taskOrder.indexOf(id) === -1) state.taskOrder.unshift(id);
-        state.taskOrder = state.taskOrder.slice(0, MAX_TRACKED);
         chain = fetch('/api/v1/tasks/' + encodeURIComponent(id))
-          .then(function (r) { return r.json(); })
-          .then(function (data) { if (data && data.task_id) state.tasks[id] = data; save(); renderTasks(); })
-          .catch(function () {});
+          .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, http: r.status, data: data }; }); })
+          .then(function (out) {
+            if (out.ok && out.data && out.data.task_id) {
+              if (state.taskOrder.indexOf(id) === -1) state.taskOrder.unshift(id);
+              state.taskOrder = state.taskOrder.slice(0, MAX_TRACKED);
+              state.tasks[id] = out.data;
+              save(); renderTasks();
+              return null;
+            }
+            return {
+              error: out.http === 404 ? 'task_not_found' : 'lookup_failed',
+              http_status: out.http,
+              message: out.http === 404
+                ? 'No task with ID ' + id + ' exists. It was not added to the board.'
+                : 'The status lookup for ' + id + ' failed (http ' + out.http + '). It was not added to the board.',
+            };
+          })
+          .catch(function (err) {
+            return { error: 'network_error', message: 'Could not reach the task API for ' + id + ' — it was not added to the board. ' + String(err && err.message || err) };
+          });
       }
-      return chain.then(function () {
-        return { tracked_tasks: state.taskOrder.map(function (tid) { return state.tasks[tid] || { task_id: tid }; }) };
+      return chain.then(function (problem) {
+        var result = { tracked_tasks: state.taskOrder.map(function (tid) { return state.tasks[tid] || { task_id: tid }; }) };
+        if (problem) {
+          result.error = problem.error;
+          result.http_status = problem.http_status;
+          result.message = problem.message;
+          result.task_id = id;
+          feed('system', 'task ' + id + ' was not added to the board: ' + problem.error);
+        }
+        return result;
       });
     },
 
@@ -472,8 +647,17 @@
     if (auto) auto.addEventListener('change', function () {
       if (auto.checked) {
         var scope = ($('autopilot-scope').value || '').trim();
-        state.autopilot = { enabled: true, scope: scope, granted_at: now() };
-        feed('human', 'granted AUTOPILOT — standing approval for the agent to submit' + (scope ? ' (scope: "' + scope.slice(0, 120) + '")' : ''));
+        var maxTasks = Math.max(1, Math.min(10, parseInt(($('autopilot-max') || {}).value, 10) || 1));
+        var minutes = Math.max(5, Math.min(1440, parseInt(($('autopilot-minutes') || {}).value, 10) || 60));
+        state.autopilot = {
+          enabled: true,
+          scope: scope,
+          granted_at: now(),
+          expires_at: new Date(Date.now() + minutes * 60000).toISOString(),
+          max_tasks: maxTasks,
+          used: 0,
+        };
+        feed('human', 'granted AUTOPILOT — standing approval for ' + maxTasks + ' task(s), expires in ' + minutes + ' min' + (scope ? ' (scope: "' + scope.slice(0, 120) + '")' : ''));
         humanActed({ type: 'autopilot_granted', scope: scope });
       } else {
         state.autopilot = { enabled: false };
@@ -485,18 +669,28 @@
     });
     var ap = $('btn-approve');
     if (ap) ap.addEventListener('click', function () {
+      // The click binds to the rev the agent requested — never to whatever
+      // the draft happens to be at click time. A mismatch means the request
+      // is stale and the click is refused.
+      if (state.approval.state !== 'requested' || !state.draft || state.approval.rev !== state.draft.rev) {
+        feed('system', 'approve ignored — the request is stale (the draft changed since it was raised). The agent must ask again.');
+        state.approval = { state: 'none' };
+        save(); renderApproval(); renderDraft();
+        return;
+      }
       var note = ($('approval-note').value || '').trim();
-      state.approval = { state: 'approved', rev: state.draft ? state.draft.rev : 0, ts: now(), note: note };
+      state.approval = { state: 'approved', rev: state.approval.rev, ts: now(), note: note };
       $('approval-note').value = '';
       save();
-      feed('human', 'APPROVED the draft' + (note ? ' — "' + note.slice(0, 120) + '"' : ''));
+      feed('human', 'APPROVED draft rev ' + state.approval.rev + (note ? ' — "' + note.slice(0, 120) + '"' : ''));
       renderApproval(); renderDraft();
       humanActed({ type: 'approved', note: note });
     });
     var rj = $('btn-reject');
     if (rj) rj.addEventListener('click', function () {
+      if (state.approval.state !== 'requested') return;
       var note = ($('approval-note').value || '').trim();
-      state.approval = { state: 'rejected', rev: state.draft ? state.draft.rev : 0, ts: now(), note: note };
+      state.approval = { state: 'rejected', rev: state.approval.rev, ts: now(), note: note };
       $('approval-note').value = '';
       save();
       feed('human', 'rejected the draft' + (note ? ' — "' + note.slice(0, 120) + '"' : ''));

@@ -138,13 +138,24 @@
               <span class="autopilot-state" id="autopilot-state">off — every submit needs your click</span>
               <div class="field" style="margin:0.6rem 0 0">
                 <input type="text" id="autopilot-scope" maxlength="300" placeholder="optional scope, e.g. UX feedback tasks only, nothing physical">
-                <span class="hint">Flip it on and your agent submits without asking. The feed still shows every move, and you can revoke any time.</span>
               </div>
+              <div style="display:flex;gap:0.9rem;flex-wrap:wrap;margin-top:0.5rem">
+                <div class="field" style="margin:0">
+                  <label for="autopilot-max" class="small">max tasks</label>
+                  <input type="number" id="autopilot-max" value="1" min="1" max="10" style="width:5rem">
+                </div>
+                <div class="field" style="margin:0">
+                  <label for="autopilot-minutes" class="small">expires in (minutes)</label>
+                  <input type="number" id="autopilot-minutes" value="60" min="5" max="1440" style="width:6.5rem">
+                </div>
+              </div>
+              <span class="hint" style="display:block;margin-top:0.5rem">Flip it on and your agent submits without asking — within this budget and expiry, delivering only to <em>your</em> email above. The feed still shows every move, and you can revoke any time.</span>
             </div>
 
             <div class="approval-bar" id="approval-bar" hidden>
               <h3>Your agent asks for approval</h3>
-              <p class="small" style="margin:0 0 0.6rem">Review the draft in the middle lane — edit any field directly if you want. Nothing is submitted without your click.</p>
+              <p class="small machine" id="approval-rev" style="margin:0 0 0.4rem"></p>
+              <p class="small" style="margin:0 0 0.6rem">Review the draft in the middle lane — edit any field directly if you want (any change voids this request and the agent must ask again). Nothing is submitted without your click.</p>
               <input type="text" id="approval-note" maxlength="500" placeholder="optional note, e.g. why you rejected">
               <p style="margin:0.6rem 0 0">
                 <button class="btn btn-primary btn-sm" id="btn-approve" type="button">Approve &amp; unlock submit</button>
@@ -209,7 +220,7 @@
               <li>Type your goal in the <em>You</em> lane, in plain words.</li>
               <li>Ask your agent something like: <em>"Work with me on this page — read my goal and draft the task for my approval."</em></li>
               <li>Watch it draft in the middle lane. Edit any field yourself — it's a shared document.</li>
-              <li>When it requests approval, <strong>you click</strong> — or grant <strong>Autopilot</strong> once and let it submit on its own from then on. Your agent, your call.</li>
+              <li>When it requests approval, <strong>you click</strong> — the approval binds to the exact draft revision shown, and any edit voids it. Or grant <strong>Autopilot</strong>: standing authority with a task budget and an expiry you set. Your agent, your call.</li>
               <li>A verified human operator gets pinged, and you both watch the task go <span class="machine">submitted → seen → accepted → delivered</span>, live.</li>
             </ol>
             <div class="notice" style="margin-top:1rem">
@@ -296,7 +307,7 @@
   </footer>
 
   <script src="/js/app.js" defer></script>
-  <script src="/js/together.js?v=3" defer></script>
-  <script src="/js/together-webmcp.js?v=4" defer></script>
+  <script src="/js/together.js?v=4" defer></script>
+  <script src="/js/together-webmcp.js?v=5" defer></script>
 </body>
 </html>
