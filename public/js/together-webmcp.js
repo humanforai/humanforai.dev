@@ -4,8 +4,8 @@
  * Registers the workspace toolset with the Web Model Context API
  * (document.modelContext, navigator.modelContext fallback). These tools
  * differ from the site-wide set in webmcp.js: they read and WRITE page
- * state that the human co-edits live, and the submit tool is gated on a
- * physical human click (the approval bar in the You lane).
+ * state that the human co-edits live, and the submit tool is gated on an
+ * explicit on-page approval bound to the exact draft revision.
  *
  * The same tools are exposed on window.__hfaiTogetherTools so the page
  * can be exercised and audited in browsers without the draft API.
@@ -189,7 +189,7 @@
       description:
         'Block until the human at the keyboard acts — approves, rejects, edits the draft, updates the goal, posts ' +
         'a note to you, or grants/revokes Autopilot — or the timeout passes. Returns the event and a fresh ' +
-        'workspace snapshot. This is a tool call resolved by a physical human click.',
+        'workspace snapshot. This is a tool call resolved by an explicit human action on the shared page.',
       inputSchema: {
         type: 'object',
         properties: {

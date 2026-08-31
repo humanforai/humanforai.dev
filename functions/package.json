@@ -2,6 +2,7 @@
   "name": "human-api-functions",
   "description": "Human For AI — task & contact API on Cloud Functions + Firestore",
   "private": true,
+  "license": "MIT",
   "main": "index.js",
   "engines": {
     "node": "22"

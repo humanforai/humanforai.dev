@@ -181,9 +181,14 @@
         var prov = state.draft.provenance[k] || 'agent';
         return '<div class="draft-field"><span class="k">' + esc(k) +
           '<span class="prov prov-' + prov + '">' + (prov === 'agent' ? 'written by your agent' : 'edited by you') + '</span></span>' +
-          '<span class="v" contenteditable="plaintext-only" data-field="' + esc(k) + '">' + esc(String(state.draft.fields[k])) + '</span></div>';
+          '<span class="v" contenteditable="plaintext-only" role="textbox" aria-label="Draft field ' + esc(k) +
+          ', last ' + (prov === 'agent' ? 'written by your agent' : 'edited by you') + '. Press Enter to save your edit." data-field="' + esc(k) + '">' +
+          esc(String(state.draft.fields[k])) + '</span></div>';
       }).join('');
     box.querySelectorAll('.v[contenteditable]').forEach(function (el) {
+      el.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter' && el.getAttribute('data-field') !== 'description') { ev.preventDefault(); el.blur(); }
+      });
       el.addEventListener('blur', function () {
         var k = el.getAttribute('data-field');
         var v = el.textContent.trim();
@@ -439,6 +444,14 @@
       state.approval = { state: 'requested', rev: state.draft.rev, ts: now(), agent_message: String(messageToHuman || '').slice(0, 500) };
       feed('agent', 'requested your approval' + (messageToHuman ? ': "' + String(messageToHuman).slice(0, 120) + '"' : ''));
       save(); renderApproval(); renderDraft();
+      // Bring the human to the decision: scroll, focus, and announce it.
+      var bar = $('approval-bar');
+      if (bar && !bar.hidden) {
+        bar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        bar.focus({ preventScroll: true });
+      }
+      var sr = $('sr-announce');
+      if (sr) sr.textContent = 'Your agent requests approval for draft revision ' + state.draft.rev + '. The approval controls are below the draft.';
       return {
         status: 'approval_requested',
         draft_rev: state.draft.rev,
@@ -719,6 +732,31 @@
         feed('human', 'wrote to the operator');
         pollSoon(3000);
       });
+    });
+    document.querySelectorAll('.goal-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        var goal = chip.getAttribute('data-goal') || '';
+        var g2 = $('goal');
+        if (!g2) return;
+        g2.value = goal;
+        state.goal = goal;
+        save();
+        feed('human', 'picked a sample goal');
+        humanActed({ type: 'goal_updated', goal: state.goal });
+        g2.focus();
+      });
+    });
+    var cp = $('copy-prompt');
+    if (cp) cp.addEventListener('click', function () {
+      var text = ($('agent-prompt') || {}).textContent || '';
+      var done2 = function () { cp.textContent = 'copied'; setTimeout(function () { cp.textContent = 'copy'; }, 1500); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done2, function () {});
+    });
+    var cw = $('clear-workspace');
+    if (cw) cw.addEventListener('click', function () {
+      if (!window.confirm('Clear this workspace? Goal, draft, approvals, tracked tasks and the operator thread are removed from this browser. Already-submitted tasks stay live with the operator.')) return;
+      try { localStorage.removeItem(LS_KEY); } catch (e) { /* private mode */ }
+      window.location.reload();
     });
   }
 

@@ -23,10 +23,13 @@ other end of the API).
   every field shows who wrote it last, and you can edit any field directly.
   It's a document you both hold.
 - **You choose the approval regime.** Default: nothing is submitted without
-  your physical click (`request_human_approval` → `await_human`, a WebMCP tool
-  call that blocks until a real human presses a real button). Or flip
-  **Autopilot** and grant your agent standing authority — it submits on its
-  own, within the scope you wrote, while you watch. Revocable any time.
+  your explicit on-page approval (`request_human_approval` → `await_human`, a
+  WebMCP tool call that blocks until a person acts on the page) — and the
+  approval binds to the exact draft revision shown; any edit voids it. Or flip
+  **Autopilot** and grant your agent bounded standing authority: a task
+  budget and an expiry you set, delivery locked to your own email, one
+  submission per draft revision. The grant retires itself and is revocable
+  any time.
 - After submission the third human appears: the operator's
   `seen_by_operator_at`, ETA, status history, and message-thread replies
   stream onto the page for both of you (`track_task_status`,
@@ -94,6 +97,14 @@ Set `functions/.env` from your own values (`ADMIN_KEY` required; optional
 `NOTIFY_EMAIL`, Telegram/WhatsApp alert credentials — see the header of
 [`functions/index.js`](functions/index.js)). Or poke the legacy
 zero-dependency server: `node server.js` → http://localhost:4180.
+
+## Testing and evals
+
+[TESTING.md](TESTING.md) — deterministic hand-runnable checks for every trust
+property (validation, rev-bound approvals, bounded autopilot, honest
+failures), runnable in any browser via `window.__hfaiTogetherTools`.
+[EVALS.md](EVALS.md) — expected agent journeys per tool and the measured
+results of the latest verification pass.
 
 ## Hackathon provenance
 

@@ -61,6 +61,19 @@
     .mcp-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--dim); flex: none; }
     .mcp-banner.on .mcp-dot { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
     .tool-table td:first-child { font-family: var(--mono); white-space: nowrap; color: var(--accent-link); }
+    .vh { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+    .goal-samples { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.45rem 0; }
+    .goal-chip { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); background: var(--code-bg); border: 1px solid var(--line-strong); border-radius: 999px; padding: 0.35rem 0.7rem; cursor: pointer; min-height: 32px; }
+    .goal-chip:hover, .goal-chip:focus-visible { color: var(--accent); border-color: var(--accent); }
+    .prompt-row { display: flex; gap: 0.5rem; align-items: stretch; }
+    .prompt-row code { flex: 1; font-size: 0.78rem; border: 1px dashed var(--line-strong); border-radius: var(--radius); padding: 0.5rem 0.6rem; color: var(--code-text); background: var(--code-bg); }
+    /* touch targets: buttons and checkboxes on this page meet ~44px */
+    .lane .btn, .mcp-banner .btn { min-height: 42px; }
+    .lane input[type="checkbox"] { width: 1.2rem; height: 1.2rem; }
+    @media (pointer: coarse) {
+      .lane .btn, .mcp-banner .btn, .goal-chip { min-height: 44px; }
+      .lane input[type="checkbox"] { width: 1.4rem; height: 1.4rem; }
+    }
   </style>
 </head>
 <body>
@@ -101,7 +114,8 @@
       <div class="wrap">
         <div class="mcp-banner" id="mcp-banner">
           <span class="mcp-dot" aria-hidden="true"></span>
-          <span id="mcp-banner-text">Checking for WebMCP…</span>
+          <span id="mcp-banner-text" style="flex:1">Checking for WebMCP…</span>
+          <button class="btn btn-ghost btn-sm" id="clear-workspace" type="button">Clear workspace</button>
         </div>
 
         <div class="lanes">
@@ -115,7 +129,20 @@
             <div class="field">
               <label for="goal">Your goal — in your own words</label>
               <textarea id="goal" rows="4" maxlength="2000" placeholder="e.g. I want to know if my new signup flow confuses real people. Something with a real human trying it and telling me honestly."></textarea>
+              <div class="goal-samples" role="group" aria-label="Sample goals">
+                <button class="goal-chip" type="button" data-goal="I want a real human to try the signup flow on my product and tell me honestly where they got confused or stuck.">test my signup flow</button>
+                <button class="goal-chip" type="button" data-goal="I need a human judgment call: review my landing page copy and tell me which claims feel overhyped or unclear to a real reader.">review my landing copy</button>
+                <button class="goal-chip" type="button" data-goal="Verify that a business address really exists and looks legitimate — I need human eyes on the ground, with a short written report.">verify a real-world address</button>
+              </div>
               <span class="hint">Your agent reads this from the page with the <code>read_workspace</code> tool and drafts the formal task for you.</span>
+            </div>
+
+            <div class="field">
+              <label class="small" for="agent-prompt">Then ask your agent</label>
+              <div class="prompt-row">
+                <code id="agent-prompt">Work with me on this page — read my goal and draft the task for my approval.</code>
+                <button class="btn btn-ghost btn-sm" id="copy-prompt" type="button" aria-label="Copy the example prompt">copy</button>
+              </div>
             </div>
 
             <div class="field">
@@ -152,16 +179,6 @@
               <span class="hint" style="display:block;margin-top:0.5rem">Flip it on and your agent submits without asking — within this budget and expiry, delivering only to <em>your</em> email above. The feed still shows every move, and you can revoke any time.</span>
             </div>
 
-            <div class="approval-bar" id="approval-bar" hidden>
-              <h3>Your agent asks for approval</h3>
-              <p class="small machine" id="approval-rev" style="margin:0 0 0.4rem"></p>
-              <p class="small" style="margin:0 0 0.6rem">Review the draft in the middle lane — edit any field directly if you want (any change voids this request and the agent must ask again). Nothing is submitted without your click.</p>
-              <input type="text" id="approval-note" maxlength="500" placeholder="optional note, e.g. why you rejected">
-              <p style="margin:0.6rem 0 0">
-                <button class="btn btn-primary btn-sm" id="btn-approve" type="button">Approve &amp; unlock submit</button>
-                <button class="btn btn-ghost btn-sm" id="btn-reject" type="button" style="margin-left:0.5rem">Reject</button>
-              </p>
-            </div>
           </div>
 
           <!-- ── Lane 2: the agent's drafting surface ────────────────── -->
@@ -174,6 +191,18 @@
             <div id="draft" aria-live="polite">
               <p class="small muted" id="draft-empty">No draft yet. Your agent writes here with <code>draft_task</code> — and you can edit any field it writes, right on the page.</p>
             </div>
+
+            <div class="approval-bar" id="approval-bar" role="region" aria-label="Approval request" tabindex="-1" hidden>
+              <h3>Your agent asks for approval</h3>
+              <p class="small machine" id="approval-rev" style="margin:0 0 0.4rem"></p>
+              <p class="small" style="margin:0 0 0.6rem">Review the draft above — edit any field directly if you want (any change voids this request and the agent must ask again). Nothing is submitted without your click.</p>
+              <input type="text" id="approval-note" maxlength="500" placeholder="optional note, e.g. why you rejected" aria-label="Optional note to your agent">
+              <p style="margin:0.6rem 0 0">
+                <button class="btn btn-primary btn-sm" id="btn-approve" type="button">Approve &amp; unlock submit</button>
+                <button class="btn btn-ghost btn-sm" id="btn-reject" type="button" style="margin-left:0.5rem">Reject</button>
+              </p>
+            </div>
+            <span class="vh" id="sr-announce" aria-live="assertive"></span>
 
             <h3 style="margin:1rem 0 0.5rem;font-size:0.9rem">Activity — who did what</h3>
             <ul class="feed" id="feed" aria-live="polite"></ul>
@@ -236,7 +265,7 @@
                   <tr><td>read_workspace</td><td>Read the shared state: your goal, notes, draft, approval status, tracked tasks, operator thread.</td></tr>
                   <tr><td>draft_task</td><td>Write or revise the task draft on the page, field by field. Every field shows who wrote it last.</td></tr>
                   <tr><td>request_human_approval</td><td>Ask the human for the click. Skipped entirely when the human has granted Autopilot.</td></tr>
-                  <tr><td>await_human</td><td>Block until the human acts — approve, reject, edit, note, grant or revoke Autopilot — or a timeout passes. A tool call resolved by a physical click.</td></tr>
+                  <tr><td>await_human</td><td>Block until the human acts — approve, reject, edit, note, grant or revoke Autopilot — or a timeout passes. A tool call resolved by an explicit human action on the page.</td></tr>
                   <tr><td>submit_approved_task</td><td>Submits the real task to the real operator. Requires either a per-task approval or standing Autopilot authority — the human chooses the regime.</td></tr>
                   <tr><td>track_task_status</td><td>Live status of workspace tasks: seen-by-operator, ETA, status history, delivery, signed receipt.</td></tr>
                   <tr><td>message_operator</td><td>Open or continue a message thread with the human operator, rendered on the page for both of you.</td></tr>
@@ -307,7 +336,7 @@
   </footer>
 
   <script src="/js/app.js" defer></script>
-  <script src="/js/together.js?v=4" defer></script>
-  <script src="/js/together-webmcp.js?v=5" defer></script>
+  <script src="/js/together.js?v=5" defer></script>
+  <script src="/js/together-webmcp.js?v=6" defer></script>
 </body>
 </html>
