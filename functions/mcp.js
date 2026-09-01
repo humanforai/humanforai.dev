@@ -24,6 +24,7 @@ const { McpServer } = require('@modelcontextprotocol/sdk/server/mcp.js');
 const { StreamableHTTPServerTransport } = require('@modelcontextprotocol/sdk/server/streamableHttp.js');
 const { z } = require('zod');
 const { track } = require('./track');
+const { clientIpFromXff } = require('./client-ip');
 
 const BASE_URL = process.env.PUBLIC_BASE_URL || 'https://humanforai.dev';
 
@@ -379,8 +380,11 @@ exports.mcp = onRequest(
 
     try {
       // Stateless: a fresh server + transport per request. No sessions to expire.
-      const xff = String(req.get('x-forwarded-for') || '');
-      const clientIp = (xff.split(',')[0] || '').trim() || req.ip || 'unknown';
+      // Counted from the right (see client-ip.js): this value is forwarded
+      // to the REST API as X-Client-IP over the authenticated internal hop,
+      // which trusts it outright — so a spoofable value here would defeat
+      // the per-client limits and the blocklist on the other side.
+      const clientIp = clientIpFromXff(req) || req.ip || 'unknown';
       const server = buildServer(clientIp);
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined,

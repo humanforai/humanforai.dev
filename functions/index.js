@@ -29,6 +29,7 @@ if (!admin.apps.length) admin.initializeApp();
 const db = admin.firestore();
 
 const { track } = require('./track');
+const { clientIpFromXff } = require('./client-ip');
 
 /* Fail closed: ADMIN_KEY gates every admin endpoint (task list, PATCH,
  * message inbox, blocklist) and the internal rate-limit bypass. A deploy
@@ -455,8 +456,7 @@ function clientIpHash(req) {
   if (keyMatches(req.get('x-internal-auth')) && req.get('x-client-ip')) {
     ip = req.get('x-client-ip');
   } else {
-    const xff = String(req.get('x-forwarded-for') || '');
-    ip = (xff.split(',')[0] || '').trim() || req.ip || 'unknown';
+    ip = clientIpFromXff(req) || req.ip || 'unknown';
   }
   return crypto.createHash('sha256').update('hfai-ip-salt:' + ip).digest('hex').slice(0, 16);
 }
