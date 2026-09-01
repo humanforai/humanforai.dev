@@ -125,8 +125,8 @@
       title: 'Read the shared workspace',
       description:
         'Read everything on this page: the human\'s goal and notes to you, the current task draft with per-field ' +
-        'provenance, approval state, live tracked tasks, and the operator thread. Call this first, and again after ' +
-        'the human acts. The human sees the same state rendered on the page.',
+        'provenance, approval state, live tracked tasks, and the operator thread. The starting point, and the ' +
+        'refresh after each human action. The human sees the same state rendered on the page.',
       inputSchema: { type: 'object', properties: {} },
       outputSchema: WORKSPACE_SCHEMA,
       annotations: { title: 'Read the shared workspace', readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false, untrustedContentHint: true },

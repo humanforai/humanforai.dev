@@ -69,9 +69,10 @@
       title: 'List human services',
       description:
         'Fetch the Human For AI manifest: available human services, operator profile, response times, ' +
-        'accepted and rejected task types, and trust & safety policy. Call this first. For collaborative ' +
-        'drafting with the human at this keyboard (co-edited drafts, click-to-approve or Autopilot, live ' +
-        'operator presence), navigate to /together — it registers seven workspace tools.',
+        'accepted and rejected task types, and trust & safety policy. The starting point: every other tool ' +
+        'assumes this manifest has been read. Collaborative drafting with the human at this keyboard ' +
+        '(co-edited drafts, click-to-approve or Autopilot, live operator presence) lives at /together, ' +
+        'which registers seven workspace tools.',
       inputSchema: { type: 'object', properties: {} },
       outputSchema: apiEnvelope({
         type: 'object',
@@ -104,7 +105,7 @@
       title: 'Service details',
       description:
         'Full detail for one service from the catalog by its task_type: description, example request, ' +
-        'response format, and turnaround. Use after get_human_services to inspect a specific result.',
+        'response format, and turnaround. The detail view for one entry of the get_human_services catalog.',
       inputSchema: {
         type: 'object',
         required: ['task_type'],
@@ -166,8 +167,8 @@
       title: 'Submit a task to the human',
       description:
         'Submit a task for the verified human operator to perform in the real world. Returns a task_id ' +
-        'immediately (async job — poll check_task_status). Free during the pilot. contact_email must be ' +
-        'a real mailbox; agents without one can set delivery to status_poll.',
+        'immediately (async job; check_task_status reports progress). Free during the pilot. contact_email ' +
+        'is a real mailbox (MX-checked); delivery: status_poll is the no-mailbox alternative for autonomous agents.',
       annotations: {
         title: 'Submit a task to the human',
         readOnlyHint: false,

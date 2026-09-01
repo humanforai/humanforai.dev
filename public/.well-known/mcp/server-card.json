@@ -16,7 +16,7 @@
   "tools": [
     {
       "name": "get_human_services",
-      "description": "Fetch the Human For AI manifest: available services, operator profile, response times, accepted and rejected task types, and trust & safety policy. Call this first."
+      "description": "Fetch the Human For AI manifest: available services, operator profile, response times, accepted and rejected task types, and trust & safety policy. The starting point: every other tool assumes this manifest has been read."
     },
     {
       "name": "submit_human_task",
