@@ -99,6 +99,12 @@
   var waiters = [];       // await_human: [{resolve, timer}]
   var pendingEvents = []; // human acts that happened while no await_human was listening
   var submitInFlight = false;
+  // Simulation mode (together-sim.js): a scripted agent drives the real tool
+  // objects. Everything it writes is labeled "simulated"; nothing leaves the
+  // browser. Not persisted — a reload ends any simulation.
+  var simMode = false;
+  var agentBusyTimer = null;
+  var agentBusy = false;
 
   function load() {
     try { return JSON.parse(localStorage.getItem(LS_KEY)); } catch (e) { return null; }
@@ -115,10 +121,21 @@
   }
 
   function feed(actor, text) {
-    state.feed.unshift({ actor: actor, text: text, ts: now() });
+    var entry = { actor: actor, text: text, ts: now() };
+    if (simMode && actor === 'agent') entry.sim = true;
+    state.feed.unshift(entry);
     if (state.feed.length > 80) state.feed.length = 80;
     save();
     renderFeed();
+  }
+
+  // Short-lived "agent working" signal for the lane pulse: every real tool
+  // call (and every simulated step) lights the agent lane for a moment.
+  function markAgentBusy(ms) {
+    agentBusy = true;
+    clearTimeout(agentBusyTimer);
+    agentBusyTimer = setTimeout(function () { agentBusy = false; renderTurn(); }, ms || 2500);
+    renderTurn();
   }
 
   // Resolve every pending await_human with what just happened. If no one is
@@ -140,11 +157,17 @@
   // DOM-only on purpose: read_workspace is annotated read-only, so the
   // presence signal must not mutate persisted workspace state.
   function agentPresent() {
+    markAgentBusy();
     var el = $('agent-presence');
-    if (el) el.textContent = 'connected via WebMCP';
     var banner = $('mcp-banner');
-    if (banner) banner.classList.add('on');
     var bt = $('mcp-banner-text');
+    if (simMode) {
+      if (el) el.textContent = 'SIMULATED agent — scripted, not WebMCP';
+      if (bt) bt.textContent = 'Simulation running — a scripted agent is driving this page’s real tool objects. Nothing is sent to the operator.';
+      return;
+    }
+    if (el) el.textContent = 'connected via WebMCP';
+    if (banner) banner.classList.add('on');
     if (bt) bt.textContent = 'Your agent is here — it is using this page’s WebMCP tools.';
   }
 
@@ -154,8 +177,10 @@
     var ul = $('feed');
     if (!ul) return;
     ul.innerHTML = state.feed.map(function (f) {
-      var who = f.actor === 'human' ? 'you' : f.actor === 'agent' ? 'your agent' : f.actor === 'operator' ? 'operator' : 'page';
-      return '<li class="f-' + esc(f.actor) + '"><span class="who">' + esc(who) +
+      var who = f.sim && f.actor === 'agent' ? 'simulated agent'
+        : f.actor === 'human' ? 'you' : f.actor === 'agent' ? 'your agent'
+        : f.actor === 'operator' ? 'operator' : f.actor === 'sim' ? 'simulation' : 'page';
+      return '<li class="f-' + esc(f.actor) + (f.sim ? ' f-sim' : '') + '"><span class="who">' + esc(who) +
         '<span class="ts">' + esc(f.ts.slice(11, 19)) + ' utc</span></span>' + esc(f.text) + '</li>';
     }).join('');
   }
@@ -273,6 +298,7 @@
         chip.textContent = 'off — every submit needs your click';
       }
     }
+    renderTurn();
   }
 
   function renderTasks() {
@@ -288,14 +314,79 @@
       var eta = t.eta ? ' · eta ' + esc(String(t.eta).slice(0, 16)) : '';
       var status = t.status || 'submitted';
       var pill = status === 'delivered' ? 'pill-ok' : status === 'rejected' ? 'pill-bad' : '';
-      return '<div class="task-card"><span class="tid">' + esc(id) + '</span>' +
+      return '<div class="task-card' + (t.simulated ? ' task-sim' : '') + '"><span class="tid">' + esc(id) + '</span>' +
+        (t.simulated ? '<span class="sim-badge">SIMULATED — not a real task</span>' +
+          '<button type="button" class="sim-dismiss" data-sim-dismiss="' + esc(id) + '" aria-label="Remove simulated task ' + esc(id) + '">dismiss</button>' : '') +
         '<div class="trow"><span class="pill ' + pill + '">' + esc(status) + '</span>' + eta + '</div>' +
         '<div class="trow">' + seen + '</div>' +
         (t.operator_notes ? '<div class="trow">📝 ' + esc(String(t.operator_notes).slice(0, 400)) + '</div>' : '') +
         (t.receipt ? '<div class="trow">🧾 signed receipt attached</div>' : '') +
         '</div>';
     }).join('');
+    box.querySelectorAll('[data-sim-dismiss]').forEach(function (b) {
+      b.addEventListener('click', function () { window.HFAI_TOGETHER.dismissSimulated(b.getAttribute('data-sim-dismiss')); });
+    });
+    renderTurn();
   }
+
+  // Whose move is it? One pulse per lane, computed from state — the human's
+  // lane when a decision or goal is needed, the agent's while it works or owes
+  // the next step, the operator's while a task is live.
+  function setTurn(laneId, chipId, on, label) {
+    var lane = $(laneId);
+    var chip = $(chipId);
+    if (lane) lane.classList.toggle('turn', !!on);
+    if (chip) { chip.hidden = !on; chip.textContent = label || ''; }
+  }
+  function renderTurn() {
+    var hasDraft = !!(state.draft && state.draft.fields && state.draft.fields.description);
+    var reqOpen = state.approval.state === 'requested' && state.draft && state.approval.rev === state.draft.rev;
+    var live = state.taskOrder.some(function (id) {
+      var s = (state.tasks[id] || {}).status || 'submitted';
+      return s !== 'delivered' && s !== 'rejected';
+    });
+    var you = reqOpen || (!state.goal && !hasDraft);
+    var agentReason = agentBusy ? 'working'
+      : state.approval.state === 'approved' ? 'submit'
+      : state.approval.state === 'rejected' ? 'revise'
+      : (state.goal && !hasDraft) ? 'draft'
+      : (state.autopilot.enabled && hasDraft && state.lastSubmittedRev !== state.draft.rev) ? 'submit'
+      : null;
+    setTurn('lane-you', 'turn-you', you, reqOpen ? 'your move — approve or reject' : 'your move — set a goal');
+    setTurn('lane-agent', 'turn-agent', !!agentReason && !(you && !agentBusy),
+      agentReason === 'working' ? 'agent working…' : 'agent’s move — ' + agentReason);
+    setTurn('lane-operator', 'turn-operator', live, 'operator’s move — task live');
+  }
+
+  /* ── tool-call inspector ───────────────────────────────────────── */
+
+  // Every tool call — from a real WebMCP agent or the simulator — is logged
+  // with its exact arguments and result, so the protocol is visible in any
+  // browser. Fed by the hfai:tool event from together-webmcp.js.
+  var toolCalls = 0;
+  function logToolCall(d) {
+    var ol = $('tool-log');
+    if (!ol) return;
+    toolCalls += 1;
+    var count = $('tool-count');
+    if (count) count.textContent = toolCalls + ' call' + (toolCalls === 1 ? '' : 's');
+    var details = $('tool-console');
+    if (details && toolCalls === 1) details.open = true;
+    var trunc = function (v) {
+      var s = JSON.stringify(v == null ? null : v, null, 1);
+      return s.length > 1600 ? s.slice(0, 1600) + '\n… (' + (s.length - 1600) + ' more chars)' : s;
+    };
+    var li = document.createElement('li');
+    li.className = d.simulated ? 'tc tc-sim' : 'tc';
+    li.innerHTML = '<span class="tc-head"><span class="tc-name">' + esc(d.name) + '</span>' +
+      (d.simulated ? '<span class="sim-badge">simulated</span>' : '') +
+      '<span class="ts">' + esc(now().slice(11, 19)) + ' utc · ' + esc(String(d.ms)) + ' ms</span></span>' +
+      '<pre class="tc-io"><span class="tc-dir">→ args</span>\n' + esc(trunc(d.args)) + '</pre>' +
+      '<pre class="tc-io"><span class="tc-dir">← result</span>\n' + esc(trunc(d.result)) + '</pre>';
+    ol.insertBefore(li, ol.firstChild);
+    while (ol.children.length > 40) ol.removeChild(ol.lastChild);
+  }
+  document.addEventListener('hfai:tool', function (e) { logToolCall(e.detail || {}); });
 
   function renderThread() {
     var box = $('thread');
@@ -325,6 +416,7 @@
     var e = $('you-email'); if (e && e.value !== state.email) e.value = state.email;
     var a = $('autopilot-toggle'); if (a) a.checked = !!state.autopilot.enabled;
     var s = $('autopilot-scope'); if (s && state.autopilot.scope && !s.value) s.value = state.autopilot.scope;
+    renderTurn();
   }
 
   /* ── operator-side polling ─────────────────────────────────────── */
@@ -336,7 +428,9 @@
   }
 
   function poll() {
-    var jobs = state.taskOrder.slice(0, MAX_TRACKED).map(function (id) {
+    var jobs = state.taskOrder.slice(0, MAX_TRACKED).filter(function (id) {
+      return !(state.tasks[id] && state.tasks[id].simulated); // never hits the API
+    }).map(function (id) {
       return fetch('/api/v1/tasks/' + encodeURIComponent(id))
         .then(function (r) { return r.json(); })
         .then(function (data) {
@@ -379,7 +473,9 @@
       autopilot: state.autopilot,
       tracked_tasks: state.taskOrder.map(function (id) {
         var t = state.tasks[id] || {};
-        return { task_id: id, status: t.status || 'submitted', seen_by_operator_at: t.seen_by_operator_at || null, eta: t.eta || null };
+        var row = { task_id: id, status: t.status || 'submitted', seen_by_operator_at: t.seen_by_operator_at || null, eta: t.eta || null };
+        if (t.simulated) row.simulated = true; // a demo card, not a real task
+        return row;
       }),
       operator_thread: state.thread ? {
         message_id: state.thread.message_id,
@@ -401,10 +497,120 @@
     };
   }
 
+  // The one gate in front of submission, shared by the real submit and the
+  // simulator: a per-task approval of this exact revision, or live autopilot
+  // with budget left. Returns {viaAutopilot} or a structured refusal.
+  function submitAuthority() {
+    if (!state.draft) return { error: 'no_draft', message: 'Nothing drafted yet.' };
+    if (submitInFlight) {
+      return { error: 'submission_in_flight', message: 'A submission is already in progress — wait for it to return before submitting again.' };
+    }
+    var viaAutopilot = autopilotActive();
+    if (!viaAutopilot && (state.approval.state !== 'approved' || state.approval.rev !== state.draft.rev)) {
+      return {
+        error: 'not_approved',
+        approval: state.approval,
+        autopilot: state.autopilot,
+        message: 'The human has not approved this draft revision. Call request_human_approval and wait for their click — or the human can grant bounded Autopilot in their lane.',
+      };
+    }
+    var problems = validateDraft(state.draft);
+    if (problems.length) {
+      return { error: 'invalid_draft', problems: problems, message: 'The draft is not valid — fix these fields with draft_task, then get approval again.' };
+    }
+    if (viaAutopilot && state.lastSubmittedRev === state.draft.rev) {
+      return { error: 'already_submitted', message: 'This exact draft revision was already submitted. Revise the draft (a new revision) before submitting another task.' };
+    }
+    return { viaAutopilot: viaAutopilot };
+  }
+
   window.HFAI_TOGETHER = {
     agentPresent: agentPresent,
 
     getState: function () { autopilotActive(); return publicState(); },
+
+    /* ── simulation-only surface (together-sim.js) ───────────────── */
+
+    isSimulating: function () { return simMode; },
+
+    setSimMode: function (on) {
+      simMode = !!on;
+      var el = $('agent-presence');
+      var banner = $('mcp-banner');
+      if (simMode) {
+        if (banner) banner.classList.add('sim');
+        agentPresent();
+      } else {
+        if (banner) banner.classList.remove('sim');
+        agentBusy = false; clearTimeout(agentBusyTimer);
+        if (el) el.textContent = window.__hfaiToolReport && window.__hfaiToolReport.ok ? 'connected via WebMCP' : 'not connected yet';
+        renderTurn();
+      }
+    },
+
+    // The simulator narrates in the feed under its own actor, never as "you".
+    simNarrate: function (text) { feed('sim', String(text || '')); },
+
+    // The simulator fills a sample goal when the page has none — attributed
+    // to the simulation, not the human, and it does not fire a human event.
+    setGoal: function (text) {
+      state.goal = String(text || '').trim();
+      var g = $('goal'); if (g) g.value = state.goal;
+      save(); renderTurn();
+    },
+
+    // Same gate as the real submit (approval consumed, autopilot budget
+    // spent, revision recorded) — but no request leaves the browser: a card
+    // marked SIMULATED lands on the operator board instead.
+    simulateSubmission: function () {
+      var started = Date.now();
+      var auth = submitAuthority();
+      var result;
+      if (auth.error) {
+        result = auth;
+      } else {
+        var id = 'SIM-' + Date.now().toString(36).toUpperCase();
+        var f = state.draft.fields;
+        state.approval = { state: 'none' };
+        state.lastSubmittedRev = state.draft.rev;
+        if (auth.viaAutopilot) state.autopilot.used = (state.autopilot.used || 0) + 1;
+        state.taskOrder.unshift(id);
+        state.taskOrder = state.taskOrder.slice(0, MAX_TRACKED);
+        state.tasks[id] = {
+          task_id: id, simulated: true, status: 'submitted', created_at: now(),
+          task_type: f.task_type, description: f.description,
+          status_history: [{ status: 'submitted', at: now() }],
+        };
+        feed('agent', 'submitted SIMULATED task ' + id + (auth.viaAutopilot ? ' on autopilot' : ' with your approval') + ' — nothing was sent to the operator');
+        save(); renderTasks(); renderApproval(); renderDraft();
+        result = { simulated: true, http_status: 201, response: { task_id: id, status: 'submitted', message: 'Simulated — no request left the browser. A real submit_approved_task would POST /api/v1/tasks here.' } };
+      }
+      document.dispatchEvent(new CustomEvent('hfai:tool', { detail: { name: 'submit_approved_task', args: {}, result: result, ms: Date.now() - started, simulated: true } }));
+      markAgentBusy();
+      return result;
+    },
+
+    // Advance a simulated task through the operator lifecycle. Refuses to
+    // touch anything that is not marked simulated.
+    simAdvance: function (id, patch) {
+      var t = state.tasks[id];
+      if (!t || !t.simulated) return false;
+      Object.keys(patch || {}).forEach(function (k) { t[k] = patch[k]; });
+      if (patch && patch.status) {
+        t.status_history = (t.status_history || []).concat([{ status: patch.status, at: now() }]);
+        feed('operator', '(simulated) task ' + id + ' moved to ' + patch.status);
+      }
+      if (patch && patch.seen_by_operator_at) feed('operator', '(simulated) a human has seen task ' + id);
+      save(); renderTasks();
+      return true;
+    },
+
+    dismissSimulated: function (id) {
+      if (!state.tasks[id] || !state.tasks[id].simulated) return;
+      delete state.tasks[id];
+      state.taskOrder = state.taskOrder.filter(function (x) { return x !== id; });
+      save(); renderTasks();
+    },
 
     applyDraft: function (fields) {
       var applied = [], rejected = [];
@@ -478,26 +684,9 @@
     },
 
     submitApproved: function () {
-      if (!state.draft) return Promise.resolve({ error: 'no_draft', message: 'Nothing drafted yet.' });
-      if (submitInFlight) {
-        return Promise.resolve({ error: 'submission_in_flight', message: 'A submission is already in progress — wait for it to return before submitting again.' });
-      }
-      var viaAutopilot = autopilotActive();
-      if (!viaAutopilot && (state.approval.state !== 'approved' || state.approval.rev !== state.draft.rev)) {
-        return Promise.resolve({
-          error: 'not_approved',
-          approval: state.approval,
-          autopilot: state.autopilot,
-          message: 'The human has not approved this draft revision. Call request_human_approval and wait for their click — or the human can grant bounded Autopilot in their lane.',
-        });
-      }
-      var problems = validateDraft(state.draft);
-      if (problems.length) {
-        return Promise.resolve({ error: 'invalid_draft', problems: problems, message: 'The draft is not valid — fix these fields with draft_task, then get approval again.' });
-      }
-      if (viaAutopilot && state.lastSubmittedRev === state.draft.rev) {
-        return Promise.resolve({ error: 'already_submitted', message: 'This exact draft revision was already submitted. Revise the draft (a new revision) before submitting another task.' });
-      }
+      var auth = submitAuthority();
+      if (auth.error) return Promise.resolve(auth);
+      var viaAutopilot = auth.viaAutopilot;
       var payload = {};
       DRAFT_FIELDS.forEach(function (k) { if (state.draft.fields[k] !== undefined && state.draft.fields[k] !== '') payload[k] = state.draft.fields[k]; });
       // Delivery destination is human-controlled: the email in the You lane
@@ -635,6 +824,7 @@
           state.goal = g.value.trim();
           save();
           feed('human', 'updated the goal');
+          renderTurn();
           humanActed({ type: 'goal_updated', goal: state.goal });
         }, 900);
       });
@@ -780,7 +970,7 @@
     if (bt) {
       bt.textContent = hasMC
         ? 'WebMCP detected — ask your agent to work with you on this page.'
-        : 'No WebMCP in this browser. Open this page in the ChatGPT desktop app or Chrome with WebMCP enabled — or drive everything by hand.';
+        : 'No WebMCP in this browser. Open this page in the ChatGPT desktop app or Chrome with WebMCP enabled — or press Simulate to watch a scripted agent drive the page’s real tools.';
     }
     if (hasMC && banner) banner.classList.add('on');
     pollSoon(2000);

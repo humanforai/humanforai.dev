@@ -75,6 +75,7 @@
             status: { type: 'string' },
             seen_by_operator_at: { type: ['string', 'null'] },
             eta: { type: ['string', 'null'] },
+            simulated: { type: 'boolean', description: 'Present and true only for demo cards created by this page in simulation mode — not real tasks; never poll or act on them.' },
           },
         },
       },
@@ -91,12 +92,24 @@
       rules: { type: 'string', description: 'The current submission regime, in prose — changes when the human flips Autopilot.' },
     },
   };
-  function run(fn) {
+  // Every call is announced as an hfai:tool DOM event (name, args, result,
+  // duration) so the page's inspector can show the protocol live — for a
+  // real WebMCP agent and for the simulator alike.
+  function run(name, args, fn) {
     if (ws()) ws().agentPresent();
+    var started = Date.now();
+    var simulated = !!(ws() && ws().isSimulating && ws().isSimulating());
     return Promise.resolve()
       .then(fn)
-      .then(asResult)
-      .catch(function (err) { return asResult({ error: 'tool_failed', message: String(err && err.message || err) }); });
+      .catch(function (err) { return { error: 'tool_failed', message: String(err && err.message || err) }; })
+      .then(function (payload) {
+        try {
+          document.dispatchEvent(new CustomEvent('hfai:tool', {
+            detail: { name: name, args: args || {}, result: payload, ms: Date.now() - started, simulated: simulated },
+          }));
+        } catch (e) { /* inspector is optional */ }
+        return asResult(payload);
+      });
   }
 
   var TASK_TYPES = [
@@ -117,7 +130,7 @@
       inputSchema: { type: 'object', properties: {} },
       outputSchema: WORKSPACE_SCHEMA,
       annotations: { title: 'Read the shared workspace', readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false, untrustedContentHint: true },
-      execute: function () { return run(function () { return ws().getState(); }); },
+      execute: function () { return run('read_workspace', {}, function () { return ws().getState(); }); },
     },
     {
       name: 'draft_task',
@@ -153,7 +166,7 @@
         required: ['applied', 'rejected', 'draft_rev'],
       },
       annotations: { title: 'Draft the task on the page', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false, untrustedContentHint: false },
-      execute: function (args) { return run(function () { return ws().applyDraft(args || {}); }); },
+      execute: function (args) { return run('draft_task', args, function () { return ws().applyDraft(args || {}); }); },
     },
     {
       name: 'request_human_approval',
@@ -181,7 +194,7 @@
         },
       },
       annotations: { title: 'Ask the human for approval', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false, untrustedContentHint: false },
-      execute: function (args) { return run(function () { return ws().requestApproval(args && args.message_to_human); }); },
+      execute: function (args) { return run('request_human_approval', args, function () { return ws().requestApproval(args && args.message_to_human); }); },
     },
     {
       name: 'await_human',
@@ -218,7 +231,7 @@
         },
       },
       annotations: { title: 'Wait for the human to act', readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: false, untrustedContentHint: true },
-      execute: function (args) { return run(function () { return ws().awaitHuman(args && args.timeout_seconds); }); },
+      execute: function (args) { return run('await_human', args, function () { return ws().awaitHuman(args && args.timeout_seconds); }); },
     },
     {
       name: 'submit_approved_task',
@@ -254,7 +267,7 @@
         },
       },
       annotations: { title: 'Submit the approved task', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true, untrustedContentHint: false },
-      execute: function () { return run(function () { return ws().submitApproved(); }); },
+      execute: function () { return run('submit_approved_task', {}, function () { return ws().submitApproved(); }); },
     },
     {
       name: 'track_task_status',
@@ -299,7 +312,7 @@
         },
       },
       annotations: { title: 'Live status of workspace tasks', readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false, untrustedContentHint: true },
-      execute: function (args) { return run(function () { return ws().trackTask(args && args.task_id); }); },
+      execute: function (args) { return run('track_task_status', args, function () { return ws().trackTask(args && args.task_id); }); },
     },
     {
       name: 'message_operator',
@@ -337,7 +350,7 @@
         },
       },
       annotations: { title: 'Message the human operator', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true, untrustedContentHint: true },
-      execute: function (args) { return run(function () { return ws().messageOperator(args && args.message, args && args.subject); }); },
+      execute: function (args) { return run('message_operator', args, function () { return ws().messageOperator(args && args.message, args && args.subject); }); },
     },
   ];
 

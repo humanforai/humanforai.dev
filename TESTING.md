@@ -81,6 +81,30 @@ window.fetch = (u, o) => (String(u).includes('/api/v1/tasks') && o?.method === '
 Reset everything between runs with the **Clear workspace** button in the
 banner (or `localStorage.removeItem('hfai_together_v1')`).
 
+## Simulation mode (any browser, no console needed)
+
+The **Simulate an agent** button in the banner runs a scripted agent against
+the same tool objects (`window.__hfaiTogetherTools`), so it is a one-click
+version of checks 1-6 with the protocol visible in the inspector below the
+lanes. What to expect:
+
+- three `draft_task` calls (rev increments each time), then a
+  `submit_approved_task` attempt that returns `not_approved`;
+- `request_human_approval` raises the bar, then `await_human(120)` blocks
+  until you click. Reject with a note: the draft is revised with it and the
+  agent asks again. Edit a field: the request is voided and re-raised.
+  Let it time out: `{type:"timeout"}` comes back and the run stops;
+- on approval the submit is **simulated**: the same authority gate runs
+  (approval consumed, revision recorded, autopilot budget spent if on), but
+  no request leaves the browser. The operator card is marked
+  `SIMULATED — not a real task`, is walked through seen → accepted →
+  in_progress → delivered by a script, is never polled against the API, and
+  can be dismissed from the card. Confirm in DevTools › Network that no
+  `/api/v1/tasks` request was made.
+
+Simulated feed entries and inspector rows are amber and dashed; the agent
+lane reads `SIMULATED agent — scripted, not WebMCP` for the duration.
+
 ## What is intentionally not covered
 
 Client-side enforcement is the trust boundary of this build; the backend does

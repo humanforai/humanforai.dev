@@ -37,6 +37,14 @@ other end of the API).
 
 Delegation in one direction, human-in-the-loop in the other — on one page.
 
+No WebMCP browser? Press **Simulate an agent**: a scripted agent drives the
+page's real tool objects — drafts, gets refused when it tries to submit
+unapproved, blocks in `await_human` until you click, then places a clearly
+marked *simulated* task on the operator board and walks it through the
+lifecycle. Nothing is sent to the operator. The **WebMCP inspector** under
+the lanes logs every tool call — real or simulated — with its exact
+arguments and result. Each lane pulses when it is that seat's move.
+
 ### WebMCP tools
 
 Registered via `document.modelContext` (W3C Web Model Context draft), with a
@@ -60,6 +68,9 @@ workspace tools stay auditable at `window.__hfaiTogetherTools`.
    goal and draft the task for my approval."*
 3. Approve with a click — or grant Autopilot and watch it work.
 
+No WebMCP client at hand? Press **Simulate an agent** on the page instead —
+same tools, scripted driver, clearly labeled, nothing sent.
+
 Everything is real: a task submitted here pings a real human operator
 (push-notified), who reviews, accepts, and delivers — with a signed receipt
 (EdDSA JWS binding the deliverable's SHA-256 to the task lifecycle,
@@ -73,6 +84,8 @@ public/            static site (no framework, no build step)
   js/together.js   workspace engine: shared state, three-lane rendering,
                    approval + autopilot regimes, live polling, localStorage
   js/together-webmcp.js   the agent's seat: 7 WebMCP tools over the engine
+  js/together-sim.js      simulation mode: a scripted agent over the same
+                          tool objects, for browsers without WebMCP
   js/webmcp.js     site-wide WebMCP tools (5, mirroring the REST API)
   .well-known/     agent discovery: agent.json, services, capabilities,
                    human.json, MCP server card, JWKS, agent skills
