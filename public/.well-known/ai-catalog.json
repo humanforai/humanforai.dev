@@ -1,0 +1,94 @@
+{
+  "$comment": "Alias of /.well-known/ard.json at the ai-catalog.json path some ARD registries fetch. Same entries.",
+  "specVersion": "0.91",
+  "host": {
+    "name": "Human For AI",
+    "url": "https://humanforai.dev",
+    "publisher": "humanforai.dev"
+  },
+  "publisher": "humanforai.dev",
+  "updatedAt": "2026-09-02T06:49:55Z",
+  "entries": [
+    {
+      "identifier": "urn:air:humanforai.dev:server:human-for-ai",
+      "displayName": "Human For AI — MCP server",
+      "type": "application/mcp-server-card+json",
+      "url": "https://humanforai.dev/.well-known/mcp/server-card.json",
+      "description": "MCP server (streamable HTTP, no auth) at https://humanforai.dev/mcp where an AI agent hires a verified human operator: real-world verification, product testing, AI output review, data collection, and physical-world tasks.",
+      "version": "1.8.0",
+      "tags": [
+        "human-in-the-loop",
+        "mcp",
+        "real-world",
+        "verification"
+      ],
+      "representativeQueries": [
+        "hire a human to verify a store price in the real world",
+        "get a human to test my app and report findings",
+        "have a human review this AI-generated output",
+        "send a human to check whether this business location exists"
+      ],
+      "capabilities": [
+        "real_world_verification",
+        "product_or_app_testing",
+        "ai_output_review",
+        "data_collection",
+        "local_physical_task",
+        "custom_human_in_the_loop"
+      ],
+      "trustManifest": {
+        "identity": "https://humanforai.dev/.well-known/jwks.json",
+        "trustSchema": {
+          "governanceUri": "https://humanforai.dev/trust",
+          "verificationMethods": [
+            "https://humanforai.dev/.well-known/jwks.json",
+            "https://smithery.ai/servers/humanforai/humanforai",
+            "https://www.npmjs.com/package/humanforai",
+            "https://github.com/humanforai/humanforai-mcp"
+          ]
+        },
+        "attestations": []
+      }
+    },
+    {
+      "identifier": "urn:air:humanforai.dev:api:rest-v1",
+      "displayName": "Human For AI — REST API",
+      "type": "application/vnd.oai.openapi+json",
+      "url": "https://humanforai.dev/openapi.json",
+      "description": "Public REST API (no auth): submit tasks, poll status, message the operator. Supports Idempotency-Key on writes, cursor pagination on list endpoints, standard RateLimit headers, and signed deliverable receipts.",
+      "version": "1.9.0",
+      "tags": [
+        "rest",
+        "openapi",
+        "human-in-the-loop"
+      ],
+      "representativeQueries": [
+        "submit a task to a human over a REST API",
+        "poll the status of a human task by id"
+      ]
+    },
+    {
+      "identifier": "urn:air:humanforai.dev:manifest:agent-json",
+      "displayName": "Human For AI — agent manifest",
+      "type": "application/json",
+      "url": "https://humanforai.dev/.well-known/agent.json",
+      "description": "Canonical platform self-description: services catalog, endpoints, task schema, accepted and rejected task types, pricing, response expectations, and trust & safety policy.",
+      "version": "1.9.0",
+      "tags": [
+        "manifest",
+        "discovery"
+      ]
+    },
+    {
+      "identifier": "urn:air:humanforai.dev:docs:llms-txt",
+      "displayName": "Human For AI — llms.txt",
+      "type": "text/markdown",
+      "url": "https://humanforai.dev/llms.txt",
+      "description": "One-page overview for language models: what the service does, key facts, and links to every machine-readable endpoint.",
+      "tags": [
+        "docs",
+        "llms-txt"
+      ]
+    }
+  ]
+}

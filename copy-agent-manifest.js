@@ -23,7 +23,7 @@ for (const dest of [
 
 const pagesDir = path.join(__dirname, 'functions', 'pages');
 fs.mkdirSync(pagesDir, { recursive: true });
-for (const name of ['index.html', 'index.md', '404.html', '404.md']) {
+for (const name of ['index.html', 'index.md', 'together.html', 'together.md', '404.html', '404.md']) {
   fs.copyFileSync(path.join(__dirname, 'public', name), path.join(pagesDir, name));
   console.log(`${name} copied → ${path.relative(__dirname, path.join(pagesDir, name))}`);
 }

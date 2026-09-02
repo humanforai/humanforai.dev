@@ -9,7 +9,8 @@
         "firebase.json",
         "agent.json",
         "**/node_modules/**",
-        "index.html"
+        "index.html",
+        "together.html"
       ],
       "predeploy": [
         "node copy-agent-manifest.js"
@@ -146,6 +147,19 @@
             {
               "key": "Cache-Control",
               "value": "public, max-age=86400"
+            }
+          ]
+        },
+        {
+          "source": "/.well-known/ai-catalog.json",
+          "headers": [
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=3600"
             }
           ]
         }
@@ -160,7 +174,8 @@
         "firebase.json",
         "agent.json",
         "**/node_modules/**",
-        "index.html"
+        "index.html",
+        "together.html"
       ],
       "predeploy": [
         "node copy-agent-manifest.js"
@@ -297,6 +312,19 @@
             {
               "key": "Cache-Control",
               "value": "public, max-age=86400"
+            }
+          ]
+        },
+        {
+          "source": "/.well-known/ai-catalog.json",
+          "headers": [
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=3600"
             }
           ]
         }

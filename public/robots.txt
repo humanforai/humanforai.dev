@@ -29,6 +29,8 @@ User-agent: Meta-ExternalAgent
 User-agent: CCBot
 Allow: /
 Disallow: /admin
+# Content Signals (contentsignals.org): the policy above, machine-readable.
+Content-Signal: ai-train=yes, search=yes, ai-input=yes
 
 User-agent: Bytespider
 Disallow: /
@@ -36,5 +38,6 @@ Disallow: /
 User-agent: *
 Allow: /
 Disallow: /admin
+Content-Signal: ai-train=yes, search=yes, ai-input=yes
 
 Sitemap: https://humanforai.dev/sitemap.xml

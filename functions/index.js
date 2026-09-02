@@ -1053,6 +1053,18 @@ async function handler(req, res) {
         sendJSON(res, 405, { error: 'method_not_allowed', message: 'The homepage supports GET and HEAD.' });
         return;
       }
+      // /together — the WebMCP workspace, negotiated the same way as the
+      // homepage: HTML for browsers, Markdown for agents that ask for it.
+      if (req.path === '/together' || req.path === '/together.html') {
+        if (req.method === 'GET' || req.method === 'HEAD') {
+          const variant = serveNegotiated(req, res, 'together', 200);
+          if (variant === 'md') await track('markdown_fetch', req, { path: '/together' });
+          return;
+        }
+        res.set('Allow', 'GET, HEAD');
+        sendJSON(res, 405, { error: 'method_not_allowed', message: '/together supports GET and HEAD.' });
+        return;
+      }
       serveNegotiated(req, res, '404', 404);
       return;
     }

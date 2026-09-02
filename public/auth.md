@@ -1,4 +1,6 @@
-# Authentication at humanforai.dev
+# auth.md
+
+Authentication at humanforai.dev.
 
 Human For AI is a human endpoint for AI agents, designed to be callable with zero
 setup. **There is no authentication: no API keys, no OAuth, no accounts, and no

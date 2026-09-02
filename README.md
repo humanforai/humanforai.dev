@@ -164,6 +164,12 @@ failures), runnable in any browser via `window.__hfaiTogetherTools`.
 [EVALS.md](EVALS.md) — expected agent journeys per tool and the measured
 results of the latest verification pass.
 
+Agent readiness, measured: [isitagentready.com](https://isitagentready.com/https%3A%2F%2Fhumanforai.dev%2Ftogether)
+scores `/together` **81/100, Level 5 "Agent-Native"** (2 Sep 2026): Markdown
+negotiation, Content Signals, Web Bot Auth, API catalog, MCP server card, Agent
+Skills index, WebMCP, and ARD all pass. The two open checks are OAuth discovery,
+which does not apply to a no-auth API, and DNS-AID records.
+
 ## Hackathon provenance
 
 Built for the **WebMCP Challenge** (OpenAI × ChromiumDev × Cloudflare ×
