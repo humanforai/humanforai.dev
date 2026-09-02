@@ -572,7 +572,10 @@
           'Each draft revision can be submitted once. Stay inside the scope and the goal; the human sees everything live and can revoke at any moment.'
         : 'submit_approved_task only works while approval.state is "approved" for the current draft rev. ' +
           'Any draft change resets approval — including an open approval request. The human sees everything you write here, live — and can grant ' +
-          'bounded autopilot (standing approval with a task budget and expiry) with the toggle in their lane.',
+          'bounded autopilot (standing approval with a task budget and expiry) with the toggle in their lane, or submit the draft themselves with the on-page button. ' +
+          (state.email
+            ? 'Delivery goes to the human\'s saved email.'
+            : 'No human email is on file, so delivery falls back to status polling — the free pilot allows ONE such task per client per day (HTTP 429 beyond that). Ask the human to add their email in their lane for the normal budget.'),
     };
   }
 
@@ -647,7 +650,10 @@
           // must not try to submit this revision again.
           if (actor === 'human') humanActed({ type: 'submitted_by_human', task_id: out.data.task_id });
         } else {
-          feed('system', 'submission failed (http ' + out.http + ') — no task was created. Approval was NOT consumed.');
+          // Surface the server's own reason (rate limit, duplicate, validation)
+          // so the human is not left with a bare status code.
+          var why = out.data && (out.data.message || out.data.error) ? ' — ' + (out.data.error ? out.data.error + ': ' : '') + (out.data.message || '') : '';
+          feed('system', 'submission failed (http ' + out.http + ')' + why + ' No task was created. Approval was NOT consumed.');
           if (actor === 'human') { state.approval = { state: 'none' }; save(); renderApproval(); }
         }
         return { http_status: out.http, response: out.data };
