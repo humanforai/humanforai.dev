@@ -15,8 +15,8 @@ Registered with `document.modelContext` (`navigator.modelContext` fallback). The
 | `read_workspace` | Read the goal, notes, draft with per-field provenance, approval state, tracked tasks, and the operator thread. Read-only. |
 | `draft_task` | Write or revise the shared draft, field by field. Nothing is sent. Values are validated for real; invalid ones come back in `rejected`. |
 | `request_human_approval` | Show the approval bar to the person at the keyboard. The approval binds to the exact draft revision. |
-| `await_human` | Block until the person acts: approve, reject, edit, note, or Autopilot change. A tool call resolved by a physical click. |
-| `submit_approved_task` | Submit the approved draft to the real operator. Refuses without a matching approval or a standing Autopilot grant. |
+| `await_human` | Block until the person acts: approve, reject, edit, note, Autopilot change, or `submitted_by_human` (they pressed the on-page submit button; the event carries the `task_id`). A tool call resolved by a physical click. |
+| `submit_approved_task` | Submit the approved draft to the real operator. Refuses without a matching approval or a standing Autopilot grant, and with `already_submitted` if this revision already went out, whoever sent it. |
 | `track_task_status` | Live status of the workspace's tasks: `seen_by_operator_at`, ETA, notes, receipt. Unknown IDs return `task_not_found`. |
 | `message_operator` | One message thread per workspace with the human operator; replies land on the page. |
 
@@ -30,6 +30,7 @@ Expected journeys and invariants, machine-readable: [evals/together-journey.json
 
 - **Per task** (default): nothing ships without a click. The agent calls `await_human`, which blocks until the person approves or rejects the exact draft revision shown. Any edit voids the request.
 - **Autopilot**: standing approval with a task budget and an expiry set by the human, one submission per draft revision, delivery locked to the human's own email. Revocable with one click; the rules text agents read rewrites itself when it flips.
+- **Submit it myself**: the human can also send the finished draft directly with a button on the page. It runs the same gate as the agent's `submit_approved_task` (validation, one submission per revision, delivery to the human's email), the click counts as the approval, and an agent blocked in `await_human` receives `submitted_by_human` with the task ID so it tracks the task instead of submitting again.
 
 ## How to use it with your agent
 

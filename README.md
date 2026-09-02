@@ -30,6 +30,11 @@ other end of the API).
   budget and an expiry you set, delivery locked to your own email, one
   submission per draft revision. The grant retires itself and is revocable
   any time.
+- Or send it yourself: **Submit this draft myself** runs the same gate as
+  the agent's `submit_approved_task` (validation, one submission per
+  revision, delivery to your own email), your click counts as the approval,
+  and an agent blocked in `await_human` gets `submitted_by_human` with the
+  task ID, so it tracks the task instead of submitting it again.
 - After submission the third human appears: the operator's
   `seen_by_operator_at`, ETA, status history, and message-thread replies
   stream onto the page for both of you (`track_task_status`,

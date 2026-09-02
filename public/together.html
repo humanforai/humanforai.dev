@@ -112,6 +112,8 @@
     .mf-gated { border-color: var(--warn); } .mf-gated::before { background: var(--warn); }
     .mf-human { border-style: dashed; border-color: var(--accent); } .mf-human::before { background: var(--accent); } .mf-human .mf-name { color: var(--accent); }
     .manifest .small { margin: 0.65rem 0 0; }
+    .human-submit { display: flex; flex-wrap: wrap; gap: 0.5rem 0.8rem; align-items: center; border: 1px dashed var(--line-strong); border-radius: var(--radius); padding: 0.6rem 0.8rem; margin-top: 0.9rem; }
+    .human-submit .small { flex: 1 1 16rem; margin: 0; }
     .prompt-row { display: flex; gap: 0.5rem; align-items: stretch; }
     .prompt-row code { flex: 1; font-size: 0.78rem; border: 1px dashed var(--line-strong); border-radius: var(--radius); padding: 0.5rem 0.6rem; color: var(--code-text); background: var(--code-bg); }
     /* touch targets: buttons and checkboxes on this page meet ~44px */
@@ -252,6 +254,10 @@
                 <button class="btn btn-ghost btn-sm" id="btn-reject" type="button" style="margin-left:0.5rem">Reject</button>
               </p>
             </div>
+            <div class="human-submit" id="human-submit-row" hidden>
+              <button class="btn btn-ghost btn-sm" id="btn-human-submit" type="button">Submit this draft myself</button>
+              <span class="small muted">Done editing? Send it without going back to your agent. Same gate as its <code>submit_approved_task</code> — your click is the approval — and a waiting agent gets <code>submitted_by_human</code>.</span>
+            </div>
             <span class="vh" id="sr-announce" aria-live="assertive"></span>
 
             <h3 style="margin:1rem 0 0.5rem;font-size:0.9rem">Activity — who did what</h3>
@@ -322,7 +328,7 @@
               <li>Type your goal in the <em>You</em> lane, in plain words.</li>
               <li>Ask your agent something like: <em>"Work with me on this page — read my goal and draft the task for my approval."</em></li>
               <li>Watch it draft in the middle lane. Edit any field yourself — it's a shared document.</li>
-              <li>When it requests approval, <strong>you click</strong> — the approval binds to the exact draft revision shown, and any edit voids it. Or grant <strong>Autopilot</strong>: standing authority with a task budget and an expiry you set. Your agent, your call.</li>
+              <li>When it requests approval, <strong>you click</strong> — the approval binds to the exact draft revision shown, and any edit voids it. Or grant <strong>Autopilot</strong>: standing authority with a task budget and an expiry you set. Or skip the round-trip and press <strong>Submit this draft myself</strong> — same gate, your click is the approval, and a waiting agent is told <span class="machine">submitted_by_human</span>. Your agent, your call.</li>
               <li>A verified human operator gets pinged, and you both watch the task go <span class="machine">submitted → seen → accepted → delivered</span>, live.</li>
             </ol>
             <div class="notice" style="margin-top:1rem">
@@ -412,8 +418,8 @@
   </footer>
 
   <script src="/js/app.js" defer></script>
-  <script src="/js/together.js?v=8" defer></script>
-  <script src="/js/together-webmcp.js?v=9" defer></script>
-  <script src="/js/together-sim.js?v=1" defer></script>
+  <script src="/js/together.js?v=9" defer></script>
+  <script src="/js/together-webmcp.js?v=10" defer></script>
+  <script src="/js/together-sim.js?v=2" defer></script>
 </body>
 </html>

@@ -277,8 +277,10 @@
       title: 'Wait for the human to act',
       description:
         'Block until the human at the keyboard acts — approves, rejects, edits the draft, updates the goal, posts ' +
-        'a note to you, or grants/revokes Autopilot — or the timeout passes. Returns the event and a fresh ' +
-        'workspace snapshot. This is a tool call resolved by an explicit human action on the shared page.',
+        'a note to you, grants/revokes Autopilot, or submits the draft themselves with the on-page button ' +
+        '(event submitted_by_human, with the task_id: the task is already with the operator, do not submit again) — ' +
+        'or the timeout passes. Returns the event and a fresh workspace snapshot. This is a tool call resolved by ' +
+        'an explicit human action on the shared page.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -294,8 +296,9 @@
             description: 'What the human did (or a timeout).',
             required: ['type'],
             properties: {
-              type: { type: 'string', enum: ['approved', 'rejected', 'draft_edited', 'goal_updated', 'note_to_agent', 'autopilot_granted', 'autopilot_revoked', 'timeout'] },
+              type: { type: 'string', enum: ['approved', 'rejected', 'draft_edited', 'goal_updated', 'note_to_agent', 'autopilot_granted', 'autopilot_revoked', 'submitted_by_human', 'timeout'] },
               note: { type: 'string', description: 'On approved/rejected/note_to_agent: the human\'s text.' },
+              task_id: { type: 'string', description: 'On submitted_by_human: the task the human sent. Track it; do not submit this revision again.' },
               field: { type: 'string', description: 'On draft_edited: which field.' },
               value: { type: 'string', description: 'On draft_edited: the new value.' },
               goal: { type: 'string', description: 'On goal_updated: the new goal.' },
@@ -315,7 +318,8 @@
       description:
         'Submit the draft as a real task to the real human operator. Works under either regime the human chose: ' +
         'a per-task approval of the current draft revision, or standing Autopilot authority (see read_workspace). ' +
-        'Without either it refuses. On success the task is tracked live on the page for both of you.',
+        'Without either it refuses. Each draft revision goes out once, whoever sends it — if the human already ' +
+        'pressed "Submit this draft myself" you get already_submitted. On success the task is tracked live on the page for both of you.',
       inputSchema: {
         type: 'object',
         properties: {},

@@ -100,6 +100,12 @@
       "human_says": "(agent tries to submit an unapproved or edited draft)",
       "expected_sequence": ["submit_approved_task"],
       "expected_outcome": "Structured refusal: not_approved, invalid_draft, or already_submitted, with the reason."
+    },
+    {
+      "id": 8,
+      "human_says": "(edits the draft, then presses 'Submit this draft myself' while the agent waits in await_human)",
+      "expected_sequence": ["await_human"],
+      "expected_outcome": "await_human resolves with {type: submitted_by_human, task_id}; the task card appears; submit_approved_task for the same revision now refuses with already_submitted. The human path runs the same validation and delivery rules as the tool."
     }
   ],
   "invariants": {
@@ -113,6 +119,9 @@
     "draft_change_voids_open_approval": true,
     "autopilot_contact_email_locked_to_human": true,
     "one_submission_per_draft_rev_under_autopilot": true,
+    "one_submission_per_draft_rev_any_sender": true,
+    "human_direct_submit_uses_same_gate_as_tool": true,
+    "await_human_event_types": ["approved", "rejected", "draft_edited", "goal_updated", "note_to_agent", "autopilot_granted", "autopilot_revoked", "submitted_by_human", "timeout"],
     "untrusted_content_hint_on_human_authored_output": ["read_workspace", "await_human", "track_task_status", "message_operator"],
     "enforcement_boundary": "client-side; server-verifiable approval proofs are future work and are not claimed"
   }

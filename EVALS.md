@@ -41,6 +41,7 @@ real operator work was generated:
 | Arguments passed as a JSON string are parsed; an unparseable string returns `invalid_arguments` with `isError` (added 2026-09-02) | pass |
 | A result over the 8,000-character budget comes back shortened, with a `truncated` note naming the fields (added 2026-09-02) | pass |
 | The on-page capability manifest matches the refusal each gated tool actually returns (added 2026-09-02) | pass |
+| Human presses "Submit this draft myself" while the agent waits: `await_human` resolves with `submitted_by_human` + `task_id`, and `submit_approved_task` for that revision returns `already_submitted` (added 2026-09-02) | pass |
 
 The expected journeys, per-phase refusals, and invariants are also encoded
 machine-readably in [evals/together-journey.json](evals/together-journey.json).

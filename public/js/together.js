@@ -284,6 +284,11 @@
       revLine.textContent = 'approving draft rev ' + state.approval.rev +
         ' — exactly the fields shown in the middle lane right now';
     }
+    // The human's own submit: offered whenever a draft exists that has not
+    // gone out at this revision yet. Validity is checked on click so the
+    // reasons land in the feed.
+    var row = $('human-submit-row');
+    if (row) row.hidden = !(state.draft && state.draft.fields && state.draft.fields.description && state.lastSubmittedRev !== state.draft.rev);
     var box = $('autopilot-box');
     if (box) box.classList.toggle('on', onAutopilot);
     var chip = $('autopilot-state');
@@ -378,9 +383,9 @@
     var ap = autopilotStanding();
     var approved = !!(d && state.approval.state === 'approved' && state.approval.rev === d.rev);
     var submit = !d ? ['gated', 'refuses: no_draft']
+      : (state.lastSubmittedRev === d.rev) ? ['gated', 'refuses: already_submitted']
       : (!ap && !approved) ? ['gated', 'refuses: not_approved']
       : problems.length ? ['gated', 'refuses: invalid_draft']
-      : (ap && state.lastSubmittedRev === d.rev) ? ['gated', 'refuses: already_submitted']
       : ['ready', ap ? 'ready · autopilot · rev ' + d.rev : 'ready · approved rev ' + d.rev];
     var request = ap ? ['idle', 'not needed · autopilot']
       : !d ? ['gated', 'refuses: nothing_to_approve']
@@ -580,6 +585,11 @@
       return { error: 'submission_in_flight', message: 'A submission is already in progress — wait for it to return before submitting again.' };
     }
     var viaAutopilot = autopilotActive();
+    // A revision goes out once, whoever sent it — the agent under either
+    // regime, or the human with the on-page submit button.
+    if (state.lastSubmittedRev === state.draft.rev) {
+      return { error: 'already_submitted', message: 'This exact draft revision was already submitted. Revise the draft (a new revision) before submitting another task.' };
+    }
     if (!viaAutopilot && (state.approval.state !== 'approved' || state.approval.rev !== state.draft.rev)) {
       return {
         error: 'not_approved',
@@ -592,10 +602,62 @@
     if (problems.length) {
       return { error: 'invalid_draft', problems: problems, message: 'The draft is not valid — fix these fields with draft_task, then get approval again.' };
     }
-    if (viaAutopilot && state.lastSubmittedRev === state.draft.rev) {
-      return { error: 'already_submitted', message: 'This exact draft revision was already submitted. Revise the draft (a new revision) before submitting another task.' };
-    }
     return { viaAutopilot: viaAutopilot };
+  }
+
+  // The one place a draft leaves the browser. `actor` is who is sending it:
+  // 'agent' (per-task approval), 'autopilot' (standing grant), or 'human'
+  // (the on-page submit button). Delivery is always human-controlled: the
+  // email in the You lane wins; without one, delivery falls back to status
+  // polling, and an agent-set contact_email is never honored under autopilot.
+  function postDraft(actor) {
+    var viaAutopilot = actor === 'autopilot';
+    var payload = {};
+    DRAFT_FIELDS.forEach(function (k) { if (state.draft.fields[k] !== undefined && state.draft.fields[k] !== '') payload[k] = state.draft.fields[k]; });
+    if (state.email) payload.contact_email = state.email;
+    else if (viaAutopilot) { delete payload.contact_email; payload.delivery = 'status_poll'; }
+    else if (!payload.contact_email) payload.delivery = 'status_poll';
+    payload.requester = payload.requester || (
+      viaAutopilot ? 'together-workspace (autopilot)'
+        : actor === 'human' ? 'together-workspace (human-submitted)'
+          : 'together-workspace (human-approved)');
+    payload.source = 'api';
+    submitInFlight = true;
+    var rev = state.draft.rev;
+    return fetch('/api/v1/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).then(function (r) { return r.json().then(function (data) { return { http: r.status, ok: r.ok, data: data }; }); })
+      .then(function (out) {
+        submitInFlight = false;
+        if (out.ok && out.data && out.data.task_id) {
+          state.approval = { state: 'none' };
+          state.lastSubmittedRev = rev;
+          if (viaAutopilot) state.autopilot.used = (state.autopilot.used || 0) + 1;
+          state.taskOrder.unshift(out.data.task_id);
+          state.tasks[out.data.task_id] = out.data;
+          if (actor === 'human') feed('human', 'submitted the draft yourself — task ' + out.data.task_id + ' is with the operator');
+          else feed('agent', viaAutopilot
+            ? 'submitted task ' + out.data.task_id + ' on autopilot (' + Math.max(0, (state.autopilot.max_tasks || 1) - state.autopilot.used) + ' left in the budget)'
+            : 'submitted approved task ' + out.data.task_id + ' to the operator');
+          save(); renderTasks(); renderApproval(); renderDraft();
+          pollSoon(3000);
+          // An agent blocked in await_human learns the draft is gone and
+          // must not try to submit this revision again.
+          if (actor === 'human') humanActed({ type: 'submitted_by_human', task_id: out.data.task_id });
+        } else {
+          feed('system', 'submission failed (http ' + out.http + ') — no task was created. Approval was NOT consumed.');
+          if (actor === 'human') { state.approval = { state: 'none' }; save(); renderApproval(); }
+        }
+        return { http_status: out.http, response: out.data };
+      })
+      .catch(function (err) {
+        submitInFlight = false;
+        feed('system', 'submission failed (network error) — no task was created. Approval was NOT consumed.');
+        if (actor === 'human') { state.approval = { state: 'none' }; save(); renderApproval(); }
+        return { error: 'network_error', message: String(err && err.message || err) };
+      });
   }
 
   window.HFAI_TOGETHER = {
@@ -636,7 +698,7 @@
     // Same gate as the real submit (approval consumed, autopilot budget
     // spent, revision recorded) — but no request leaves the browser: a card
     // marked SIMULATED lands on the operator board instead.
-    simulateSubmission: function () {
+    simulateSubmission: function (byHuman) {
       var started = Date.now();
       var auth = submitAuthority();
       var result;
@@ -655,12 +717,16 @@
           task_type: f.task_type, description: f.description,
           status_history: [{ status: 'submitted', at: now() }],
         };
-        feed('agent', 'submitted SIMULATED task ' + id + (auth.viaAutopilot ? ' on autopilot' : ' with your approval') + ' — nothing was sent to the operator');
+        if (!byHuman) feed('agent', 'submitted SIMULATED task ' + id + (auth.viaAutopilot ? ' on autopilot' : ' with your approval') + ' — nothing was sent to the operator');
         save(); renderTasks(); renderApproval(); renderDraft();
         result = { simulated: true, http_status: 201, response: { task_id: id, status: 'submitted', message: 'Simulated — no request left the browser. A real submit_approved_task would POST /api/v1/tasks here.' } };
       }
-      document.dispatchEvent(new CustomEvent('hfai:tool', { detail: { name: 'submit_approved_task', args: {}, result: result, ms: Date.now() - started, simulated: true } }));
-      markAgentBusy();
+      // The human's own button is not a tool call, so it never shows up in
+      // the inspector as one.
+      if (!byHuman) {
+        document.dispatchEvent(new CustomEvent('hfai:tool', { detail: { name: 'submit_approved_task', args: {}, result: result, ms: Date.now() - started, simulated: true } }));
+        markAgentBusy();
+      }
       return result;
     },
 
@@ -760,46 +826,32 @@
     submitApproved: function () {
       var auth = submitAuthority();
       if (auth.error) return Promise.resolve(auth);
-      var viaAutopilot = auth.viaAutopilot;
-      var payload = {};
-      DRAFT_FIELDS.forEach(function (k) { if (state.draft.fields[k] !== undefined && state.draft.fields[k] !== '') payload[k] = state.draft.fields[k]; });
-      // Delivery destination is human-controlled: the email in the You lane
-      // always wins. Under autopilot an agent-set contact_email is never
-      // honored — without a human email, delivery falls back to status polling.
-      if (state.email) payload.contact_email = state.email;
-      else if (viaAutopilot) { delete payload.contact_email; payload.delivery = 'status_poll'; }
-      else if (!payload.contact_email) payload.delivery = 'status_poll';
-      payload.requester = payload.requester || (viaAutopilot ? 'together-workspace (autopilot)' : 'together-workspace (human-approved)');
-      payload.source = 'api';
-      submitInFlight = true;
-      return fetch('/api/v1/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      }).then(function (r) { return r.json().then(function (data) { return { http: r.status, ok: r.ok, data: data }; }); })
-        .then(function (out) {
-          submitInFlight = false;
-          if (out.ok && out.data && out.data.task_id) {
-            state.approval = { state: 'none' };
-            state.lastSubmittedRev = state.draft.rev;
-            if (viaAutopilot) state.autopilot.used = (state.autopilot.used || 0) + 1;
-            state.taskOrder.unshift(out.data.task_id);
-            state.tasks[out.data.task_id] = out.data;
-            feed('agent', viaAutopilot
-              ? 'submitted task ' + out.data.task_id + ' on autopilot (' + Math.max(0, (state.autopilot.max_tasks || 1) - state.autopilot.used) + ' left in the budget)'
-              : 'submitted approved task ' + out.data.task_id + ' to the operator');
-            save(); renderTasks(); renderApproval(); renderDraft();
-            pollSoon(3000);
-          } else {
-            feed('system', 'submission failed (http ' + out.http + ') — no task was created. Approval was NOT consumed.');
-          }
-          return { http_status: out.http, response: out.data };
-        })
-        .catch(function (err) {
-          submitInFlight = false;
-          feed('system', 'submission failed (network error) — no task was created. Approval was NOT consumed.');
-          return { error: 'network_error', message: String(err && err.message || err) };
-        });
+      return postDraft(auth.viaAutopilot ? 'autopilot' : 'agent');
+    },
+
+    // The human's own submit button. Their click is the approval, so the
+    // draft is marked approved at this revision and goes through the very
+    // same post routine as the agent's tool — same validation, same
+    // one-submission-per-revision rule, same delivery lock to their email.
+    submitAsHuman: function () {
+      if (!state.draft) return Promise.resolve({ error: 'no_draft', message: 'Nothing drafted yet.' });
+      if (submitInFlight) return Promise.resolve({ error: 'submission_in_flight', message: 'A submission is already in progress.' });
+      if (state.lastSubmittedRev === state.draft.rev) return Promise.resolve({ error: 'already_submitted', message: 'This draft revision was already submitted.' });
+      var problems = validateDraft(state.draft);
+      if (problems.length) return Promise.resolve({ error: 'invalid_draft', problems: problems, message: 'The draft is not valid yet.' });
+      state.approval = { state: 'approved', rev: state.draft.rev, ts: now(), note: 'submitted by the human directly' };
+      save();
+      if (simMode) {
+        // In simulation nothing may leave the browser: place the SIMULATED
+        // card the same way the scripted agent would, attributed to you.
+        var sim = window.HFAI_TOGETHER.simulateSubmission(true);
+        if (!sim.error) {
+          feed('human', 'submitted the draft yourself — SIMULATED task ' + sim.response.task_id + ', nothing was sent');
+          humanActed({ type: 'submitted_by_human', task_id: sim.response.task_id, simulated: true });
+        }
+        return Promise.resolve(sim);
+      }
+      return postDraft('human');
     },
 
     trackTask: function (taskId) {
@@ -973,6 +1025,16 @@
       feed('human', 'rejected the draft' + (note ? ' — "' + note.slice(0, 120) + '"' : ''));
       renderApproval(); renderDraft();
       humanActed({ type: 'rejected', note: note });
+    });
+    var hs = $('btn-human-submit');
+    if (hs) hs.addEventListener('click', function () {
+      hs.disabled = true;
+      window.HFAI_TOGETHER.submitAsHuman().then(function (r) {
+        hs.disabled = false;
+        if (r && r.error === 'invalid_draft') feed('system', 'not submitted — the draft is not valid yet: ' + (r.problems || []).join('; '));
+        else if (r && r.error) feed('system', 'not submitted — ' + r.error + (r.message ? ': ' + r.message : ''));
+        renderApproval(); renderDraft();
+      });
     });
     var tr = $('track-add');
     if (tr) tr.addEventListener('click', function () {

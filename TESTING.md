@@ -148,6 +148,16 @@ Three more checks from the DevTools console, any browser:
    object had been passed. Then call `.execute('not json')`: the result is
    `{error:"invalid_arguments"}` with `isError: true`, and nothing changed.
 
+4. **The human can submit directly.** With a valid draft on the page, start
+   `window.__hfaiTogetherTools[3].execute({timeout_seconds: 60})`
+   (`await_human`) and keep the promise, then press **Submit this draft
+   myself** under the draft (stub the task endpoint first, as in steps 5-7,
+   or run in simulation mode where it places a SIMULATED card). The promise
+   resolves with `event.type === "submitted_by_human"` and the `task_id`;
+   the feed attributes the submission to you, not the agent; the manifest
+   flips `submit_approved_task` to `refuses: already_submitted`, and calling
+   it returns exactly that.
+
 The expected journeys and invariants behind these checks are encoded in
 [evals/together-journey.json](evals/together-journey.json).
 

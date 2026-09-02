@@ -181,6 +181,11 @@
       } else if (e.type === 'timeout') {
         say('await_human timed out after ' + e.waited_seconds + 's and returned a structured {type:"timeout"} — the agent is free to decide what to do next. The simulation stops here; press Simulate again when ready.');
         return;
+      } else if (e.type === 'submitted_by_human') {
+        say('await_human returned {type:"submitted_by_human", task_id:"' + e.task_id + '"} — you sent the draft yourself, so the agent must not submit this revision again (submit_approved_task would now refuse with already_submitted). Tracking your SIMULATED task instead.');
+        await wait(700); guard();
+        await operatorScript(e.task_id); guard();
+        return;
       } else {
         say('Unexpected event "' + e.type + '" — simulation stops.');
         return;
