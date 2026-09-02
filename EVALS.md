@@ -51,6 +51,26 @@ the challenge submission rather than reproduced here.
 | Any browser, API attached after load (simulated via console) | 7/7 registered within one 250 ms poll | 2026-09-02 |
 | ChatGPT desktop app, in-app browser | 7/7 workspace tools listed by name with correct summaries when asked "What tools does this page offer you?" (catalog only; no tool invoked in this check) | 2026-09-02 |
 
+## What the agent has to read: page versus tools
+
+Measured 2026-09-02 on the live /together page with one draft present, in a
+browser without WebMCP (so nothing but the page itself). Token counts are the
+usual rough estimate of one token per four characters; the character counts
+are exact.
+
+| What an agent would read | Characters | Tokens (est.) |
+|---|---|---|
+| Full page HTML (what a DOM-driving agent parses) | 32,618 | ~8,200 |
+| Visible text only (what a screenshot or accessibility-tree agent reads) | 7,568 | ~1,900 |
+| `read_workspace` result (the same state, as a tool result) | 1,492 | ~370 |
+| Tool catalog, read once per page load (7 names, descriptions, schemas) | 5,009 | ~1,250 |
+
+The default journey (read the goal, draft, ask for approval, wait for the
+click) is four tool calls. Driving the page instead means reasoning about 10
+form fields and 12 buttons per step, and re-reading the page after each one.
+After the one-time catalog read, every workspace read costs about a fifth of
+the visible text and about a twentieth of the HTML.
+
 ## Known limitations
 
 - Approval enforcement is client-side; server-verifiable approval proofs are

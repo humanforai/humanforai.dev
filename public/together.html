@@ -278,6 +278,7 @@
         <details class="tool-console" id="tool-console">
           <summary>WebMCP inspector — every tool call on this page, live <span class="count" id="tool-count">0 calls</span></summary>
           <span class="hint">Exact arguments in, exact result out, for a real agent over <code>document.modelContext</code> and for the simulator alike — the same JSON the agent sees. Amber entries are simulated.</span>
+          <span class="hint" id="tool-stats" aria-live="polite">0 calls · median 0 ms · 0 refused · 0 stopped for the human</span>
           <ol class="tool-log" id="tool-log" aria-live="polite"></ol>
         </details>
       </div>
@@ -383,8 +384,8 @@
   </footer>
 
   <script src="/js/app.js" defer></script>
-  <script src="/js/together.js?v=6" defer></script>
-  <script src="/js/together-webmcp.js?v=7" defer></script>
+  <script src="/js/together.js?v=7" defer></script>
+  <script src="/js/together-webmcp.js?v=8" defer></script>
   <script src="/js/together-sim.js?v=1" defer></script>
 </body>
 </html>

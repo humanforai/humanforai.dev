@@ -885,6 +885,32 @@ function publicThread(m) {
   };
 }
 
+// Web Bot Auth: the outbound webhook request is also signed as an HTTP
+// Message Signature (RFC 9421, tag "web-bot-auth") with the same Ed25519
+// key that signs receipts, so a receiver can verify WHO is calling, not only
+// that the body is intact. Public key: /.well-known/http-message-signatures-directory
+// (keyid = RFC 7638 JWK thumbprint). Failure here never blocks delivery.
+function webBotAuthHeaders(url) {
+  if (!RECEIPT_SIGNING_KEY) return {};
+  try {
+    const key = crypto.createPrivateKey({ key: Buffer.from(RECEIPT_SIGNING_KEY, 'base64'), format: 'der', type: 'pkcs8' });
+    const pub = crypto.createPublicKey(key).export({ format: 'jwk' });
+    const keyid = crypto.createHash('sha256').update(JSON.stringify({ crv: pub.crv, kty: pub.kty, x: pub.x })).digest('base64url');
+    const authority = new URL(url).host.toLowerCase();
+    const agent = '"humanforai.dev"';
+    const created = Math.floor(Date.now() / 1000);
+    const params = `("@authority" "signature-agent");created=${created};expires=${created + 300};keyid="${keyid}";alg="ed25519";nonce="${crypto.randomBytes(16).toString('base64')}";tag="web-bot-auth"`;
+    const base = `"@authority": ${authority}
+"signature-agent": ${agent}
+"@signature-params": ${params}`;
+    const sig = crypto.sign(null, Buffer.from(base, 'utf8'), key).toString('base64');
+    return { 'Signature-Agent': agent, 'Signature-Input': `sig1=${params}`, Signature: `sig1=:${sig}:` };
+  } catch (err) {
+    console.warn('web-bot-auth signing skipped:', err.message);
+    return {};
+  }
+}
+
 async function deliverWebhook(m, event, data) {
   if (!m.webhook || !m.webhook.url) return null;
   const body = JSON.stringify({ event, message_id: m.message_id, sent_at: new Date().toISOString(), data });
@@ -898,6 +924,7 @@ async function deliverWebhook(m, event, data) {
         'X-HumanForAI-Timestamp': ts,
         'X-HumanForAI-Signature': `sha256=${sig}`,
         'User-Agent': 'humanforai-webhook/1.0 (+https://humanforai.dev/api)',
+        ...webBotAuthHeaders(m.webhook.url),
       },
       body,
       redirect: 'error',

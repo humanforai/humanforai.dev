@@ -364,12 +364,33 @@
   // with its exact arguments and result, so the protocol is visible in any
   // browser. Fed by the hfai:tool event from together-webmcp.js.
   var toolCalls = 0;
+  // Running totals for the session: how many calls, how long they took,
+  // how many came back as refusals, and how many stopped for a human.
+  var toolStats = { ms: [], refused: 0, humanReview: 0 };
+  function median(xs) {
+    if (!xs.length) return 0;
+    var s = xs.slice().sort(function (a, b) { return a - b; });
+    var m = s.length >> 1;
+    return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2);
+  }
+  function renderToolStats(d) {
+    var el = $('tool-stats');
+    if (!el) return;
+    toolStats.ms.push(Number(d.ms) || 0);
+    if (d.result && typeof d.result === 'object' && d.result.error) toolStats.refused += 1;
+    if (d.name === 'request_human_approval' || d.name === 'await_human') toolStats.humanReview += 1;
+    el.textContent = toolCalls + ' call' + (toolCalls === 1 ? '' : 's') +
+      ' · median ' + median(toolStats.ms) + ' ms' +
+      ' · ' + toolStats.refused + ' refused' +
+      ' · ' + toolStats.humanReview + ' stopped for the human';
+  }
   function logToolCall(d) {
     var ol = $('tool-log');
     if (!ol) return;
     toolCalls += 1;
     var count = $('tool-count');
     if (count) count.textContent = toolCalls + ' call' + (toolCalls === 1 ? '' : 's');
+    renderToolStats(d);
     var details = $('tool-console');
     if (details && toolCalls === 1) details.open = true;
     var trunc = function (v) {

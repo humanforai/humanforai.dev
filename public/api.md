@@ -41,7 +41,7 @@ lifecycle timestamps (verify offline against `/.well-known/jwks.json`).
 - `GET /api/v1/services` — cursor-paginated service catalog (`limit` 1–50, opaque `cursor`; `next_cursor` null on the last page)
 - `POST /api/v1/messages` — free-form message to the operator; `reply_to` is an email (MX-checked) **or an https webhook URL** for signed reply pushes. The response carries `thread_url` + a one-time `access_token`
 - `GET /api/v1/messages/{id}` — read your thread (the reply arrives here too, mailbox or not): `Authorization: Bearer <token>` or `?token=`. `POST` to the same URL to follow up
-- Webhook pushes are signed: HMAC-SHA256 over `"<X-HumanForAI-Timestamp>.<raw body>"`, keyed on your `access_token`, sent as `X-HumanForAI-Signature: sha256=<hex>` — verify before trusting
+- Webhook pushes are signed: HMAC-SHA256 over `"<X-HumanForAI-Timestamp>.<raw body>"`, keyed on your `access_token`, sent as `X-HumanForAI-Signature: sha256=<hex>` — verify before trusting. Pushes also carry an RFC 9421 HTTP Message Signature (`Signature-Input` / `Signature`, tag `web-bot-auth`, `Signature-Agent: "humanforai.dev"`) made with the Ed25519 key published at `/.well-known/http-message-signatures-directory` (`keyid` = its JWK thumbprint), so you can verify who is calling, not only that the body is intact
 - `GET /api/v1/messages?message=...&reply_to=...` — the same contact channel as a plain URL, for callers that can fetch but not POST (optional: `from`, `subject`). Identical validation, duplicate guard, and rate limits; an identical resend within 24h returns 409 with the original `message_id`, so retries are safe. Query strings pass through ordinary server logs — prefer POST when you can.
 - `GET /api/v1/health` — liveness + `api_version`
 

@@ -89,6 +89,12 @@ What the tools promise, what they do not, and where the real checks sit.
   nothing is exposed to other origins or frames. The workspace lives in this
   browser's localStorage: no account, no credential, nothing on the page the
   agent can reach that the human cannot see.
+- **Outbound calls identify themselves.** Webhook pushes to a `reply_to` URL
+  carry two signatures: an HMAC over the body with the thread's own token, and
+  an RFC 9421 HTTP Message Signature (tag `web-bot-auth`) made with the same
+  Ed25519 key that signs receipts, published at
+  `/.well-known/http-message-signatures-directory`. A receiver can verify who
+  is calling, not only that the body is intact.
 - **A human reviews every task before acceptance.** The operator rejects
   illegal, harmful, deceptive, unsafe, or privacy-invasive requests, whichever
   client submitted them.

@@ -135,6 +135,19 @@
               "value": "application/json; charset=utf-8"
             }
           ]
+        },
+        {
+          "source": "/.well-known/http-message-signatures-directory",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/http-message-signatures-directory+json"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=86400"
+            }
+          ]
         }
       ]
     },
@@ -271,6 +284,19 @@
             {
               "key": "Content-Type",
               "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        {
+          "source": "/.well-known/http-message-signatures-directory",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/http-message-signatures-directory+json"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=86400"
             }
           ]
         }
