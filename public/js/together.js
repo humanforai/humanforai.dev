@@ -652,7 +652,8 @@
         } else {
           // Surface the server's own reason (rate limit, duplicate, validation)
           // so the human is not left with a bare status code.
-          var why = out.data && (out.data.message || out.data.error) ? ' — ' + (out.data.error ? out.data.error + ': ' : '') + (out.data.message || '') : '';
+          var reason = out.data ? (out.data.message || (Array.isArray(out.data.details) ? out.data.details.join(' · ') : '')) : '';
+          var why = out.data && (reason || out.data.error) ? ' — ' + (out.data.error ? out.data.error + ': ' : '') + reason : '';
           feed('system', 'submission failed (http ' + out.http + ')' + why + ' No task was created. Approval was NOT consumed.');
           if (actor === 'human') { state.approval = { state: 'none' }; save(); renderApproval(); }
         }
