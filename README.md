@@ -60,6 +60,45 @@ declarative half lives as `toolname`/`tooldescription` attributes on the
 site's forms. In browsers without the API the pages no-op gracefully, and the
 workspace tools stay auditable at `window.__hfaiTogetherTools`.
 
+### Trust boundaries
+
+What the tools promise, what they do not, and where the real checks sit.
+
+- **Tool declarations are hints, not a security boundary.** Every write goes
+  through the same HTTPS endpoints as the human form and the remote MCP
+  server, and the server validates every field again: task types, lengths,
+  reply addresses (MX-checked), duplicate descriptions, rate limits. Passing
+  the client-side schema proves nothing.
+- **Page content is data, not instructions.** `read_workspace`,
+  `await_human`, `track_task_status` and `message_operator` return
+  human-authored text (the goal, notes, operator replies) and carry
+  `untrustedContentHint: true`. Nothing in a tool result asks the agent to do
+  anything; results are status codes and records.
+- **No tool can grant authority.** The only consequential action,
+  `submit_approved_task`, needs an on-page approval bound to the exact draft
+  revision, or a bounded Autopilot grant. Both are clicks by the person at the
+  keyboard; there is no tool that approves, grants, or extends. An injected
+  instruction can draft, but it cannot ship.
+- **Autopilot is bounded by construction.** A task budget and an expiry set
+  by the human, one submission per draft revision, delivery locked to the
+  human's own email; an agent-set `contact_email` is ignored under Autopilot.
+- **Failures read as failures.** A refusal or a failed lookup returns
+  `isError: true` at the protocol level as well as a structured `error` code,
+  so an agent never mistakes `not_approved` or `task_not_found` for success.
+- **Same origin only.** Tools are registered by the page, for the page;
+  nothing is exposed to other origins or frames. The workspace lives in this
+  browser's localStorage: no account, no credential, nothing on the page the
+  agent can reach that the human cannot see.
+- **A human reviews every task before acceptance.** The operator rejects
+  illegal, harmful, deceptive, unsafe, or privacy-invasive requests, whichever
+  client submitted them.
+
+Known limits, stated rather than hidden: approval enforcement is client-side,
+and an agent that bypasses the page and calls the REST API directly can file a
+task like any other API client, which the operator then reviews like any other
+task. Prompt injection is not solved by any WebMCP site; this page narrows what
+an injected instruction can do, it does not make it impossible.
+
 ## Try it
 
 1. Open https://humanforai.dev/together in the **ChatGPT desktop app's

@@ -36,10 +36,20 @@ real operator work was generated:
 | Autopilot: past `expires_at` retires the grant on next read | pass |
 | Approve-before-`await_human` returns the event immediately | pass |
 | 7/7 tools registered reported (Chrome with WebMCP) | pass |
+| Refusals and failed lookups carry `isError: true` at the protocol level (added 2026-09-02) | pass |
+| Registration succeeds when `document.modelContext` is attached after page load (added 2026-09-02) | pass |
 
 Real end-to-end runs (actual operator, actual delivery with signed receipt)
 are performed against the production site; sanitized examples are included in
 the challenge submission rather than reproduced here.
+
+## Registration by client
+
+| Client | Result | Date |
+|---|---|---|
+| Chrome 149+ with WebMCP enabled | 7/7 workspace tools registered, cross-checked with `getTools()` | 2026-08-31 |
+| Any browser, API attached after load (simulated via console) | 7/7 registered within one 250 ms poll | 2026-09-02 |
+| ChatGPT desktop app, in-app browser | not yet recorded | — |
 
 ## Known limitations
 

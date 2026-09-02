@@ -18,17 +18,37 @@
 
   // document.modelContext is the canonical entry point; the navigator
   // alias is deprecated and kept only as a fallback for older builds.
-  var mc =
-    (typeof document !== 'undefined' && document.modelContext) ||
-    (typeof navigator !== 'undefined' && navigator.modelContext) ||
-    null;
-  if (!mc) return;
+  // The object can be attached after this script has run (a browser that
+  // injects it late, or an extension), so look now and keep looking for
+  // ten seconds rather than giving up on the first miss.
+  function findModelContext() {
+    return (typeof document !== 'undefined' && document.modelContext) ||
+      (typeof navigator !== 'undefined' && navigator.modelContext) || null;
+  }
+  function whenModelContext(cb) {
+    var mc = findModelContext();
+    if (mc) return cb(mc);
+    var tries = 0;
+    var timer = setInterval(function () {
+      mc = findModelContext();
+      if (mc || ++tries >= 40) {
+        clearInterval(timer);
+        if (mc) cb(mc);
+      }
+    }, 250);
+  }
 
-  function asResult(payload) {
-    return {
+  // A failure is flagged at the protocol level (isError) as well as in the
+  // payload: a non-2xx HTTP status, or a top-level `error` key, so an agent
+  // never mistakes a failed lookup for a good result.
+  function asResult(payload, failed) {
+    if (failed === undefined) failed = !!(payload && typeof payload === 'object' && payload.error);
+    var result = {
       content: [{ type: 'text', text: JSON.stringify(payload, null, 2) }],
       structuredContent: payload,
     };
+    if (failed) result.isError = true;
+    return result;
   }
 
   function api(path, options) {
@@ -37,7 +57,7 @@
         .json()
         .catch(function () { return { error: 'invalid_response' }; })
         .then(function (data) {
-          return asResult({ http_status: res.status, ok: res.ok, response: data });
+          return asResult({ http_status: res.status, ok: res.ok, response: data }, !res.ok);
         });
     });
   }
@@ -312,15 +332,17 @@
     try { return !document.querySelector('form[toolname="' + t.name + '"]'); } catch (e) { return true; }
   }
 
-  try {
-    var active = tools.filter(noDeclarativeTwin);
-    if (typeof mc.registerTool === 'function') {
-      active.forEach(function (t) { mc.registerTool(t); });
-    } else if (typeof mc.provideContext === 'function') {
-      mc.provideContext({ tools: active });
+  whenModelContext(function (mc) {
+    try {
+      var active = tools.filter(noDeclarativeTwin);
+      if (typeof mc.registerTool === 'function') {
+        active.forEach(function (t) { mc.registerTool(t); });
+      } else if (typeof mc.provideContext === 'function') {
+        mc.provideContext({ tools: active });
+      }
+    } catch (err) {
+      // A draft API on a moving spec must never break the page.
+      if (typeof console !== 'undefined') console.warn('webmcp registration failed:', err);
     }
-  } catch (err) {
-    // A draft API on a moving spec must never break the page.
-    if (typeof console !== 'undefined') console.warn('webmcp registration failed:', err);
-  }
+  });
 })();

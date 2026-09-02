@@ -15,11 +15,17 @@
 
   function ws() { return window.HFAI_TOGETHER; }
 
+  // A top-level `error` key is a refusal or a failure. It is flagged at the
+  // protocol level too (isError), so an agent never mistakes a refused
+  // submit or a failed lookup for a good result.
   function asResult(payload) {
-    return {
+    var failed = !!(payload && typeof payload === 'object' && payload.error);
+    var result = {
       content: [{ type: 'text', text: JSON.stringify(payload, null, 2) }],
       structuredContent: payload,
     };
+    if (failed) result.isError = true;
+    return result;
   }
 
   // Shared schema fragments for outputSchema declarations.
@@ -357,77 +363,95 @@
   // Auditable in any browser: the same tool objects, callable by hand.
   window.__hfaiTogetherTools = tools;
 
-  var mc =
-    (typeof document !== 'undefined' && document.modelContext) ||
-    (typeof navigator !== 'undefined' && navigator.modelContext) ||
-    null;
-  if (!mc) return;
-
-  // "WebMCP detected" only proves the API object exists. Await every
-  // registration, cross-check with getTools() where available, and tell the
-  // human exactly how many of the 7 tools actually stand.
-  function reportRegistration(ok, total, failed) {
-    window.__hfaiToolReport = { ok: ok, total: total, failed: failed };
-    var apply = function () {
-      var bt = document.getElementById('mcp-banner-text');
-      var banner = document.getElementById('mcp-banner');
-      if (!bt) return;
-      if (ok === total) {
-        bt.textContent = 'WebMCP live — ' + ok + '/' + total + ' tools registered. Ask your agent to work with you on this page.';
-        if (banner) banner.classList.add('on');
-      } else {
-        bt.textContent = 'WebMCP degraded — ' + ok + '/' + total + ' tools registered' +
-          (failed.length ? ' (failed: ' + failed.join(', ') + ')' : '') + '. Reload the page.';
-        if (banner) banner.classList.remove('on');
+  // The API object can be attached after this script has run (a browser
+  // that injects it late, or an extension). Look now, then keep looking
+  // for ten seconds rather than giving up on the first miss.
+  function findModelContext() {
+    return (typeof document !== 'undefined' && document.modelContext) ||
+      (typeof navigator !== 'undefined' && navigator.modelContext) || null;
+  }
+  function whenModelContext(cb) {
+    var mc = findModelContext();
+    if (mc) return cb(mc);
+    var tries = 0;
+    var timer = setInterval(function () {
+      mc = findModelContext();
+      if (mc || ++tries >= 40) {
+        clearInterval(timer);
+        if (mc) cb(mc);
       }
-    };
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
-    else apply();
+    }, 250);
   }
 
-  var registrations;
-  if (typeof mc.registerTool === 'function') {
-    registrations = tools.map(function (t) {
-      try {
-        return Promise.resolve(mc.registerTool(t)).then(
-          function () { return { name: t.name, ok: true }; },
-          function (err) {
-            if (typeof console !== 'undefined') console.warn('together webmcp: registerTool(' + t.name + ') rejected:', err);
-            return { name: t.name, ok: false };
-          }
-        );
-      } catch (err) {
-        if (typeof console !== 'undefined') console.warn('together webmcp: registerTool(' + t.name + ') threw:', err);
-        return Promise.resolve({ name: t.name, ok: false });
-      }
-    });
-  } else if (typeof mc.provideContext === 'function') {
-    var all;
-    try { all = Promise.resolve(mc.provideContext({ tools: tools })).then(function () { return true; }, function () { return false; }); }
-    catch (err) { all = Promise.resolve(false); }
-    registrations = [all.then(function (ok) { return tools.map(function (t) { return { name: t.name, ok: ok }; }); })];
-  } else {
-    reportRegistration(0, tools.length, tools.map(function (t) { return t.name; }));
-    return;
+  function register(mc) {
+    // "WebMCP detected" only proves the API object exists. Await every
+    // registration, cross-check with getTools() where available, and tell the
+    // human exactly how many of the 7 tools actually stand.
+    function reportRegistration(ok, total, failed) {
+      window.__hfaiToolReport = { ok: ok, total: total, failed: failed };
+      var apply = function () {
+        var bt = document.getElementById('mcp-banner-text');
+        var banner = document.getElementById('mcp-banner');
+        if (!bt) return;
+        if (ok === total) {
+          bt.textContent = 'WebMCP live — ' + ok + '/' + total + ' tools registered. Ask your agent to work with you on this page.';
+          if (banner) banner.classList.add('on');
+        } else {
+          bt.textContent = 'WebMCP degraded — ' + ok + '/' + total + ' tools registered' +
+            (failed.length ? ' (failed: ' + failed.join(', ') + ')' : '') + '. Reload the page.';
+          if (banner) banner.classList.remove('on');
+        }
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
+      else apply();
+    }
+
+    var registrations;
+    if (typeof mc.registerTool === 'function') {
+      registrations = tools.map(function (t) {
+        try {
+          return Promise.resolve(mc.registerTool(t)).then(
+            function () { return { name: t.name, ok: true }; },
+            function (err) {
+              if (typeof console !== 'undefined') console.warn('together webmcp: registerTool(' + t.name + ') rejected:', err);
+              return { name: t.name, ok: false };
+            }
+          );
+        } catch (err) {
+          if (typeof console !== 'undefined') console.warn('together webmcp: registerTool(' + t.name + ') threw:', err);
+          return Promise.resolve({ name: t.name, ok: false });
+        }
+      });
+    } else if (typeof mc.provideContext === 'function') {
+      var all;
+      try { all = Promise.resolve(mc.provideContext({ tools: tools })).then(function () { return true; }, function () { return false; }); }
+      catch (err) { all = Promise.resolve(false); }
+      registrations = [all.then(function (ok) { return tools.map(function (t) { return { name: t.name, ok: ok }; }); })];
+    } else {
+      reportRegistration(0, tools.length, tools.map(function (t) { return t.name; }));
+      return;
+    }
+
+    Promise.all(registrations)
+      .then(function (results) {
+        var flat = [].concat.apply([], results.map(function (r) { return Array.isArray(r) ? r : [r]; }));
+        // Cross-check against what the browser says it actually holds.
+        if (typeof mc.getTools === 'function') {
+          return Promise.resolve(mc.getTools()).then(function (registered) {
+            var names = (registered || []).map(function (t) { return t && t.name; });
+            if (names.length) {
+              flat.forEach(function (r) { if (r.ok && names.indexOf(r.name) === -1) r.ok = false; });
+            }
+            return flat;
+          }, function () { return flat; });
+        }
+        return flat;
+      })
+      .then(function (flat) {
+        var failed = flat.filter(function (r) { return !r.ok; }).map(function (r) { return r.name; });
+        reportRegistration(flat.length - failed.length, flat.length, failed);
+      });
   }
 
-  Promise.all(registrations)
-    .then(function (results) {
-      var flat = [].concat.apply([], results.map(function (r) { return Array.isArray(r) ? r : [r]; }));
-      // Cross-check against what the browser says it actually holds.
-      if (typeof mc.getTools === 'function') {
-        return Promise.resolve(mc.getTools()).then(function (registered) {
-          var names = (registered || []).map(function (t) { return t && t.name; });
-          if (names.length) {
-            flat.forEach(function (r) { if (r.ok && names.indexOf(r.name) === -1) r.ok = false; });
-          }
-          return flat;
-        }, function () { return flat; });
-      }
-      return flat;
-    })
-    .then(function (flat) {
-      var failed = flat.filter(function (r) { return !r.ok; }).map(function (r) { return r.name; });
-      reportRegistration(flat.length - failed.length, flat.length, failed);
-    });
+  whenModelContext(register);
 })();

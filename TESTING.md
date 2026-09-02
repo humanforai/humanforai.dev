@@ -67,6 +67,24 @@ const un = r => r.structuredContent;
    the feed reports the failure, no task card appears, and the approval is
    not consumed.
 
+8. **Failures read as failures.** Refusals are flagged at the protocol
+   level, not only in the payload:
+   `(await T.submit_approved_task.execute({})).isError === true` with no
+   approval, and
+   `(await T.track_task_status.execute({task_id:'HFAI-2026-DOESNOTEXIST00'})).isError === true`.
+   A good `read_workspace` result has no `isError` key.
+
+9. **A late-attached API still registers.** In a browser without WebMCP,
+   reload and within ten seconds paste:
+
+   ```js
+   const reg = [];
+   document.modelContext = { registerTool: async t => { reg.push(t.name); }, getTools: async () => reg.map(name => ({ name })) };
+   ```
+
+   The banner flips to `WebMCP live — 7/7 tools registered` on the next
+   poll (250 ms).
+
 To avoid creating real operator tasks while testing steps 5–7, stub the
 network first:
 
