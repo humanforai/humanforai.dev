@@ -22,6 +22,10 @@ Registered with `document.modelContext` (`navigator.modelContext` fallback). The
 
 Refusals and failed lookups carry `isError: true` at the protocol level as well as a structured `error` code.
 
+All seven tools stay registered for the whole session; the gates live inside them. The page shows a live **capability manifest**: what each tool would do right now (`ready`, or `refuses: <error code>`), and the four human-only actions that have no tool form: approve, reject, grant Autopilot, revoke Autopilot. Every result is bounded to 8,000 serialized characters (longest text fields shortened with a marker and a `truncated` note; structure never dropped). Arguments are accepted as an object or as a JSON string.
+
+Expected journeys and invariants, machine-readable: [evals/together-journey.json](https://github.com/humanforai/humanforai.dev/blob/main/evals/together-journey.json).
+
 ## Two approval regimes, chosen by the human
 
 - **Per task** (default): nothing ships without a click. The agent calls `await_human`, which blocks until the person approves or rejects the exact draft revision shown. Any edit voids the request.

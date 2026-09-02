@@ -123,6 +123,34 @@ lanes. What to expect:
 Simulated feed entries and inspector rows are amber and dashed; the agent
 lane reads `SIMULATED agent — scripted, not WebMCP` for the duration.
 
+## Capability manifest, result budget, string arguments
+
+Three more checks from the DevTools console, any browser:
+
+1. **The manifest matches the gates.** Above the inspector, the *Agent
+   capability manifest* strip lists every registered tool with what it would
+   do right now. With no draft, `submit_approved_task` reads
+   `refuses: no_draft`; after a draft, `refuses: not_approved`; after your
+   Approve click, `ready · approved rev N`. The same rows are exposed at
+   `window.__hfaiManifest`. Cross-check by calling the gated tool: the
+   `error` code in its result must equal the one the strip announced.
+2. **Results are bounded.** `window.__hfaiResultBudget` is `8000`. Force an
+   oversized result: draft a description of 5,000 characters (the field's
+   maximum), post six 500-character notes from the *You* lane, then call
+   `window.__hfaiTogetherTools[0].execute({})` (`read_workspace`). The
+   serialized `structuredContent` is at most 8,000 characters, the
+   description comes back shortened with a `…[truncated N chars]` marker,
+   and the payload carries `truncated: {budget_chars, original_chars,
+   fields}`. No key is missing.
+3. **String arguments parse.** Call
+   `window.__hfaiTogetherTools[1].execute('{"task_type":"ai_output_review"}')`
+   (a JSON string, the shape some harnesses pass). The draft updates as if an
+   object had been passed. Then call `.execute('not json')`: the result is
+   `{error:"invalid_arguments"}` with `isError: true`, and nothing changed.
+
+The expected journeys and invariants behind these checks are encoded in
+[evals/together-journey.json](evals/together-journey.json).
+
 ## What is intentionally not covered
 
 Client-side enforcement is the trust boundary of this build; the backend does

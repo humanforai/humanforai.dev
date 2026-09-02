@@ -45,6 +45,18 @@ lifecycle. Nothing is sent to the operator. The **WebMCP inspector** under
 the lanes logs every tool call — real or simulated — with its exact
 arguments and result. Each lane pulses when it is that seat's move.
 
+Above the inspector, a live **capability manifest** shows what each of the
+seven registered tools would do at this moment — `ready`, or
+`refuses: <error code>` — and lists the four human-only actions that have no
+tool form: approve, reject, grant Autopilot, revoke Autopilot. All seven tools
+stay registered for the whole session; the gates live inside them and refuse
+with a structured reason, so an agent learns what to do next rather than
+finding a tool missing. Every result is bounded to 8,000 serialized
+characters (long text fields are shortened with a marker and a `truncated`
+note; structure is never dropped), and arguments are accepted as an object or
+as a JSON string. The expected journeys, per-phase refusals, and invariants
+are encoded in [`evals/together-journey.json`](evals/together-journey.json).
+
 ### WebMCP tools
 
 Registered via `document.modelContext` (W3C Web Model Context draft), with a

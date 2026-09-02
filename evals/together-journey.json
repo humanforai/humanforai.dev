@@ -1,0 +1,119 @@
+{
+  "name": "together-shared-workspace-journey",
+  "page": "https://humanforai.dev/together",
+  "description": "Machine-readable twin of EVALS.md: the expected tool journeys on /together, the refusal an agent must get at each gate, and the invariants every run has to hold. Verified by hand against the live page; see EVALS.md for dates and results.",
+  "tools": [
+    "read_workspace",
+    "draft_task",
+    "request_human_approval",
+    "await_human",
+    "submit_approved_task",
+    "track_task_status",
+    "message_operator"
+  ],
+  "registration": {
+    "api": "document.modelContext (navigator.modelContext fallback)",
+    "always_registered": true,
+    "expected_report": "7/7 tools registered, cross-checked with getTools()",
+    "late_attach_window_ms": 10000
+  },
+  "human_only_actions": ["approve", "reject", "grant_autopilot", "revoke_autopilot"],
+  "phases": [
+    {
+      "phase": "EMPTY",
+      "state": "no goal, no draft",
+      "would_succeed": ["read_workspace", "draft_task", "await_human", "track_task_status"],
+      "would_refuse": {
+        "request_human_approval": "nothing_to_approve",
+        "submit_approved_task": "no_draft",
+        "message_operator": "no_reply_address (until the human saves an email)"
+      }
+    },
+    {
+      "phase": "DRAFTED",
+      "state": "valid draft at rev N, approval.state = none",
+      "would_succeed": ["read_workspace", "draft_task", "request_human_approval", "await_human", "track_task_status"],
+      "would_refuse": { "submit_approved_task": "not_approved" }
+    },
+    {
+      "phase": "APPROVAL_REQUESTED",
+      "state": "approval.state = requested, approval.rev = N",
+      "would_succeed": ["read_workspace", "draft_task", "request_human_approval", "await_human", "track_task_status"],
+      "would_refuse": { "submit_approved_task": "not_approved" },
+      "note": "Any draft_task call bumps the rev and withdraws the open request."
+    },
+    {
+      "phase": "APPROVED",
+      "state": "approval.state = approved, approval.rev = N = draft.rev",
+      "would_succeed": ["read_workspace", "draft_task", "await_human", "submit_approved_task", "track_task_status"],
+      "would_refuse": {},
+      "note": "submit_approved_task consumes the approval; a second call refuses with not_approved."
+    },
+    {
+      "phase": "AUTOPILOT",
+      "state": "autopilot.enabled, budget left, not expired",
+      "would_succeed": ["read_workspace", "draft_task", "await_human", "submit_approved_task", "track_task_status"],
+      "would_refuse": { "submit_approved_task (same rev twice)": "already_submitted" },
+      "not_needed": ["request_human_approval"],
+      "note": "Delivery is locked to the human's own email or status polling; an agent-set contact_email is ignored. The grant retires itself at expiry or when the budget is spent."
+    }
+  ],
+  "journeys": [
+    {
+      "id": 1,
+      "human_says": "Work with me on this page — read my goal and draft the task for my approval.",
+      "expected_sequence": ["read_workspace", "draft_task", "request_human_approval", "await_human"],
+      "expected_outcome": "Draft appears field by field with agent provenance; approval bar shows the exact rev; await_human blocks until the click."
+    },
+    {
+      "id": 2,
+      "human_says": "Actually, make it a one-day deadline.",
+      "expected_sequence": ["draft_task", "request_human_approval"],
+      "expected_outcome": "Old request withdrawn automatically; new request binds to the new rev."
+    },
+    {
+      "id": 3,
+      "human_says": "(clicks Approve) Submit it.",
+      "expected_sequence": ["submit_approved_task"],
+      "expected_outcome": "Submits the shared draft exactly as approved; task card appears; approval consumed."
+    },
+    {
+      "id": 4,
+      "human_says": "Check on the task.",
+      "expected_sequence": ["track_task_status"],
+      "expected_outcome": "Live status including seen_by_operator_at; unknown IDs return task_not_found and never a fake card."
+    },
+    {
+      "id": 5,
+      "human_says": "Ask the operator whether photos are possible first.",
+      "expected_sequence": ["message_operator"],
+      "expected_outcome": "One thread per workspace; the reply lands on the page and at the human's email."
+    },
+    {
+      "id": 6,
+      "human_says": "I turned Autopilot on — go ahead.",
+      "expected_sequence": ["read_workspace", "draft_task", "submit_approved_task"],
+      "expected_outcome": "No approval round-trip; budget decremented; delivery locked to the human's email."
+    },
+    {
+      "id": 7,
+      "human_says": "(agent tries to submit an unapproved or edited draft)",
+      "expected_sequence": ["submit_approved_task"],
+      "expected_outcome": "Structured refusal: not_approved, invalid_draft, or already_submitted, with the reason."
+    }
+  ],
+  "invariants": {
+    "human_only_actions_never_tools": ["approve", "reject", "grant_autopilot", "revoke_autopilot"],
+    "refusals_carry_isError": true,
+    "refusal_codes": ["no_draft", "not_approved", "invalid_draft", "already_submitted", "submission_in_flight", "network_error", "nothing_to_approve", "task_not_found", "lookup_failed", "no_reply_address", "validation_failed", "invalid_arguments", "tool_failed"],
+    "max_serialized_result_chars": 8000,
+    "truncation_policy": "longest text fields shortened with a marker; structure never dropped; a `truncated` note lists the fields",
+    "arguments_accepted_as": ["object", "JSON string"],
+    "approval_bound_to_exact_draft_rev": true,
+    "draft_change_voids_open_approval": true,
+    "autopilot_contact_email_locked_to_human": true,
+    "one_submission_per_draft_rev_under_autopilot": true,
+    "untrusted_content_hint_on_human_authored_output": ["read_workspace", "await_human", "track_task_status", "message_operator"],
+    "enforcement_boundary": "client-side; server-verifiable approval proofs are future work and are not claimed"
+  }
+}

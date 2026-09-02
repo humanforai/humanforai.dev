@@ -41,7 +41,74 @@
   // A failure is flagged at the protocol level (isError) as well as in the
   // payload: a non-2xx HTTP status, or a top-level `error` key, so an agent
   // never mistakes a failed lookup for a good result.
+  // Every result is bounded to RESULT_BUDGET serialized characters: the
+  // longest text fields are shortened (with a visible marker) until the
+  // payload fits, and a `truncated` note names them. Structure is never
+  // dropped. Same policy as the /together workspace tools.
+  var RESULT_BUDGET = 8000;
+  function boundPayload(payload) {
+    var s;
+    try { s = JSON.stringify(payload); }
+    catch (e) { return { error: 'unserializable_result', message: String(e && e.message || e) }; }
+    if (!s || s.length <= RESULT_BUDGET) return payload;
+    var clone = JSON.parse(s);
+    var leaves = [];
+    (function walk(node, path) {
+      Object.keys(node).forEach(function (k) {
+        var v = node[k], p = path ? path + '.' + k : k;
+        if (typeof v === 'string' && v.length > 160) leaves.push({ parent: node, key: k, path: p, orig: v, keep: v.length });
+        else if (v && typeof v === 'object') walk(v, p);
+      });
+    })(clone, '');
+    var note = {
+      budget_chars: RESULT_BUDGET,
+      original_chars: s.length,
+      fields: [],
+      note: 'The result exceeded the per-call budget, so the longest text fields were shortened. Full records: GET /api/v1/tasks/{task_id} and /api/v1/messages/{message_id}.',
+    };
+    if (clone && typeof clone === 'object' && !Array.isArray(clone)) clone.truncated = note;
+    // Shorten, re-measure, repeat: the note and the markers take room too.
+    for (var pass = 0; pass < 5; pass++) {
+      var over = JSON.stringify(clone).length - RESULT_BUDGET;
+      if (over <= 0) break;
+      leaves.sort(function (a, b) { return b.keep - a.keep; });
+      for (var i = 0; i < leaves.length && over > 0; i++) {
+        var leaf = leaves[i];
+        var keep = Math.max(120, leaf.keep - over - 32);
+        if (keep >= leaf.keep) continue;
+        over -= leaf.keep - keep;
+        leaf.keep = keep;
+        leaf.parent[leaf.key] = leaf.orig.slice(0, keep) + ' …[truncated ' + (leaf.orig.length - keep) + ' chars]';
+        if (note.fields.indexOf(leaf.path) === -1) note.fields.push(leaf.path);
+      }
+    }
+    return clone;
+  }
+
+  // Arguments arrive as an object from most clients and as a JSON string
+  // from some harnesses (Chrome 152's DevTools path). Accept both; an
+  // unparseable string becomes a structured refusal, not a thrown error.
+  function parseArgs(raw) {
+    if (typeof raw !== 'string') return { args: raw == null ? {} : raw };
+    var t = raw.trim();
+    if (!t) return { args: {} };
+    try { var v = JSON.parse(t); return { args: v == null ? {} : v }; }
+    catch (e) {
+      return { refusal: { error: 'invalid_arguments', message: 'Arguments arrived as a string that is not valid JSON: ' + String(e && e.message || e) } };
+    }
+  }
+  function harden(tool) {
+    var inner = tool.execute;
+    tool.execute = function (raw, opts) {
+      var p = parseArgs(raw);
+      if (p.refusal) return Promise.resolve(asResult(p.refusal, true));
+      return Promise.resolve().then(function () { return inner.call(tool, p.args, opts); });
+    };
+    return tool;
+  }
+
   function asResult(payload, failed) {
+    payload = boundPayload(payload);
     if (failed === undefined) failed = !!(payload && typeof payload === 'object' && payload.error);
     var result = {
       content: [{ type: 'text', text: JSON.stringify(payload, null, 2) }],
@@ -334,7 +401,7 @@
 
   whenModelContext(function (mc) {
     try {
-      var active = tools.filter(noDeclarativeTwin);
+      var active = tools.filter(noDeclarativeTwin).map(harden);
       if (typeof mc.registerTool === 'function') {
         active.forEach(function (t) { mc.registerTool(t); });
       } else if (typeof mc.provideContext === 'function') {

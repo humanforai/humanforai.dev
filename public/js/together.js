@@ -356,6 +356,59 @@
     setTurn('lane-agent', 'turn-agent', !!agentReason && !(you && !agentBusy),
       agentReason === 'working' ? 'agent working…' : 'agent’s move — ' + agentReason);
     setTurn('lane-operator', 'turn-operator', live, 'operator’s move — task live');
+    renderManifest();
+  }
+
+  /* ── capability manifest ───────────────────────────────────────── */
+
+  // What each registered tool would do right now, computed from the same
+  // state the tools read. All seven stay registered for the whole session;
+  // the gates live inside them and refuse with a structured reason, so this
+  // panel shows the agent's real room to act — and that authority actions
+  // (approve, reject, grant or revoke autopilot) have no tool form at all.
+  function autopilotStanding() {
+    var a = state.autopilot;
+    return !!(a.enabled &&
+      (!a.expires_at || Date.parse(a.expires_at) > Date.now()) &&
+      (a.used || 0) < (a.max_tasks || 1));
+  }
+  function manifest() {
+    var d = state.draft;
+    var problems = d ? validateDraft(d) : [];
+    var ap = autopilotStanding();
+    var approved = !!(d && state.approval.state === 'approved' && state.approval.rev === d.rev);
+    var submit = !d ? ['gated', 'refuses: no_draft']
+      : (!ap && !approved) ? ['gated', 'refuses: not_approved']
+      : problems.length ? ['gated', 'refuses: invalid_draft']
+      : (ap && state.lastSubmittedRev === d.rev) ? ['gated', 'refuses: already_submitted']
+      : ['ready', ap ? 'ready · autopilot · rev ' + d.rev : 'ready · approved rev ' + d.rev];
+    var request = ap ? ['idle', 'not needed · autopilot']
+      : !d ? ['gated', 'refuses: nothing_to_approve']
+      : problems.length ? ['gated', 'refuses: invalid_draft']
+      : state.approval.state === 'requested' && state.approval.rev === d.rev ? ['ready', 'ready · request open, rev ' + d.rev]
+      : ['ready', 'ready'];
+    return [
+      ['read_workspace', 'ready', 'ready · read-only'],
+      ['draft_task', 'ready', d ? 'ready · rev ' + d.rev : 'ready · no draft yet'],
+      ['request_human_approval'].concat(request),
+      ['await_human', 'ready', 'ready · blocks on your click'],
+      ['submit_approved_task'].concat(submit),
+      ['track_task_status', 'ready', 'ready · ' + state.taskOrder.length + ' tracked'],
+      ['message_operator', state.email ? 'ready' : 'gated', state.email ? 'ready' : 'refuses: no_reply_address'],
+    ];
+  }
+  function renderManifest() {
+    var list = $('manifest-list');
+    if (!list) return;
+    var rows = manifest();
+    list.innerHTML = rows.map(function (r) {
+      return '<li class="mf mf-' + r[1] + '"><span class="mf-name">' + esc(r[0]) + '</span>' + esc(r[2]) + '</li>';
+    }).join('');
+    var ready = rows.filter(function (r) { return r[1] === 'ready'; }).length;
+    var gated = rows.filter(function (r) { return r[1] === 'gated'; }).length;
+    var sum = $('manifest-summary');
+    if (sum) sum.textContent = rows.length + ' registered · ' + ready + ' would succeed now · ' + gated + ' would refuse · 4 human-only';
+    window.__hfaiManifest = rows.map(function (r) { return { tool: r[0], state: r[1], detail: r[2] }; });
   }
 
   /* ── tool-call inspector ───────────────────────────────────────── */

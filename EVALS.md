@@ -38,6 +38,12 @@ real operator work was generated:
 | 7/7 tools registered reported (Chrome with WebMCP) | pass |
 | Refusals and failed lookups carry `isError: true` at the protocol level (added 2026-09-02) | pass |
 | Registration succeeds when `document.modelContext` is attached after page load (added 2026-09-02) | pass |
+| Arguments passed as a JSON string are parsed; an unparseable string returns `invalid_arguments` with `isError` (added 2026-09-02) | pass |
+| A result over the 8,000-character budget comes back shortened, with a `truncated` note naming the fields (added 2026-09-02) | pass |
+| The on-page capability manifest matches the refusal each gated tool actually returns (added 2026-09-02) | pass |
+
+The expected journeys, per-phase refusals, and invariants are also encoded
+machine-readably in [evals/together-journey.json](evals/together-journey.json).
 
 Real end-to-end runs (actual operator, actual delivery with signed receipt)
 are performed against the production site; sanitized examples are included in

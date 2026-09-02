@@ -99,6 +99,19 @@
     .goal-samples { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.45rem 0; }
     .goal-chip { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); background: var(--code-bg); border: 1px solid var(--line-strong); border-radius: 999px; padding: 0.35rem 0.7rem; cursor: pointer; min-height: 32px; }
     .goal-chip:hover, .goal-chip:focus-visible { color: var(--accent); border-color: var(--accent); }
+    .manifest { margin-top: 1.2rem; border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--surface); padding: 0.8rem 1rem; }
+    .mf-head { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.55rem; }
+    .mf-head h3 { margin: 0; font-family: var(--mono); font-size: 0.8rem; font-weight: 600; color: var(--muted); }
+    .mf-sum { margin-left: auto; font-family: var(--mono); font-size: 0.7rem; color: var(--dim); }
+    .mf-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .mf-list + .mf-list { margin-top: 0.45rem; }
+    .mf { display: inline-flex; align-items: center; gap: 0.45rem; border: 1px solid var(--line-strong); border-radius: 999px; padding: 0.25rem 0.7rem; font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
+    .mf::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--dim); flex: none; }
+    .mf-name { color: var(--accent-link); }
+    .mf-ready { border-color: var(--ok); } .mf-ready::before { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+    .mf-gated { border-color: var(--warn); } .mf-gated::before { background: var(--warn); }
+    .mf-human { border-style: dashed; border-color: var(--accent); } .mf-human::before { background: var(--accent); } .mf-human .mf-name { color: var(--accent); }
+    .manifest .small { margin: 0.65rem 0 0; }
     .prompt-row { display: flex; gap: 0.5rem; align-items: stretch; }
     .prompt-row code { flex: 1; font-size: 0.78rem; border: 1px dashed var(--line-strong); border-radius: var(--radius); padding: 0.5rem 0.6rem; color: var(--code-text); background: var(--code-bg); }
     /* touch targets: buttons and checkboxes on this page meet ~44px */
@@ -275,6 +288,21 @@
 
         </div>
 
+        <div class="manifest" id="manifest" role="region" aria-label="Agent capability manifest">
+          <div class="mf-head">
+            <h3>Agent capability manifest — live</h3>
+            <span class="mf-sum" id="manifest-summary">7 tools registered</span>
+          </div>
+          <ul class="mf-list" id="manifest-list" aria-label="Registered tools and what each would do right now"></ul>
+          <ul class="mf-list" aria-label="Human-only actions">
+            <li class="mf mf-human"><span class="mf-name">approve</span>never a tool — your click</li>
+            <li class="mf mf-human"><span class="mf-name">reject</span>never a tool — your click</li>
+            <li class="mf mf-human"><span class="mf-name">grant autopilot</span>never a tool — your toggle</li>
+            <li class="mf mf-human"><span class="mf-name">revoke autopilot</span>never a tool — your toggle</li>
+          </ul>
+          <p class="small muted">All seven tools stay registered for the whole session. The gates live <em>inside</em> them: a call the state doesn't allow comes back as a structured refusal (<code>isError</code> plus an <code>error</code> code and the reason), so an agent learns what to do next instead of finding a tool missing. The four authority actions have no tool form at all. Every result is bounded to 8,000 serialized characters.</p>
+        </div>
+
         <details class="tool-console" id="tool-console">
           <summary>WebMCP inspector — every tool call on this page, live <span class="count" id="tool-count">0 calls</span></summary>
           <span class="hint">Exact arguments in, exact result out, for a real agent over <code>document.modelContext</code> and for the simulator alike — the same JSON the agent sees. Amber entries are simulated.</span>
@@ -320,7 +348,7 @@
                 </tbody>
               </table>
             </div>
-            <p class="small muted" style="margin-top:0.8rem">Registered via <code>document.modelContext</code> (W3C Web Model Context draft), with <code>navigator.modelContext</code> fallback. Same REST endpoints as the <a href="/api">API</a> and the <a href="/api#mcp">remote MCP server</a> — one interface, three readers.</p>
+            <p class="small muted" style="margin-top:0.8rem">The <em>capability manifest</em> above the inspector shows, live, which of these calls would succeed right now and which would come back as a structured refusal. Results are bounded to 8,000 serialized characters; arguments are accepted as an object or as a JSON string. Registered via <code>document.modelContext</code> (W3C Web Model Context draft), with <code>navigator.modelContext</code> fallback. Same REST endpoints as the <a href="/api">API</a> and the <a href="/api#mcp">remote MCP server</a> — one interface, three readers.</p>
           </div>
         </div>
       </div>
