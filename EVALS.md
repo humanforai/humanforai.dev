@@ -49,7 +49,7 @@ the challenge submission rather than reproduced here.
 |---|---|---|
 | Chrome 149+ with WebMCP enabled | 7/7 workspace tools registered, cross-checked with `getTools()` | 2026-08-31 |
 | Any browser, API attached after load (simulated via console) | 7/7 registered within one 250 ms poll | 2026-09-02 |
-| ChatGPT desktop app, in-app browser | not yet recorded | — |
+| ChatGPT desktop app, in-app browser | 7/7 workspace tools listed by name with correct summaries when asked "What tools does this page offer you?" (catalog only; no tool invoked in this check) | 2026-09-02 |
 
 ## Known limitations
 
