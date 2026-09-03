@@ -352,7 +352,7 @@
                   <tr><td>read_workspace</td><td>Read the shared state: your goal, notes, draft, approval status, tracked tasks, operator thread.</td></tr>
                   <tr><td>draft_task</td><td>Write or revise the task draft on the page, field by field. Every field shows who wrote it last.</td></tr>
                   <tr><td>request_human_approval</td><td>Ask the human for the click. Skipped entirely when the human has granted Autopilot.</td></tr>
-                  <tr><td>await_human</td><td>Block until the human acts — approve, reject, edit, note, grant or revoke Autopilot — or a timeout passes. A tool call resolved by an explicit human action on the page.</td></tr>
+                  <tr><td>await_human</td><td>Block until the human acts — approve, reject, edit, note, grant or revoke Autopilot, or submit the draft themselves — or a timeout passes. A tool call resolved by an explicit human action on the page.</td></tr>
                   <tr><td>submit_approved_task</td><td>Submits the real task to the real operator. Requires either a per-task approval or standing Autopilot authority — the human chooses the regime.</td></tr>
                   <tr><td>track_task_status</td><td>Live status of workspace tasks: seen-by-operator, ETA, status history, delivery, signed receipt.</td></tr>
                   <tr><td>message_operator</td><td>Open or continue a message thread with the human operator, rendered on the page for both of you.</td></tr>
@@ -424,7 +424,7 @@
 
   <script src="/js/app.js" defer></script>
   <script src="/js/together.js?v=11" defer></script>
-  <script src="/js/together-webmcp.js?v=10" defer></script>
+  <script src="/js/together-webmcp.js?v=11" defer></script>
   <script src="/js/together-sim.js?v=2" defer></script>
 </body>
 </html>

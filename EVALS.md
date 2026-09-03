@@ -70,7 +70,7 @@ are exact.
 | Full page HTML (what a DOM-driving agent parses) | 32,618 | ~8,200 |
 | Visible text only (what a screenshot or accessibility-tree agent reads) | 7,568 | ~1,900 |
 | `read_workspace` result (the same state, as a tool result) | 1,492 | ~370 |
-| Tool catalog, read once per page load (7 names, descriptions, schemas) | 5,009 | ~1,250 |
+| Tool catalog, read once per page load (7 names, descriptions, input schemas; re-measured 2026-09-03 after the descriptions were sharpened) | 6,763 | ~1,700 |
 
 The default journey (read the goal, draft, ask for approval, wait for the
 click) is four tool calls. Driving the page instead means reasoning about 10
