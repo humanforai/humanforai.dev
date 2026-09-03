@@ -91,7 +91,9 @@
     .task-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 0.7rem 0.8rem; margin-bottom: 0.6rem; }
     .task-card .tid { font-family: var(--mono); font-size: 0.78rem; color: var(--accent-link); word-break: break-all; }
     .task-card .trow { font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; }
-    .mcp-banner { display: flex; gap: 0.6rem; align-items: center; border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 0.6rem 0.9rem; margin-bottom: 1.2rem; font-size: 0.85rem; }
+    .mcp-banner { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 0.6rem 0.9rem; margin-bottom: 1.2rem; font-size: 0.85rem; }
+    #mcp-banner-text { flex: 1 1 14rem; min-width: 0; }
+    .mcp-banner .btn { flex: none; }
     .mcp-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--dim); flex: none; }
     .mcp-banner.on .mcp-dot { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
     .tool-table td:first-child { font-family: var(--mono); white-space: nowrap; color: var(--accent-link); }
@@ -163,7 +165,7 @@
       <div class="wrap">
         <div class="mcp-banner" id="mcp-banner">
           <span class="mcp-dot" aria-hidden="true"></span>
-          <span id="mcp-banner-text" style="flex:1">Checking for WebMCP…</span>
+          <span id="mcp-banner-text">Checking for WebMCP…</span>
           <button class="btn btn-primary btn-sm" id="sim-toggle" type="button" aria-pressed="false" title="A scripted agent drives this page’s real WebMCP tool objects. Nothing is sent to the operator.">▶ Simulate an agent</button>
           <button class="btn btn-ghost btn-sm" id="clear-workspace" type="button">Clear workspace</button>
         </div>
