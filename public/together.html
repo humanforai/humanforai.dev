@@ -85,6 +85,9 @@
     .autopilot-box.on .autopilot-state { color: var(--ok); }
     .approval-bar { border: 1px solid var(--warn); border-radius: var(--radius); padding: 0.9rem; margin-top: 0.9rem; background: var(--accent-soft); }
     .approval-bar h3 { margin: 0 0 0.4rem; font-size: 0.95rem; color: var(--warn); }
+    #approval-note { width: 100%; box-sizing: border-box; font-family: var(--sans); font-size: 0.92rem; color: var(--ink); background: var(--bg); border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 0.6rem 0.8rem; }
+    #approval-note::placeholder { color: var(--dim); opacity: 1; }
+    #approval-note:focus { outline: none; border-color: var(--accent); }
     .thread-msg { border: 1px solid var(--line); border-radius: var(--radius); padding: 0.55rem 0.7rem; margin-bottom: 0.5rem; font-size: 0.83rem; }
     .thread-msg .who { font-family: var(--mono); font-size: 0.7rem; color: var(--dim); display: block; margin-bottom: 0.2rem; }
     .thread-msg.t-operator { border-color: var(--ok); }
